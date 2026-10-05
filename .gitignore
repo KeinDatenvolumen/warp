@@ -44,6 +44,7 @@ application-local.properties
 # Logs and temporary files
 *.log
 logs/
+logs/local/
 tmp/
 temp/
 *.tmp
