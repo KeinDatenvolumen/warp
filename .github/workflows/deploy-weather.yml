@@ -25,6 +25,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-heroku-container-deploy.yml
     with:
+      app_url: ${{ vars.HEROKU_WEATHER_URL }}
       app_name: ${{ vars.HEROKU_WEATHER_APP }}
       dockerfile: services/weather-service/Dockerfile
       image_name: warp-weather

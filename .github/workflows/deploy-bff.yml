@@ -25,6 +25,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-heroku-container-deploy.yml
     with:
+      app_url: ${{ vars.HEROKU_BFF_URL }}
       app_name: ${{ vars.HEROKU_BFF_APP }}
       dockerfile: services/bff-service/Dockerfile
       image_name: warp-bff
