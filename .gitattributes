@@ -1,0 +1,24 @@
+# POSIX-Skripte müssen auch unter Windows LF verwenden
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows-Skripte dürfen CRLF verwenden
+gradlew.bat text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# PowerShell ist mit LF problemlos plattformübergreifend nutzbar
+*.ps1 text eol=lf
+
+# Übliche Projektdateien konsistent mit LF auschecken
+*.gradle text eol=lf
+*.properties text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.java text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
