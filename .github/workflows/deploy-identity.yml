@@ -1,0 +1,33 @@
+name: Deploy Identity to Heroku
+
+on:
+  push:
+    branches:
+      - system/live
+    paths:
+      - "services/identity-service/**"
+      - "services/bff-service/build.gradle"
+      - "services/routing-service/build.gradle"
+      - "services/weather-service/build.gradle"
+      - "services/storage-service/build.gradle"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradle/**"
+      - "gradlew"
+      - ".dockerignore"
+      - ".github/workflows/deploy-identity.yml"
+      - ".github/workflows/reusable-heroku-container-deploy.yml"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-heroku-container-deploy.yml
+    with:
+      app_name: ${{ vars.HEROKU_IDENTITY_APP }}
+      dockerfile: services/identity-service/Dockerfile
+      image_name: warp-identity
+      health_path: /actuator/health/readiness
+    secrets:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

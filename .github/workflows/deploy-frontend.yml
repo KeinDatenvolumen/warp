@@ -1,0 +1,27 @@
+name: Deploy Frontend to Heroku
+
+on:
+  push:
+    branches:
+      - system/live
+    paths:
+      - "frontend/**"
+      - ".dockerignore"
+      - ".github/workflows/deploy-frontend.yml"
+      - ".github/workflows/reusable-heroku-container-deploy.yml"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-heroku-container-deploy.yml
+    with:
+      app_name: ${{ vars.HEROKU_FRONTEND_APP }}
+      dockerfile: frontend/Dockerfile
+      image_name: warp-frontend
+      health_path: /health
+      build_args: >-
+        --build-arg
+        VITE_BFF_BASE_URL=${{ vars.BFF_PUBLIC_URL }}
+    secrets:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

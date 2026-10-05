@@ -1,0 +1,122 @@
+name: Validate pull request for live
+
+on:
+  pull_request:
+    branches:
+      - system/live
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend build and tests
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v5
+
+      - name: Java 25 einrichten
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Gradle Wrapper ausführbar machen
+        run: chmod +x gradlew
+
+      - name: Alle Backend-Tests ausführen
+        run: ./gradlew clean test --no-daemon
+
+      - name: Alle Backend-Services bauen
+        run: ./gradlew build --no-daemon
+
+  frontend:
+    name: Frontend build
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v5
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.20.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Frontend bauen
+        run: npm run build
+
+  docker:
+    name: Dockerfiles prüfen
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs:
+      - backend
+      - frontend
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: bff
+            dockerfile: services/bff-service/Dockerfile
+          - name: identity
+            dockerfile: services/identity-service/Dockerfile
+          - name: routing
+            dockerfile: services/routing-service/Dockerfile
+          - name: weather
+            dockerfile: services/weather-service/Dockerfile
+          - name: storage
+            dockerfile: services/storage-service/Dockerfile
+          - name: frontend
+            dockerfile: frontend/Dockerfile
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v5
+
+      - name: Docker-Image bauen
+        env:
+          DOCKERFILE: ${{ matrix.dockerfile }}
+          IMAGE_NAME: ${{ matrix.name }}
+          BFF_PUBLIC_URL: ${{ vars.BFF_PUBLIC_URL }}
+        run: |
+          if [ "$IMAGE_NAME" = "frontend" ]; then
+            docker build \
+              --file "$DOCKERFILE" \
+              --build-arg \
+                "VITE_BFF_BASE_URL=$BFF_PUBLIC_URL" \
+              --tag "warp-$IMAGE_NAME:pr" \
+              .
+          else
+            docker build \
+              --file "$DOCKERFILE" \
+              --tag "warp-$IMAGE_NAME:pr" \
+              .
+          fi

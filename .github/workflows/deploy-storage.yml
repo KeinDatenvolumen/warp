@@ -1,0 +1,33 @@
+name: Deploy Storage to Heroku
+
+on:
+  push:
+    branches:
+      - system/live
+    paths:
+      - "services/storage-service/**"
+      - "services/bff-service/build.gradle"
+      - "services/identity-service/build.gradle"
+      - "services/routing-service/build.gradle"
+      - "services/weather-service/build.gradle"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradle/**"
+      - "gradlew"
+      - ".dockerignore"
+      - ".github/workflows/deploy-storage.yml"
+      - ".github/workflows/reusable-heroku-container-deploy.yml"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-heroku-container-deploy.yml
+    with:
+      app_name: ${{ vars.HEROKU_STORAGE_APP }}
+      dockerfile: services/storage-service/Dockerfile
+      image_name: warp-storage
+      health_path: /actuator/health/readiness
+    secrets:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

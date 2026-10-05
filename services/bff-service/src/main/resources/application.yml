@@ -6,6 +6,23 @@ server:
   port: ${PORT:8080}
   shutdown: graceful
 
+warp:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+  services:
+    identity:
+      name: identity-service
+      url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+    routing:
+      name: routing-service
+      url: ${ROUTING_SERVICE_URL:http://localhost:8082}
+    weather:
+      name: weather-service
+      url: ${WEATHER_SERVICE_URL:http://localhost:8083}
+    storage:
+      name: storage-service
+      url: ${STORAGE_SERVICE_URL:http://localhost:8084}
+
 management:
   endpoints:
     web:
