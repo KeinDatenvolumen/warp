@@ -1,0 +1,76 @@
+name: warp
+
+services:
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    environment:
+      PORT: "8081"
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  routing-service:
+    build:
+      context: .
+      dockerfile: services/routing-service/Dockerfile
+    environment:
+      PORT: "8082"
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+
+  weather-service:
+    build:
+      context: .
+      dockerfile: services/weather-service/Dockerfile
+    environment:
+      PORT: "8083"
+    ports:
+      - "8083:8083"
+    restart: unless-stopped
+
+  storage-service:
+    build:
+      context: .
+      dockerfile: services/storage-service/Dockerfile
+    environment:
+      PORT: "8084"
+    ports:
+      - "8084:8084"
+    restart: unless-stopped
+
+  bff-service:
+    build:
+      context: .
+      dockerfile: services/bff-service/Dockerfile
+    environment:
+      PORT: "8080"
+      FRONTEND_URL: "http://localhost:5173"
+      IDENTITY_SERVICE_URL: "http://identity-service:8081"
+      ROUTING_SERVICE_URL: "http://routing-service:8082"
+      WEATHER_SERVICE_URL: "http://weather-service:8083"
+      STORAGE_SERVICE_URL: "http://storage-service:8084"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - identity-service
+      - routing-service
+      - weather-service
+      - storage-service
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_BFF_BASE_URL: "http://localhost:8080"
+    environment:
+      PORT: "8080"
+    ports:
+      - "5173:8080"
+    depends_on:
+      - bff-service
+    restart: unless-stopped
