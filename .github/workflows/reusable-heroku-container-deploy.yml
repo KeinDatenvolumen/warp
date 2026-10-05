@@ -7,6 +7,10 @@ on:
         description: Existing Heroku app name
         required: true
         type: string
+      app_url:
+        description: Public HTTPS URL of the Heroku app
+        required: true
+        type: string
       dockerfile:
         description: Dockerfile path relative to repository root
         required: true
@@ -114,10 +118,11 @@ jobs:
       - name: Auf erfolgreichen Healthcheck warten
         shell: bash
         env:
-          APP_NAME: ${{ inputs.app_name }}
+          APP_URL: ${{ inputs.app_url }}
           HEALTH_PATH: ${{ inputs.health_path }}
         run: |
-          HEALTH_URL="https://${APP_NAME}.herokuapp.com${HEALTH_PATH}"
+          BASE_URL="${APP_URL%/}"
+          HEALTH_URL="${BASE_URL}${HEALTH_PATH}"
 
           echo "Pruefe $HEALTH_URL"
 

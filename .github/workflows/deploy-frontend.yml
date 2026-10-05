@@ -16,6 +16,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-heroku-container-deploy.yml
     with:
+      app_url: ${{ vars.HEROKU_FRONTEND_URL }}
       app_name: ${{ vars.HEROKU_FRONTEND_APP }}
       dockerfile: frontend/Dockerfile
       image_name: warp-frontend

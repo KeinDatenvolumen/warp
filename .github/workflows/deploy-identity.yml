@@ -25,6 +25,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-heroku-container-deploy.yml
     with:
+      app_url: ${{ vars.HEROKU_IDENTITY_URL }}
       app_name: ${{ vars.HEROKU_IDENTITY_APP }}
       dockerfile: services/identity-service/Dockerfile
       image_name: warp-identity

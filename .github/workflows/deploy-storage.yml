@@ -25,6 +25,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-heroku-container-deploy.yml
     with:
+      app_url: ${{ vars.HEROKU_STORAGE_URL }}
       app_name: ${{ vars.HEROKU_STORAGE_APP }}
       dockerfile: services/storage-service/Dockerfile
       image_name: warp-storage
