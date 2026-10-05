@@ -1,0 +1,33 @@
+name: Deploy Weather to Heroku
+
+on:
+  push:
+    branches:
+      - system/live
+    paths:
+      - "services/weather-service/**"
+      - "services/bff-service/build.gradle"
+      - "services/identity-service/build.gradle"
+      - "services/routing-service/build.gradle"
+      - "services/storage-service/build.gradle"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradle/**"
+      - "gradlew"
+      - ".dockerignore"
+      - ".github/workflows/deploy-weather.yml"
+      - ".github/workflows/reusable-heroku-container-deploy.yml"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-heroku-container-deploy.yml
+    with:
+      app_name: ${{ vars.HEROKU_WEATHER_APP }}
+      dockerfile: services/weather-service/Dockerfile
+      image_name: warp-weather
+      health_path: /actuator/health/readiness
+    secrets:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

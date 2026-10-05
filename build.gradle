@@ -1,0 +1,26 @@
+plugins {
+    id 'org.springframework.boot' version '4.1.1' apply false
+}
+
+allprojects {
+    group = 'de.warp'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+}

@@ -1,0 +1,7 @@
+rootProject.name = 'warp'
+
+include 'services:bff-service'
+include 'services:identity-service'
+include 'services:routing-service'
+include 'services:weather-service'
+include 'services:storage-service'
