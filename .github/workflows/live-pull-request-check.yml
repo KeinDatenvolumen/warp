@@ -28,11 +28,11 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v5
 
-      - name: Java 25 einrichten
+      - name: Java 21 einrichten
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "25"
+          java-version: "21"
           cache: gradle
 
       - name: Gradle Wrapper ausführbar machen
