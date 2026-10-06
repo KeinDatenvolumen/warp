@@ -1,0 +1,14 @@
+FROM node:22.20.0-alpine
+
+WORKDIR /app
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ ./
+
+ENV NODE_ENV=development
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--config", "vite.config.dev.js", "--host", "0.0.0.0"]

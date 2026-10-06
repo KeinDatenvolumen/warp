@@ -1,0 +1,17 @@
+FROM gradle:9.8.0-jdk21
+
+USER root
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends bash \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+COPY infrastructure/docker/dev/spring-dev-entrypoint.sh /usr/local/bin/spring-dev-entrypoint
+COPY infrastructure/docker/dev/spring-dev.init.gradle /opt/warp/spring-dev.init.gradle
+
+RUN chmod +x /usr/local/bin/spring-dev-entrypoint \
+    && mkdir -p /workspace /home/gradle/.gradle \
+    && chown -R gradle:gradle /workspace /home/gradle/.gradle /opt/warp
+
+ENTRYPOINT ["spring-dev-entrypoint"]
