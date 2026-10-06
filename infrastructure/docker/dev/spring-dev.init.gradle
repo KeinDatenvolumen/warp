@@ -1,0 +1,10 @@
+allprojects {
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin('org.springframework.boot')) {
+            project.dependencies.add(
+                'developmentOnly',
+                'org.springframework.boot:spring-boot-devtools'
+            )
+        }
+    }
+}
