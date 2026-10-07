@@ -29,4 +29,9 @@ COPY --from=build \
 
 USER warp
 
-ENTRYPOINT ["java", "-jar", "/app/application.jar"]
+COPY infrastructure/docker/production/spring-entrypoint.sh \
+    /usr/local/bin/spring-entrypoint
+
+RUN chmod +x /usr/local/bin/spring-entrypoint
+
+ENTRYPOINT ["spring-entrypoint"]
