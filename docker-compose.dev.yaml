@@ -7,9 +7,6 @@ x-spring-service: &spring-service
   working_dir: /workspace
   init: true
   restart: unless-stopped
-  volumes:
-    - .:/workspace
-    - gradle-cache:/home/gradle/.gradle
 
 services:
   identity-service:
@@ -17,12 +14,18 @@ services:
     environment:
       SERVICE_NAME: identity-service
       PORT: "8081"
+      DB_URL: jdbc:postgresql://identity-db:5432/${IDENTITY_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
+      DB_USERNAME: ${IDENTITY_DB_USER}
+      DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+    depends_on:
+      identity-db:
+        condition: service_healthy
     ports:
       - "8081:8081"
     volumes:
       - .:/workspace
-      - gradle-cache:/home/gradle/.gradle
-        - identity-gradle-work:/workspace/.gradle
+      - identity-gradle-cache:/home/gradle/.gradle
+      - identity-gradle-work:/workspace/.gradle
       - identity-build:/workspace/services/identity-service/build
 
   routing-service:
@@ -30,12 +33,18 @@ services:
     environment:
       SERVICE_NAME: routing-service
       PORT: "8082"
+      DB_URL: jdbc:postgresql://routing-db:5432/${ROUTING_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
+      DB_USERNAME: ${ROUTING_DB_USER}
+      DB_PASSWORD: ${ROUTING_DB_PASSWORD}
+    depends_on:
+      routing-db:
+        condition: service_healthy
     ports:
       - "8082:8082"
     volumes:
       - .:/workspace
-      - gradle-cache:/home/gradle/.gradle
-        - routing-gradle-work:/workspace/.gradle
+      - routing-gradle-cache:/home/gradle/.gradle
+      - routing-gradle-work:/workspace/.gradle
       - routing-build:/workspace/services/routing-service/build
 
   weather-service:
@@ -43,12 +52,18 @@ services:
     environment:
       SERVICE_NAME: weather-service
       PORT: "8083"
+      DB_URL: jdbc:postgresql://weather-db:5432/${WEATHER_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
+      DB_USERNAME: ${WEATHER_DB_USER}
+      DB_PASSWORD: ${WEATHER_DB_PASSWORD}
+    depends_on:
+      weather-db:
+        condition: service_healthy
     ports:
       - "8083:8083"
     volumes:
       - .:/workspace
-      - gradle-cache:/home/gradle/.gradle
-        - weather-gradle-work:/workspace/.gradle
+      - weather-gradle-cache:/home/gradle/.gradle
+      - weather-gradle-work:/workspace/.gradle
       - weather-build:/workspace/services/weather-service/build
 
   storage-service:
@@ -56,12 +71,18 @@ services:
     environment:
       SERVICE_NAME: storage-service
       PORT: "8084"
+      DB_URL: jdbc:postgresql://storage-db:5432/${STORAGE_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
+      DB_USERNAME: ${STORAGE_DB_USER}
+      DB_PASSWORD: ${STORAGE_DB_PASSWORD}
+    depends_on:
+      storage-db:
+        condition: service_healthy
     ports:
       - "8084:8084"
     volumes:
       - .:/workspace
-      - gradle-cache:/home/gradle/.gradle
-        - storage-gradle-work:/workspace/.gradle
+      - storage-gradle-cache:/home/gradle/.gradle
+      - storage-gradle-work:/workspace/.gradle
       - storage-build:/workspace/services/storage-service/build
 
   bff-service:
@@ -83,8 +104,8 @@ services:
       - storage-service
     volumes:
       - .:/workspace
-      - gradle-cache:/home/gradle/.gradle
-        - bff-gradle-work:/workspace/.gradle
+      - bff-gradle-cache:/home/gradle/.gradle
+      - bff-gradle-work:/workspace/.gradle
       - bff-build:/workspace/services/bff-service/build
 
   frontend:
@@ -104,16 +125,100 @@ services:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
 
+  identity-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${IDENTITY_DB_NAME}
+      POSTGRES_USER: ${IDENTITY_DB_USER}
+      POSTGRES_PASSWORD: ${IDENTITY_DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - identity-db-data:/var/lib/postgresql
+    restart: unless-stopped
+
+  routing-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${ROUTING_DB_NAME}
+      POSTGRES_USER: ${ROUTING_DB_USER}
+      POSTGRES_PASSWORD: ${ROUTING_DB_PASSWORD}
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - routing-db-data:/var/lib/postgresql
+    restart: unless-stopped
+
+  storage-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${STORAGE_DB_NAME}
+      POSTGRES_USER: ${STORAGE_DB_USER}
+      POSTGRES_PASSWORD: ${STORAGE_DB_PASSWORD}
+    ports:
+      - "5437:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - storage-db-data:/var/lib/postgresql
+    restart: unless-stopped
+
+  weather-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${WEATHER_DB_NAME}
+      POSTGRES_USER: ${WEATHER_DB_USER}
+      POSTGRES_PASSWORD: ${WEATHER_DB_PASSWORD}
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - weather-db-data:/var/lib/postgresql
+    restart: unless-stopped
+
 volumes:
-  gradle-cache:
+  bff-gradle-cache:
+  identity-gradle-cache:
+  routing-gradle-cache:
+  weather-gradle-cache:
+  storage-gradle-cache:
+
   bff-gradle-work:
   identity-gradle-work:
   routing-gradle-work:
   weather-gradle-work:
   storage-gradle-work:
+
   bff-build:
   identity-build:
   routing-build:
   weather-build:
   storage-build:
+
   frontend-node-modules:
+
+  identity-db-data:
+  routing-db-data:
+  weather-db-data:
+  storage-db-data:

@@ -27,6 +27,15 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
+echo "Kompiliere ${SERVICE_NAME} initial ..."
+
+gradle \
+    "${PROJECT_PATH}:classes" \
+    --init-script "$INIT_SCRIPT" \
+    --project-cache-dir "/tmp/gradle-initial-cache" \
+    --console=plain \
+    --no-daemon
+
 echo "Starte ${SERVICE_NAME} im Entwicklungsmodus ..."
 
 gradle \
@@ -35,7 +44,23 @@ gradle \
     --project-cache-dir "/tmp/gradle-boot-cache" \
     --console=plain \
     --no-daemon &
+
 boot_pid=$!
+
+# bootRun erhält Zeit, die Anwendung aus den vorhandenen Klassen zu starten.
+sleep 10
+
+if ! kill -0 "$boot_pid" 2>/dev/null; then
+    set +e
+    wait "$boot_pid"
+    exit_code=$?
+    set -e
+
+    echo "${SERVICE_NAME}: bootRun wurde während des Starts beendet."
+    exit "$exit_code"
+fi
+
+echo "Starte Continuous Build für ${SERVICE_NAME} ..."
 
 gradle \
     "${PROJECT_PATH}:classes" \
@@ -44,6 +69,7 @@ gradle \
     --project-cache-dir "/tmp/gradle-watch-cache" \
     --console=plain \
     --no-daemon &
+
 compile_pid=$!
 
 while true; do
