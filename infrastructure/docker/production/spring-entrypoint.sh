@@ -29,7 +29,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
 
     export DB_URL
     unset DB_USERNAME
-    unset DB_PASSWORT
+    unset DB_PASSWORD
 fi
 
 exec java -jar /app/application.jar

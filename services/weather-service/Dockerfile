@@ -27,11 +27,10 @@ COPY --from=build \
     /workspace/services/weather-service/build/libs/*.jar \
     /app/application.jar
 
-USER warp
-
-COPY infrastructure/docker/production/spring-entrypoint.sh \
+COPY --chmod=755 \
+    infrastructure/docker/production/spring-entrypoint.sh \
     /usr/local/bin/spring-entrypoint
 
-RUN chmod +x /usr/local/bin/spring-entrypoint
+USER warp
 
-ENTRYPOINT ["spring-entrypoint"]
+ENTRYPOINT ["/usr/local/bin/spring-entrypoint"]
