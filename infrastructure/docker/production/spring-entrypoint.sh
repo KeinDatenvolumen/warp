@@ -43,10 +43,10 @@ if [ -n "${DATABASE_URL:-}" ]; then
 
     case "$DB_URL" in
         *\?*)
-            DB_URL="${DB_URL}&sslmode=require&connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
+            DB_URL="${DB_URL}&connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
             ;;
         *)
-            DB_URL="${DB_URL}?sslmode=require&connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
+            DB_URL="${DB_URL}&connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
             ;;
     esac
 
