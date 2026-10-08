@@ -727,3 +727,266 @@ direkt im Terminal sichtbar ist.
 - Keine Stacktraces an Clients ausgeben
 - Geschützte Operationen autorisieren
 - Besitzprüfungen bei benutzerbezogenen Daten durchführen
+
+## Datenbankeinrichtung
+
+WaRP verwendet PostgreSQL für die persistenten Daten der Backend-Services. Jeder datenbankgestützte Service besitzt eine eigene, logisch und technisch getrennte Datenbank:
+
+- `identity-service` verwendet `warp_identity`
+- `routing-service` verwendet `warp_routing`
+- `weather-service` verwendet `warp_weather`
+- `storage-service` verwendet `warp_storage`
+- `bff-service` besitzt keine eigene Datenbank
+
+Die Datenbankschemata werden beim Start der jeweiligen Anwendung mit Flyway-Migrationen aus `src/main/resources/db/migration` angelegt und aktualisiert. Hibernate führt keine Schemaänderungen durch, sondern validiert das von Flyway verwaltete Schema.
+
+Die Migrationen müssen deshalb immer vor dem Start der eigentlichen Anwendung erfolgreich ausgeführt werden. Schlägt eine Migration fehl oder stimmt das vorhandene Schema nicht mit den JPA-Entitäten überein, wird der Start des betroffenen Services abgebrochen.
+
+### Lokale Datenbanken mit Docker Compose
+
+Für die lokale Docker-Entwicklung werden vier voneinander getrennte PostgreSQL-Container verwendet. Die Konfiguration befindet sich in `docker-compose.dev.yaml`.
+
+Die Datenbanken sind vom Host unter folgenden Ports erreichbar:
+
+| Service | Datenbank | Host-Port |
+|---|---|---:|
+| Identity | `warp_identity` | `5434` |
+| Routing | `warp_routing` | `5435` |
+| Weather | `warp_weather` | `5436` |
+| Storage | `warp_storage` | `5437` |
+
+Die Zugangsdaten werden nicht direkt in Docker Compose hinterlegt. Stattdessen werden sie aus einer lokalen `.env`-Datei gelesen.
+
+Erstelle die lokale Konfiguration aus der Vorlage:
+
+```bash
+cp .env.example .env
+```
+
+Passe anschließend die Werte in `.env` bei Bedarf an. Die Datei enthält die Zugangsdaten für die lokalen PostgreSQL-Instanzen und darf nicht in die Versionsverwaltung aufgenommen werden.
+
+Beispielhafte Struktur:
+
+```dotenv
+POSTGRES_USER=warp
+POSTGRES_PASSWORD=warp
+
+IDENTITY_DB_NAME=warp_identity
+ROUTING_DB_NAME=warp_routing
+WEATHER_DB_NAME=warp_weather
+STORAGE_DB_NAME=warp_storage
+```
+
+> Die tatsächlich benötigten Variablennamen ergeben sich aus `.env.example` und `docker-compose.dev.yaml`. Die Vorlage ist die verbindliche Referenz für die lokale Konfiguration.
+
+Die Datenbankcontainer werden mit folgendem Befehl gestartet:
+
+```bash
+docker compose -f docker-compose.dev.yaml up -d
+```
+
+Der Status der Container kann anschließend geprüft werden:
+
+```bash
+docker compose -f docker-compose.dev.yaml ps
+```
+
+Um die Protokolle eines Datenbankcontainers anzuzeigen, kann beispielsweise folgender Befehl verwendet werden:
+
+```bash
+docker compose -f docker-compose.dev.yaml logs -f routing-db
+```
+
+Der konkrete Container- beziehungsweise Servicename kann in `docker-compose.dev.yaml` nachgesehen werden.
+
+Beim ersten Start legt PostgreSQL die konfigurierte Datenbank im zugehörigen Volume an. Danach erstellt Flyway beim Start des jeweiligen Backend-Services die benötigten Tabellen, Indizes und sonstigen Datenbankobjekte.
+
+Die lokalen Datenbankverbindungen verwenden grundsätzlich folgendes Schema:
+
+```text
+jdbc:postgresql://localhost:<HOST_PORT>/<DATENBANKNAME>
+```
+
+Beispiele:
+
+```text
+jdbc:postgresql://localhost:5434/warp_identity
+jdbc:postgresql://localhost:5435/warp_routing
+jdbc:postgresql://localhost:5436/warp_weather
+jdbc:postgresql://localhost:5437/warp_storage
+```
+
+Werden die Backend-Services ebenfalls innerhalb von Docker Compose ausgeführt, darf nicht `localhost` als Datenbankhost verwendet werden. In diesem Fall muss der jeweilige Compose-Servicename der PostgreSQL-Instanz als Host eingetragen werden.
+
+### Lokale Datenbanken zurücksetzen
+
+Die Daten bleiben durch Docker-Volumes auch nach dem Stoppen der Container erhalten.
+
+Container stoppen:
+
+```bash
+docker compose -f docker-compose.dev.yaml down
+```
+
+Container und lokale Datenbank-Volumes vollständig entfernen:
+
+```bash
+docker compose -f docker-compose.dev.yaml down -v
+```
+
+Beim nächsten Start werden die Datenbanken neu angelegt und sämtliche Flyway-Migrationen erneut ausgeführt.
+
+> **Achtung:** Durch `down -v` werden alle Daten in den lokalen WaRP-Datenbanken unwiderruflich gelöscht.
+
+### Flyway-Migrationen
+
+Die Migrationen eines Services liegen in:
+
+```text
+<service>/src/main/resources/db/migration
+```
+
+Flyway führt noch nicht angewendete Migrationen beim Anwendungsstart in aufsteigender Versionsreihenfolge aus. Versionsmigrationen folgen dem Flyway-Namensschema:
+
+```text
+V<Version>__<Beschreibung>.sql
+```
+
+Beispiel:
+
+```text
+V1__create_initial_schema.sql
+V2__add_route_status.sql
+```
+
+Für Migrationen gelten folgende Regeln:
+
+1. Bereits in einer gemeinsam genutzten oder produktiven Umgebung ausgeführte Migrationen dürfen nicht nachträglich verändert werden.
+2. Schemaänderungen werden immer durch eine neue Migration ergänzt.
+3. Jede Migration gehört ausschließlich zu dem Service, der die betreffende Datenbank besitzt.
+4. Ein Service darf nicht direkt auf Tabellen eines anderen Services zugreifen.
+5. Änderungen müssen sowohl mit einer leeren Datenbank als auch mit einem bereits vorhandenen Schema getestet werden.
+6. Hibernate bleibt auf Schema-Validierung eingestellt und darf das Schema nicht automatisch erzeugen oder verändern.
+
+Typische Spring-Konfiguration:
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+```
+
+Passwörter und vollständige produktive Verbindungs-URLs dürfen weder in `application.yml` noch in anderen versionierten Dateien gespeichert werden.
+
+### Produktive Datenbanken
+
+In der produktiven Umgebung erhält jeder datenbankgestützte Service eine eigene PostgreSQL-Datenbank beziehungsweise eine eigene, ausschließlich diesem Service zugeordnete Datenbankverbindung.
+
+| Service | Produktive Datenbankverbindung erforderlich |
+|---|---|
+| `identity-service` | Ja |
+| `routing-service` | Ja |
+| `weather-service` | Ja |
+| `storage-service` | Ja |
+| `bff-service` | Nein |
+
+Die produktive Verbindungs-URL wird über eine Umgebungsvariable beziehungsweise über die Konfiguration der Hosting-Plattform bereitgestellt. Zugangsdaten werden nicht in das Repository eingecheckt.
+
+Je nach Deployment-Konfiguration wird entweder direkt `DATABASE_URL` verwendet oder die bereitgestellte PostgreSQL-URL auf die von Spring Boot erwarteten Eigenschaften abgebildet:
+
+```text
+SPRING_DATASOURCE_URL
+SPRING_DATASOURCE_USERNAME
+SPRING_DATASOURCE_PASSWORD
+```
+
+Eine JDBC-Verbindungs-URL besitzt üblicherweise dieses Format:
+
+```text
+jdbc:postgresql://<HOST>:<PORT>/<DATENBANK>?sslmode=require
+```
+
+Viele Hosting-Anbieter stellen stattdessen zunächst eine URL im PostgreSQL-Format bereit:
+
+```text
+postgresql://<BENUTZER>:<PASSWORT>@<HOST>:<PORT>/<DATENBANK>?sslmode=require
+```
+
+Falls die Anwendung keine automatische Umwandlung vornimmt, muss diese URL vor der Übergabe an `spring.datasource.url` in das JDBC-Format überführt werden.
+
+Für jeden Service ist sicherzustellen, dass:
+
+- die konfigurierte Datenbank ausschließlich diesem Service zugeordnet ist,
+- die Zugangsdaten nur als geschützte Umgebungsvariablen hinterlegt sind,
+- SSL verwendet wird, sofern der Datenbankanbieter dies unterstützt oder voraussetzt,
+- Flyway beim Start aktiviert ist,
+- Hibernate mit `ddl-auto=validate` arbeitet,
+- die Anwendung bei einer fehlgeschlagenen Migration nicht mit einem inkonsistenten Schema weiterläuft,
+- Backups und Wiederherstellungsoptionen entsprechend der Kritikalität der Umgebung eingerichtet sind.
+
+### Direkte und gepoolte Datenbankverbindungen
+
+Falls der Datenbankanbieter sowohl eine direkte als auch eine gepoolte Verbindungs-URL bereitstellt, gilt folgende Zuordnung:
+
+- Die gepoolte URL eignet sich für die normalen Datenbankzugriffe der laufenden Anwendung.
+- Für Flyway-Migrationen sollte bevorzugt eine direkte Verbindung verwendet werden, wenn der verwendete Pooler bestimmte PostgreSQL-Funktionen oder sitzungsgebundene Operationen nicht vollständig unterstützt.
+
+Spring Boot kann für Flyway bei Bedarf eine von der normalen DataSource getrennte Verbindung verwenden:
+
+```yaml
+spring:
+  datasource:
+    url: ${DATABASE_URL_POOLED:${DATABASE_URL}}
+  flyway:
+    url: ${DATABASE_URL_DIRECT:${DATABASE_URL}}
+```
+
+Benutzername und Passwort können entweder Bestandteil der URL sein oder über separate Umgebungsvariablen bereitgestellt werden. Welche Variante verwendet wird, hängt vom Datenbankanbieter und von der konkreten Spring-Konfiguration ab.
+
+### Deployment und Migration
+
+Beim Deployment wird keine separate manuelle Schemaerstellung benötigt. Der Ablauf ist:
+
+1. Die produktive Datenbank wird bereitgestellt.
+2. Die Verbindungsdaten werden als geschützte Konfigurationsvariablen am jeweiligen Service hinterlegt.
+3. Der Service wird gestartet.
+4. Flyway prüft die Migrationstabelle und führt alle noch fehlenden Migrationen aus.
+5. Hibernate validiert anschließend das resultierende Schema.
+6. Erst nach erfolgreicher Migration und Validierung nimmt der Service den regulären Betrieb auf.
+
+Bei mehreren gleichzeitig startenden Instanzen koordiniert Flyway die Ausführung über seine Metadatentabelle. Trotzdem sollte bei größeren oder potenziell langlaufenden Schemaänderungen ein kontrollierter Migrationsschritt vor dem Hochskalieren der Anwendung vorgesehen werden.
+
+### Fehlerdiagnose
+
+Wenn ein Service wegen der Datenbankkonfiguration oder einer Migration nicht startet, sollten folgende Punkte geprüft werden:
+
+1. Ist die PostgreSQL-Instanz erreichbar?
+2. Stimmen Host, Port und Datenbankname?
+3. Sind Benutzername und Passwort korrekt gesetzt?
+4. Verwendet die Anwendung eine JDBC-kompatible URL?
+5. Ist bei einer externen Datenbank die erforderliche SSL-Konfiguration vorhanden?
+6. Besitzt der Datenbankbenutzer die erforderlichen Rechte für Migrationen?
+7. Enthält `src/main/resources/db/migration` alle erwarteten Migrationen?
+8. Wurde eine bereits ausgeführte Migration nachträglich verändert?
+9. Zeigt der Service auf seine eigene Datenbank und nicht versehentlich auf die Datenbank eines anderen Services?
+
+Für die Analyse sind insbesondere die Startprotokolle des betroffenen Services sowie die Flyway-Metadatentabelle relevant:
+
+```text
+flyway_schema_history
+```
+
+Sie enthält die bereits ausgeführten Migrationen, deren Reihenfolge, Prüfsummen und Ausführungsstatus.
+
+### Sicherheits- und Betriebsregeln
+
+- `.env` und andere Dateien mit echten Zugangsdaten dürfen nicht versioniert werden.
+- `.env.example` enthält ausschließlich Platzhalter oder ungefährliche lokale Standardwerte.
+- Produktive Zugangsdaten werden nur über die Secret- beziehungsweise Config-Verwaltung der Hosting-Plattform gesetzt.
+- Datenbankzugänge werden pro Service getrennt verwaltet.
+- Produktive Datenbanken dürfen nicht für lokale Tests verwendet werden.
+- Vor destruktiven Migrationen muss ein aktuelles Backup beziehungsweise ein getesteter Wiederherstellungsweg vorhanden sein.
+- Zugangsdaten müssen erneuert werden, wenn sie versehentlich veröffentlicht wurden.
