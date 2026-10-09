@@ -1,44 +1,10 @@
-import {
-    Navigate,
-    Route,
-    Routes,
-} from 'react-router'
-import { AppLayout } from './components/AppLayout.jsx'
-import { HomePage } from './pages/HomePage.jsx'
-import { NotFoundPage } from './pages/NotFoundPage.jsx'
-import { SystemStatusPage } from './pages/SystemStatusPage.jsx'
+import { BrowserRouter } from 'react-router'
+import AppRoutes from './routes.jsx'
 
-function App() {
+export default function App() {
     return (
-        <Routes>
-            <Route element={<AppLayout />}>
-                <Route
-                    index
-                    element={<HomePage />}
-                />
-
-                <Route
-                    path="system-status"
-                    element={<SystemStatusPage />}
-                />
-
-                <Route
-                    path="status"
-                    element={
-                        <Navigate
-                            to="/system-status"
-                            replace
-                        />
-                    }
-                />
-
-                <Route
-                    path="*"
-                    element={<NotFoundPage />}
-                />
-                </Route>
-        </Routes>
+        <BrowserRouter>
+            <AppRoutes />
+        </BrowserRouter>
     )
 }
-
-export default App
