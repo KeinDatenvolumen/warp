@@ -42,6 +42,34 @@ export default function AppLayout() {
                         >
                             Systemstatus
                         </NavLink>
+
+                        <NavLink
+                            to="/route-planner"
+                            className={navigationClassName}
+                        >
+                            Routenplaner
+                        </NavLink>
+
+                        <NavLink
+                            to="/profile"
+                            className={navigationClassName}
+                        >
+                            Profil
+                        </NavLink>
+
+                        <NavLink
+                            to="/saved-routes"
+                            className={navigationClassName}
+                        >
+                            Gespeicherte Routen
+                        </NavLink>
+
+                        <NavLink
+                            to="/login"
+                            className={navigationClassName}
+                        >
+                            Anmelden
+                        </NavLink>
                     </nav>
                 </div>
             </header>
