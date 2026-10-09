@@ -7,8 +7,12 @@ RUN npm ci
 
 COPY frontend/ ./
 
+RUN chmod +x /app/docker-entrypoint.dev.sh
+
 ENV NODE_ENV=development
 
 EXPOSE 5173
+
+ENTRYPOINT ["/app/docker-entrypoint.dev.sh"]
 
 CMD ["npm", "run", "dev", "--", "--config", "vite.config.dev.js", "--host", "0.0.0.0"]

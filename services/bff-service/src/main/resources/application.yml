@@ -2,11 +2,22 @@ spring:
   application:
     name: bff-service
 
+  graphql:
+    http:
+      path: /graphql
+    graphiql:
+      enabled: false
+    schema:
+      inspection:
+        enabled: true
+
 server:
   port: ${PORT:8080}
   shutdown: graceful
 
 warp:
+  graphql:
+    test-error: ""
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
   services:

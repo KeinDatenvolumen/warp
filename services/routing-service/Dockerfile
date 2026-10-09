@@ -10,12 +10,16 @@ COPY gradle.properties gradle.properties
 
 COPY services/bff-service/build.gradle services/bff-service/build.gradle
 COPY services/identity-service/build.gradle services/identity-service/build.gradle
-COPY services/routing-service/build.gradle services/routing-service/build.gradle
-COPY services/weather-service services/weather-service
+COPY services/weather-service/build.gradle services/weather-service/build.gradle
 COPY services/storage-service/build.gradle services/storage-service/build.gradle
 
+COPY services/routing-service services/routing-service
+
 RUN chmod +x gradlew
-RUN ./gradlew :services:weather-service:bootJar --no-daemon
+
+RUN ./gradlew :services:routing-service:bootJar \
+    --no-daemon \
+    --stacktrace
 
 
 FROM eclipse-temurin:21-jre
@@ -25,7 +29,7 @@ WORKDIR /app
 RUN useradd --system --uid 10001 warp
 
 COPY --from=build \
-    /workspace/services/weather-service/build/libs/*.jar \
+    /workspace/services/routing-service/build/libs/*.jar \
     /app/application.jar
 
 COPY --chmod=755 \

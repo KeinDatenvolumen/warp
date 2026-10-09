@@ -112,6 +112,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile.dev
+    working_dir: /app
     environment:
       VITE_BFF_PROXY_TARGET: "http://bff-service:8080"
       VITE_USE_POLLING: "true"
