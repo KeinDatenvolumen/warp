@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage.jsx'
 import ProfilePage from '../pages/ProfilePage.jsx'
 import RoutePlannerPage from '../pages/RoutePlannerPage.jsx'
 import SavedRoutesPage from '../pages/SavedRoutesPage.jsx'
+import ProtectedRoute from '../components/routing/ProtectedRoute.jsx'
 
 export default function AppRoutes() {
     return (
@@ -18,11 +19,19 @@ export default function AppRoutes() {
                 />
                 <Route
                     path="/profile"
-                    element={<ProfilePage />}
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
                 />
                 <Route
                     path="/saved-routes"
-                    element={<SavedRoutesPage />}
+                    element={
+                        <ProtectedRoute>
+                            <SavedRoutesPage />
+                        </ProtectedRoute>
+                    }
                 />
                 <Route
                     path="*"
