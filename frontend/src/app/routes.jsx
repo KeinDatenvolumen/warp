@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router'
+import {Route, Routes} from 'react-router'
 import AppLayout from './AppLayout.jsx'
 import HomePage from '../pages/HomePage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'

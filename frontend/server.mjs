@@ -1,7 +1,7 @@
-import { createServer } from 'node:http'
-import { createReadStream, existsSync, statSync } from 'node:fs'
-import { extname, join, normalize } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import {createServer} from 'node:http'
+import {createReadStream, existsSync, statSync} from 'node:fs'
+import {extname, join, normalize} from 'node:path'
+import {fileURLToPath} from 'node:url'
 
 const port = Number.parseInt(process.env.PORT ?? '8080', 10)
 const host = '0.0.0.0'

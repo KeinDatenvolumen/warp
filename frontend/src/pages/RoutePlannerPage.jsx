@@ -1,12 +1,8 @@
-export default function RoutePlannerPage() {
-    return (
-        <section className="page-section">
-            <h1>Routenplaner</h1>
+import styles from './PagePlaceholder.module.css'
 
-            <p>
-                Hier entsteht später die wetterabhängige
-                Routenplanung.
-            </p>
-        </section>
-    )
+export default function RoutePlannerPage() {
+    return <main className={styles.page}>
+        <section className={styles.card}><p className={styles.eyebrow}>Routenplanung</p><h1>Routenplaner</h1><p
+            className={styles.description}>Hier entsteht später die wetterabhängige Routenplanung.</p></section>
+    </main>
 }

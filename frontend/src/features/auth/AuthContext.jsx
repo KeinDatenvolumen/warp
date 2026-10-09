@@ -1,14 +1,5 @@
-import {
-    createContext,
-    useCallback,
-    useMemo,
-    useState
-} from 'react'
-import {
-    clearAuthenticatedState,
-    readAuthenticatedState,
-    writeAuthenticatedState
-} from './authStorage.js'
+import {createContext, useCallback, useMemo, useState} from 'react'
+import {clearAuthenticatedState, readAuthenticatedState, writeAuthenticatedState} from './authStorage.js'
 
 export const AuthContext = createContext(null)
 

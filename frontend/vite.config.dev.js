@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
 
 const bffTarget = process.env.VITE_BFF_PROXY_TARGET ?? 'http://bff-service:8080'
