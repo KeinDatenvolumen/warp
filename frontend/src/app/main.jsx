@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { ApolloProvider } from '@apollo/client/react'
 import { BrowserRouter} from "react-router";
 import App from './App.jsx'
+import '../layout/styles.css'
 import { apolloClient } from './api/apolloClient.js'
-import './styles.css'
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
