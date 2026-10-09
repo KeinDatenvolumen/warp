@@ -12,7 +12,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-json'
+    implementation 'org.springframework.boot:spring-boot-starter-graphql'
+    implementation 'com.graphql-java:graphql-java-extended-scalars:24.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.graphql:spring-graphql-test'
+    testImplementation 'org.springframework.boot:spring-boot-graphql-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def graphqlContractDirectory = rootProject.file('contracts/graphql')
+
+tasks.named('processResources') {
+    from(graphqlContractDirectory) {
+        include '*.graphqls'
+        into 'graphql'
+    }
 }

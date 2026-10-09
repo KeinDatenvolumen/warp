@@ -17,6 +17,10 @@ export default defineConfig({
             '/api': {
                 target: bffTarget,
                 changeOrigin: true
+            },
+            '/graphql': {
+                target: bffTarget,
+                changeOrigin: true
             }
         }
     }

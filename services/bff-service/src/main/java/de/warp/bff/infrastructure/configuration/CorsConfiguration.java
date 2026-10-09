@@ -8,7 +8,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfiguration implements WebMvcConfigurer {
 
+    private static final String LOCAL_FRONTEND_URL =
+            "http://localhost:5173";
+
     private final String frontendUrl;
+
+    private static final String ALTAIR_GRAPHQL = "chrome-extension://flnheeellpciglgpaodhkhmapeljopja";
 
     public CorsConfiguration(
             @Value("${warp.frontend.url}") String frontendUrl
@@ -18,10 +23,19 @@ public class CorsConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
+        configureCorsMapping(registry, "/api/**");
+        configureCorsMapping(registry, "/graphql");
+    }
+
+    private void configureCorsMapping(
+            CorsRegistry registry,
+            String path
+    ) {
+        registry.addMapping(path)
                 .allowedOrigins(
                         frontendUrl,
-                        "http://localhost:5173"
+                        LOCAL_FRONTEND_URL,
+                        ALTAIR_GRAPHQL
                 )
                 .allowedMethods(
                         "GET",
