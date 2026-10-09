@@ -40,10 +40,6 @@ export default function AppRoutes() {
                     element={<SystemStatusPage />}
                 />
                 <Route
-                    path="/system-status"
-                    element={<SystemStatusPage />}
-                />
-                <Route
                     path="*"
                     element={<NotFoundPage />}
                 />
