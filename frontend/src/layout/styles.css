@@ -16,6 +16,7 @@ body {
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
+    overflow-x: hidden;
 }
 
 a {
@@ -64,6 +65,7 @@ button {
     width: 42px;
     height: 42px;
     place-items: center;
+    flex-shrink: 0;
     border-radius: 13px;
     color: white;
     background: #4263eb;
@@ -74,6 +76,7 @@ button {
 
 .app-brand-text {
     display: flex;
+    min-width: 0;
     flex-direction: column;
 }
 
@@ -91,10 +94,15 @@ button {
 .app-navigation {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
 }
 
 .app-navigation-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
     padding: 10px 14px;
     border-radius: 10px;
     color: #5b667a;
@@ -118,7 +126,6 @@ button {
 
 .app-navigation-button {
     border: 0;
-    font: inherit;
     cursor: pointer;
 }
 
@@ -606,10 +613,16 @@ h1 {
 
     .app-navigation {
         width: 100%;
+        flex-wrap: wrap;
+        justify-content: stretch;
+        gap: 6px;
     }
 
-    .app-navigation-link {
-        flex: 1;
+    .app-navigation-link,
+    .app-navigation-button {
+        min-height: 44px;
+        flex: 1 1 calc(50% - 6px);
+        padding: 10px 8px;
         text-align: center;
     }
 
