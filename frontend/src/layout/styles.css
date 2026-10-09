@@ -116,6 +116,12 @@ button {
     background: #e9edff;
 }
 
+.app-navigation-button {
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
 .app-content {
     flex: 1;
 }

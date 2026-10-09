@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router'
+import { useAuth } from '../features/auth/useAuth.js'
 
 function navigationClassName({ isActive }) {
     return isActive
@@ -7,6 +8,11 @@ function navigationClassName({ isActive }) {
 }
 
 export default function AppLayout() {
+    const {
+        isAuthenticated,
+        logout
+    } = useAuth()
+
     return (
         <div className="app-shell">
             <header className="app-header">
@@ -20,7 +26,9 @@ export default function AppLayout() {
 
                         <span className="app-brand-text">
                             <strong>WaRP</strong>
-                            <small>Weather-aware Route Planning</small>
+                            <small>
+                                Weather-aware Route Planning
+                            </small>
                         </span>
                     </NavLink>
 
@@ -50,26 +58,42 @@ export default function AppLayout() {
                             Routenplaner
                         </NavLink>
 
-                        <NavLink
-                            to="/profile"
-                            className={navigationClassName}
-                        >
-                            Profil
-                        </NavLink>
+                        {isAuthenticated && (
+                            <>
+                                <NavLink
+                                    to="/profile"
+                                    className={navigationClassName}
+                                >
+                                    Profil
+                                </NavLink>
 
-                        <NavLink
-                            to="/saved-routes"
-                            className={navigationClassName}
-                        >
-                            Gespeicherte Routen
-                        </NavLink>
+                                <NavLink
+                                    to="/saved-routes"
+                                    className={navigationClassName}
+                                >
+                                    Gespeicherte Routen
+                                </NavLink>
+                            </>
+                        )}
 
-                        <NavLink
-                            to="/login"
-                            className={navigationClassName}
-                        >
-                            Anmelden
-                        </NavLink>
+                        {!isAuthenticated && (
+                            <NavLink
+                                to="/login"
+                                className={navigationClassName}
+                            >
+                                Anmelden
+                            </NavLink>
+                        )}
+
+                        {isAuthenticated && (
+                            <button
+                                type="button"
+                                className="app-navigation-link app-navigation-button"
+                                onClick={logout}
+                            >
+                                Abmelden
+                            </button>
+                        )}
                     </nav>
                 </div>
             </header>
