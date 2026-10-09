@@ -8,6 +8,8 @@ COPY settings.gradle settings.gradle
 COPY build.gradle build.gradle
 COPY gradle.properties gradle.properties
 
+COPY contracts/graphql contracts/graphql
+
 COPY services/bff-service services/bff-service
 COPY services/identity-service/build.gradle services/identity-service/build.gradle
 COPY services/routing-service/build.gradle services/routing-service/build.gradle
