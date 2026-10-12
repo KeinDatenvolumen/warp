@@ -3,6 +3,8 @@ package de.warp.bff.application.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ import de.warp.bff.api.dto.SystemHealthResponse;
 public class SystemHealthService {
 
     private static final String READINESS_PATH =
-            "/actuator/health/readiness";
+            "/internal/health/readiness";
 
     private final RestClient restClient;
     private final ServiceDefinition identityService;
@@ -25,8 +27,11 @@ public class SystemHealthService {
     private final ServiceDefinition weatherService;
     private final ServiceDefinition storageService;
 
+    private final Executor healthCheckExecutor;
+
     public SystemHealthService(
             RestClient serviceHealthRestClient,
+            Executor healthCheckExecutor,
             @Value("${warp.services.identity.name}") String identityName,
             @Value("${warp.services.identity.url}") String identityUrl,
             @Value("${warp.services.routing.name}") String routingName,
@@ -37,6 +42,7 @@ public class SystemHealthService {
             @Value("${warp.services.storage.url}") String storageUrl
     ) {
         this.restClient = serviceHealthRestClient;
+        this.healthCheckExecutor = healthCheckExecutor;
         this.identityService =
                 new ServiceDefinition(identityName, identityUrl);
         this.routingService =
@@ -48,12 +54,29 @@ public class SystemHealthService {
     }
 
     public SystemHealthResponse getSystemHealth() {
-        List<ServiceHealthResponse> services = List.of(
-                createBffHealth(),
-                checkService(identityService),
-                checkService(routingService),
-                checkService(weatherService),
-                checkService(storageService)
+        List<ServiceDefinition> serviceDefinitions = List.of(
+                identityService,
+                routingService,
+                weatherService,
+                storageService
+        );
+
+        List<CompletableFuture<ServiceHealthResponse>> futures =
+                serviceDefinitions.stream()
+                        .map(service -> CompletableFuture.supplyAsync(
+                                () -> checkService(service),
+                                healthCheckExecutor
+                        ))
+                        .toList();
+
+        List<ServiceHealthResponse> services =
+                new java.util.ArrayList<>();
+
+        services.add(createBffHealth());
+        services.addAll(
+                futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList()
         );
 
         int healthyServices = (int) services.stream()
@@ -69,7 +92,7 @@ public class SystemHealthService {
                 Instant.now(),
                 healthyServices,
                 services.size(),
-                services
+                List.copyOf(services)
         );
     }
 
@@ -79,7 +102,7 @@ public class SystemHealthService {
                 "UP",
                 true,
                 0,
-                "/actuator/health/readiness"
+                "/internal/health/readiness"
         );
     }
 

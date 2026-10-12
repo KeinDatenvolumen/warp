@@ -33,10 +33,14 @@ warp:
     storage:
       name: storage-service
       url: ${STORAGE_SERVICE_URL:http://localhost:8084}
+  health:
+    connect-timeout: 2s
+    read-timeout: 2s
 
 management:
   endpoints:
     web:
+      base-path: /internal
       exposure:
         include:
           - health
