@@ -24,5 +24,7 @@ jobs:
       build_args: >-
         --build-arg
         VITE_BFF_BASE_URL=${{ vars.BFF_PUBLIC_URL }}
+        --build-arg
+        VITE_MAPTILER_PUBLIC_API_KEY=${{ secrets.MAPTILER_PUBLIC_API_KEY }}
     secrets:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
