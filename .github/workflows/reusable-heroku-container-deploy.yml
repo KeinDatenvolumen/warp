@@ -31,6 +31,8 @@ on:
     secrets:
       HEROKU_API_KEY:
         required: true
+      MAPTILER_PUBLIC_API_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -75,8 +77,16 @@ jobs:
           DOCKERFILE: ${{ inputs.dockerfile }}
           IMAGE_NAME: ${{ inputs.image_name }}
           BUILD_ARGS: ${{ inputs.build_args }}
+          MAPTILER_PUBLIC_API_KEY: ${{ secrets.MAPTILER_PUBLIC_API_KEY }}
         run: |
-          if [ -n "$BUILD_ARGS" ]; then
+          if [ -n "$MAPTILER_PUBLIC_API_KEY" ]; then
+            docker build \
+              --file "$DOCKERFILE" \
+              --tag "$IMAGE_NAME:${GITHUB_SHA}" \
+              $BUILD_ARGS \
+              --build-arg "VITE_MAPTILER_PUBLIC_API_KEY=$MAPTILER_PUBLIC_API_KEY" \
+              .
+          elif [ -n "$BUILD_ARGS" ]; then
             docker build \
               --file "$DOCKERFILE" \
               --tag "$IMAGE_NAME:${GITHUB_SHA}" \
