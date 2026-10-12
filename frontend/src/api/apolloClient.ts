@@ -1,4 +1,8 @@
-import {ApolloClient, HttpLink, InMemoryCache} from '@apollo/client'
+import {
+    ApolloClient,
+    HttpLink,
+    InMemoryCache
+} from '@apollo/client'
 
 const BFF_BASE_URL = (
     import.meta.env.VITE_BFF_BASE_URL ?? ''
@@ -14,16 +18,5 @@ const httpLink = new HttpLink({
 
 export const apolloClient = new ApolloClient({
     link: httpLink,
-    cache: new InMemoryCache(),
-    defaultOptions: {
-        watchQuery: {
-            errorPolicy: 'all'
-        },
-        query: {
-            errorPolicy: 'all'
-        },
-        mutate: {
-            errorPolicy: 'all'
-        }
-    }
+    cache: new InMemoryCache()
 })

@@ -2,8 +2,9 @@ import {useState} from 'react'
 import {MapContainer, TileLayer} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './RouteMap.css'
+import type {LatLngExpression} from 'leaflet'
 
-const MAP_CENTER = [49.354111, 9.150306]
+const MAP_CENTER: LatLngExpression = [49.354111, 9.150306]
 
 export default function RouteMap() {
     const [hasError, setHasError] = useState(false)

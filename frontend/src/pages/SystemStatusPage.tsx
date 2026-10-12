@@ -1,20 +1,23 @@
 import {useQuery} from '@apollo/client/react'
-import {SYSTEM_HEALTH_QUERY} from '../api/systemHealthQuery.js'
-import ServiceCard from '../components/ui/ServiceCard/ServiceCard.jsx'
-import Loader from '../components/ui/Loader/Loader.jsx'
-import MessageCard from '../components/ui/MessageCard/MessageCard.jsx'
+import {SYSTEM_HEALTH_QUERY} from '../api/systemHealthQuery'
+import ServiceCard from '../components/ui/ServiceCard/ServiceCard'
+import Loader from '../components/ui/Loader/Loader'
+import MessageCard from '../components/ui/MessageCard/MessageCard'
 import styles from './SystemStatusPage.module.css'
 
-function formatCheckedAt(value) {
-    return value ? new Intl.DateTimeFormat('de-DE', {
-        dateStyle: 'medium',
-        timeStyle: 'medium'
-    }).format(new Date(value)) : 'Unbekannt'
+function formatCheckedAt(value: string | null): string {
+    return value
+        ? new Intl.DateTimeFormat('de-DE', {
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+        }).format(new Date(value))
+        : 'Unbekannt'
 }
 
 export function SystemStatusPage() {
     const {data, loading, error, refetch, networkStatus} = useQuery(SYSTEM_HEALTH_QUERY, {
         fetchPolicy: 'network-only',
+        errorPolicy: 'all',
         notifyOnNetworkStatusChange: true
     })
     const isRefreshing = networkStatus === 4

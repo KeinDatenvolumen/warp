@@ -1,4 +1,4 @@
-import RouteMap from '../components/RouteMap/RouteMap.jsx'
+import RouteMap from '../components/RouteMap/RouteMap'
 import styles from './PagePlaceholder.module.css'
 
 export default function RoutePlannerPage() {

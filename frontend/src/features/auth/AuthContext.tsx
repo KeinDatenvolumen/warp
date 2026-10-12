@@ -1,9 +1,15 @@
-import {createContext, useCallback, useMemo, useState} from 'react'
-import {clearAuthenticatedState, readAuthenticatedState, writeAuthenticatedState} from './authStorage.js'
+import {createContext, type PropsWithChildren, useCallback, useMemo, useState} from 'react'
+import {clearAuthenticatedState, readAuthenticatedState, writeAuthenticatedState} from './authStorage'
 
-export const AuthContext = createContext(null)
+export interface AuthContextValue {
+    isAuthenticated: boolean
+    login: () => void
+    logout: () => void
+}
 
-export function AuthProvider({ children }) {
+export const AuthContext = createContext<AuthContextValue | null>(null)
+
+export function AuthProvider({children}: PropsWithChildren) {
     const [isAuthenticated, setIsAuthenticated] = useState(
         readAuthenticatedState
     )
@@ -18,7 +24,7 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(false)
     }, [])
 
-    const value = useMemo(
+    const value = useMemo<AuthContextValue>(
         () => ({
             isAuthenticated,
             login,

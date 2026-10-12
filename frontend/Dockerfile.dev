@@ -15,4 +15,4 @@ EXPOSE 5173
 
 ENTRYPOINT ["/app/docker-entrypoint.dev.sh"]
 
-CMD ["npm", "run", "dev", "--", "--config", "vite.config.dev.js", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--config", "vite.config.dev.ts", "--host", "0.0.0.0"]

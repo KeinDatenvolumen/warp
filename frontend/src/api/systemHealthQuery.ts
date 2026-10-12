@@ -1,6 +1,9 @@
-import {gql} from '@apollo/client'
+import {gql, type TypedDocumentNode} from '@apollo/client'
+import type {SystemHealthQueryData} from '../types/systemHealth'
 
-export const SYSTEM_HEALTH_QUERY = gql`
+export const SYSTEM_HEALTH_QUERY: TypedDocumentNode<
+    SystemHealthQueryData
+> = gql`
     query SystemHealth {
         systemHealth {
             status
