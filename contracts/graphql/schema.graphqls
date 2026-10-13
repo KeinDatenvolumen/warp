@@ -14,6 +14,12 @@ type Query {
     Liefert den zusammengefassten Zustand des BFF und aller internen Services.
     """
     systemHealth: SystemHealth!
+
+    """
+    Liefert alle zentral konfigurierten Aktivitätsprofile.
+    Die Profilparameter sind für Endbenutzer nicht veränderbar.
+    """
+    activityProfiles: [ActivityProfile!]!
 }
 
 type Mutation {
@@ -42,6 +48,99 @@ type ServiceHealth {
     status: ServiceHealthStatus!
     reachable: Boolean!
     responseTimeMs: Int!
+}
+
+"""
+Ein zentral konfiguriertes Aktivitätsprofil.
+
+Die Parameter werden zentral im Backend verwaltet und können
+von Endbenutzern nicht verändert werden.
+"""
+type ActivityProfile {
+    """
+    Stabiler fachlicher Code des Aktivitätsprofils.
+    """
+    code: ActivityProfileCode!
+
+    """
+    Anzeigename für das Frontend.
+    """
+    displayName: String!
+
+    """
+    Zentrale Durchschnittsgeschwindigkeit in km/h.
+    """
+    averageSpeedKmh: Float!
+
+    """
+    Dem Aktivitätsprofil zugeordnetes Routingprofil.
+    """
+    routingProfile: RoutingProfileCode!
+
+    """
+    Zentrales Wetter-Abfrageintervall in Minuten.
+    """
+    weatherQueryIntervalMinutes: Int!
+
+    """
+    Zentrale Wegepräferenzen des Profils.
+    """
+    wayPreferences: WayPreferences!
+}
+
+"""
+Verfügbare Aktivitätsprofile.
+"""
+enum ActivityProfileCode {
+    BICYCLE
+    MOTORCYCLE
+    HIKING
+}
+
+"""
+Routingprofil eines Aktivitätsprofils.
+"""
+enum RoutingProfileCode {
+    BICYCLE
+    MOTORCYCLE
+    FOOT
+}
+
+"""
+Zentrale Wegepräferenzen eines Aktivitätsprofils.
+
+Diese Werte können von Endbenutzern nicht verändert werden.
+"""
+type WayPreferences {
+    """
+    Bevorzugt ausgewiesene Fahrradwege.
+    """
+    preferCycleways: Boolean!
+
+    """
+    Vermeidet Autobahnen.
+    """
+    avoidMotorways: Boolean!
+
+    """
+    Vermeidet mautpflichtige Straßen.
+    """
+    avoidTollRoads: Boolean!
+
+    """
+    Vermeidet unbefestigte Wege.
+    """
+    avoidUnpavedWays: Boolean!
+
+    """
+    Bevorzugt befestigte Wege.
+    """
+    preferPavedWays: Boolean!
+
+    """
+    Bevorzugt landschaftlich attraktive Wege.
+    """
+    preferScenicWays: Boolean!
 }
 
 enum SystemHealthStatus {
