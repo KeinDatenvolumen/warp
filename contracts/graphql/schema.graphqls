@@ -14,6 +14,11 @@ type Query {
     Liefert den zusammengefassten Zustand des BFF und aller internen Services.
     """
     systemHealth: SystemHealth!
+
+    """
+    Sucht passende Orte und Adressen anhand eines Suchbegriffs.
+    """
+    searchPlaces(query: String!, limit: Int = 5): [Place!]!
 }
 
 type Mutation {
@@ -42,6 +47,16 @@ type ServiceHealth {
     status: ServiceHealthStatus!
     reachable: Boolean!
     responseTimeMs: Int!
+}
+
+"""
+Ein durch die Geocodierung gefundener Ort oder eine gefundene Adresse.
+"""
+type Place {
+    placeId: ID!
+    displayName: String!
+    latitude: Float!
+    longitude: Float!
 }
 
 enum SystemHealthStatus {
