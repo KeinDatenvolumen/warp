@@ -5,6 +5,11 @@
 
 .heading {
     margin-bottom: var(--spacing-small);
+    color: var(--color-primary);
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }
 
 .grid {
@@ -15,29 +20,70 @@
 
 .card {
     display: grid;
+    min-height: 13rem;
     gap: var(--spacing-medium);
     padding: 1.25rem;
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-large);
+    color: var(--color-text);
     background: var(--color-surface);
     box-shadow: var(--shadow-small);
     text-align: left;
     cursor: pointer;
+    transform: scale(1);
+    transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            background-color 160ms ease;
 }
 
 .card:hover {
+    z-index: 1;
     border-color: var(--color-primary);
+    box-shadow: var(--shadow-large);
+    transform: scale(1.035);
+}
+
+.card:focus-visible {
+    z-index: 1;
+    border-color: var(--color-primary);
+    outline: 3px solid rgb(66 99 235 / 35%);
+    outline-offset: 3px;
+    transform: scale(1.035);
 }
 
 .cardSelected {
     border-color: var(--color-primary);
     background: var(--color-primary-soft);
     box-shadow: var(--shadow-primary);
+    transform: scale(1.02);
+}
+
+.icon {
+    display: grid;
+    width: 4rem;
+    height: 4rem;
+    place-items: center;
+    border-radius: var(--border-radius-large);
+    background: var(--color-primary-soft);
+}
+
+.iconGlyph {
+    display: inline-block;
+    filter: grayscale(1) brightness(0);
+    font-size: 2.75rem;
+    line-height: 1;
 }
 
 .cardTitle {
     font-size: 1.1rem;
     font-weight: 800;
+}
+
+.description {
+    color: var(--color-text-muted);
+    font-size: .9rem;
 }
 
 .details {
@@ -72,5 +118,17 @@
 @media (min-width: 48rem) {
     .grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card {
+        transition: none;
+    }
+
+    .card:hover,
+    .card:focus-visible,
+    .cardSelected {
+        transform: none;
     }
 }

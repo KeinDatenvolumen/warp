@@ -8,6 +8,21 @@ import styles from './ActivityProfileSelector.module.css'
 const SELECTED_PROFILE_STORAGE_KEY =
     'warp-selected-activity-profile'
 
+const PROFILE_ICONS: Record<ActivityProfileCode, string> = {
+    BICYCLE: '🚲',
+    MOTORCYCLE: '🏍️',
+    HIKING: '🥾'
+}
+
+const PROFILE_DESCRIPTIONS: Record<
+    ActivityProfileCode,
+    string
+> = {
+    BICYCLE: 'Für Fahrradfahrten',
+    MOTORCYCLE: 'Für Motorradfahrten',
+    HIKING: 'Für Wanderungen'
+}
+
 interface ActivityProfileSelectorProps {
     selectedProfile: ActivityProfileCode | null
     onSelect: (profileCode: ActivityProfileCode) => void
@@ -52,6 +67,7 @@ export default function ActivityProfileSelector({
             SELECTED_PROFILE_STORAGE_KEY,
             profileCode
         )
+
         onSelect(profileCode)
     }
 
@@ -64,6 +80,7 @@ export default function ActivityProfileSelector({
                 <p className={styles.heading}>
                     Aktivitätsprofil
                 </p>
+
                 <h2 id="activity-profile-heading">
                     Wie möchtest du unterwegs sein?
                 </h2>
@@ -92,11 +109,22 @@ export default function ActivityProfileSelector({
                             ]
                                 .filter(Boolean)
                                 .join(' ')}
+                            aria-label={`${profile.displayName}, ${PROFILE_DESCRIPTIONS[profile.code]}`}
                             aria-pressed={isSelected}
                             onClick={() => handleSelect(profile.code)}
                         >
+                            <span className={styles.icon} aria-hidden="true">
+                                <span className={styles.iconGlyph}>
+                                    {PROFILE_ICONS[profile.code]}
+                                </span>
+                            </span>
+
                             <span className={styles.cardTitle}>
                                 {profile.displayName}
+                            </span>
+
+                            <span className={styles.description}>
+                                {PROFILE_DESCRIPTIONS[profile.code]}
                             </span>
 
                             <dl className={styles.details}>
@@ -104,6 +132,7 @@ export default function ActivityProfileSelector({
                                     <dt className={styles.detailName}>
                                         Wetterabfrage
                                     </dt>
+
                                     <dd className={styles.detailValue}>
                                         alle{' '}
                                         {profile.weatherQueryIntervalMinutes}{' '}
