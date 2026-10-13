@@ -1,7 +1,16 @@
-import StatusBadge from '../StatusBadge/StatusBadge.jsx'
+import StatusBadge from '../StatusBadge/StatusBadge'
+import type {ServiceHealth} from '../../../types/systemHealth'
 import styles from './ServiceCard.module.css'
 
-export default function ServiceCard({service, formatName = value => value}) {
+interface ServiceCardProps {
+    service: ServiceHealth
+    formatName?: (value: string) => string
+}
+
+export default function ServiceCard({
+                                        service,
+                                        formatName = value => value
+                                    }: ServiceCardProps) {
     const isAvailable = service.reachable && service.status === 'UP'
     return (
         <article className={`${styles.card} ${isAvailable ? styles.available : styles.unavailable}`}>

@@ -1,10 +1,17 @@
 import {NavLink, Outlet} from 'react-router'
-import {useAuth} from '../features/auth/useAuth.js'
+import {useAuth} from '../features/auth/useAuth'
 import styles from './AppLayout.module.css'
+import type {NavLinkRenderProps} from 'react-router'
 
-function navigationClassName({ isActive }) {
-    return [styles.navigationLink, isActive ? styles.navigationLinkActive : null]
-        .filter(Boolean).join(' ')
+function navigationClassName({
+                                 isActive
+                             }: NavLinkRenderProps): string {
+    return [
+        styles.navigationLink,
+        isActive ? styles.navigationLinkActive : null
+    ]
+        .filter(Boolean)
+        .join(' ')
 }
 
 export default function AppLayout() {

@@ -1,205 +1,164 @@
 # WaRP: Weather-aware Route Planning
 
-WaRP ist eine mobile Webanwendung zur wetterabhängigen Planung von Routen
-für Fahrrad, Motorrad und Wandern.
+WaRP ist eine mobile Webanwendung zur wetterabhängigen Planung von Fahrrad-, Motorrad- und Wanderrouten. Geplante Routen sollen mit räumlich und zeitlich passenden Wetterdaten verknüpft, bewertet und gespeichert werden.
 
-Eine Route wird mit zeitlich und räumlich passenden Wetterprognosen
-verknüpft. Nutzer können einen Wetterscore erhalten, alternative
-Abfahrtszeiten vergleichen und berechnete Routen speichern.
+> **Projektstatus:** Das technische Fundament steht. Fachliche Funktionen wie produktive Registrierung und Anmeldung, Routenberechnung, Wetterbewertung und gespeicherte Routen werden schrittweise ergänzt.
 
-## Projektstatus
-
-Das Projekt befindet sich aktuell im Aufbau des technischen Fundaments.
+## Aktueller Funktionsumfang
 
 Bereits vorhanden sind:
 
-- Gradle-Multi-Project-Build
+- Gradle-Multi-Project-Build mit Java 21
 - fünf getrennte Spring-Boot-Services
-- React-Frontend mit Vite
+- React-Frontend mit TypeScript im Strict Mode und Vite
+- REST- und GraphQL-Anbindung des Frontends an den BFF
 - Health-, Readiness- und Liveness-Endpunkte
-- Live-Dashboard für die Servicezustände
-- Dockerfiles für alle Services und das Frontend
-- GitHub-Actions-Workflows
-- getrennte Heroku-Deployments
+- REST- und GraphQL-Dashboard für den Systemstatus
+- Leaflet-Karte mit MapTiler-Anbindung
+- vorläufige lokale Testanmeldung und geschützte Frontend-Routen
+- PostgreSQL-Datenbank pro persistierendem Service
+- Flyway-Migrationen und Hibernate-Schemavalidierung
+- lokale Docker-Entwicklungsumgebung mit Hot Reload
+- Mailpit als lokaler SMTP- und E-Mail-Testserver
+- Produktions-Dockerfiles und getrennte Heroku-Deployments
 
-Fachliche Funktionen wie Registrierung, Routing, Wetterauswertung und
-gespeicherte Routen werden schrittweise ergänzt.
+Noch nicht produktiv umgesetzt sind insbesondere:
+
+- echte Registrierung, Anmeldung und Session-Verwaltung
+- fachliche Routenberechnung
+- Wetterauswertung und Wetterscore
+- persistente Routenverwaltung im Frontend
 
 ## Architektur
 
-Das Backend besteht aus fünf unabhängigen Spring-Boot-Anwendungen:
-
-- `bff-service`
-- `identity-service`
-- `routing-service`
-- `weather-service`
-- `storage-service`
-
-Das React-Frontend kommuniziert ausschließlich mit dem BFF.
-
-Der lokale Kommunikationsfluss lautet:
-
 ```text
 Browser
-  -> React-Frontend
-  -> BFF
+  -> React-/TypeScript-Frontend
+  -> BFF-Service
   -> Identity-, Routing-, Weather- und Storage-Service
 ```
 
-## Verwendete Versionen
+Das Frontend kommuniziert ausschließlich mit dem BFF. Interne Services werden nicht direkt aus dem Browser angesprochen.
 
-Für die lokale Entwicklung werden benötigt:
+### Services
 
-- Java 21 LTS
-- Gradle 9.8.0 über den mitgelieferten Gradle Wrapper
-- Node.js 22.12.0 oder neuer
-- npm
-- Git
-- Docker und Docker Compose für Containerprüfungen
-- curl für die automatischen lokalen Healthchecks
+| Service | Aufgabe | Port | Datenbank |
+|---|---|---:|---|
+| `bff-service` | öffentlicher Einstiegspunkt, REST und GraphQL | `8080` | keine |
+| `identity-service` | Benutzer, Anmeldung und Identität | `8081` | `warp_identity` |
+| `routing-service` | Routenberechnung | `8082` | `warp_routing` |
+| `weather-service` | Wetterdaten und Auswertung | `8083` | `warp_weather` |
+| `storage-service` | gespeicherte Routen und persistente Fachdaten | `8084` | `warp_storage` |
+| Frontend | Weboberfläche | `5173` | keine |
+| Mailpit UI | lokale E-Mail-Ansicht | `8025` | lokales Volume |
+| Mailpit SMTP | lokaler SMTP-Eingang | `1025` | lokales Volume |
 
-Eine globale Gradle-Installation ist nicht erforderlich. Verwendet wird
-immer der Gradle Wrapper aus dem Repository.
+Die PostgreSQL-Instanzen sind in der Docker-Entwicklung zusätzlich über die Host-Ports `5434` bis `5437` erreichbar.
 
-## Lokale Ports
+## Technologieübersicht
 
-- Frontend: `5173`
-- BFF-Service: `8080`
-- Identity-Service: `8081`
-- Routing-Service: `8082`
-- Weather-Service: `8083`
-- Storage-Service: `8084`
+### Backend
 
-Die Ports müssen beim lokalen Start verfügbar sein.
+- Java 21
+- Spring Boot 4.1.1
+- Gradle 9.8.0 über den Gradle Wrapper
+- Spring GraphQL im BFF
+- PostgreSQL 18 in der Docker-Entwicklung
+- Flyway für Datenbankmigrationen
+- Hibernate ausschließlich zur Schemavalidierung
+
+### Frontend
+
+- React 19.3
+- TypeScript 7 mit Strict Mode
+- Vite 8
+- React Router 8
+- Apollo Client 4
+- Leaflet und React Leaflet
+- CSS Modules und globale CSS-Variablen
+
+Für die lokale Frontend-Entwicklung wird wegen React Router **Node.js 22.22 oder neuer** empfohlen.
 
 ## Projektstruktur
 
 ```text
 warp/
-├── .github/
-│   └── workflows/
+├── .github/workflows/              # Prüf- und Deployment-Workflows
 ├── contracts/
-│   ├── examples/
-│   ├── graphql/
-│   └── openapi/
-├── frontend/
+│   ├── examples/                   # Beispielantworten externer APIs
+│   ├── graphql/                    # öffentlicher GraphQL-Vertrag
+│   └── openapi/                    # REST-Verträge
+├── frontend/                       # React-/TypeScript-Anwendung
 ├── infrastructure/
-│   ├── docker/
+│   ├── docker/dev/                 # Docker-Hot-Reload für Spring
+│   ├── docker/production/          # Produktions-Entrypoints
 │   └── heroku/
-├── scripts/
+├── scripts/                        # lokale Starts und Projektdump
 ├── services/
 │   ├── bff-service/
 │   ├── identity-service/
 │   ├── routing-service/
 │   ├── weather-service/
 │   └── storage-service/
+├── docker-compose.dev.yaml         # vollständige Entwicklungsumgebung
+├── docker-compose.yaml             # produktionsnahe Containerumgebung
 ├── build.gradle
 ├── settings.gradle
-├── gradlew
-└── gradlew.bat
+└── gradlew
 ```
 
-## Erste Schritte nach dem Klonen
+## Voraussetzungen
 
-### 1. Repository klonen
+- Java 21
+- Node.js 22.22 oder neuer
+- npm
+- Docker mit Docker Compose V2
+- `curl` für lokale Healthchecks
+
+Eine globale Gradle-Installation ist nicht erforderlich.
+
+## Schnellstart mit Docker
+
+### 1. Lokale Konfiguration anlegen
 
 ```bash
-git clone URL-DES-REPOSITORIES
-cd warp
+cp .env.example .env
+cp frontend/.env.example frontend/.env
 ```
 
-Ersetze `URL-DES-REPOSITORIES` durch die tatsächliche HTTPS- oder
-SSH-Adresse des GitHub-Repositorys.
+Mindestens der öffentliche MapTiler-Key muss bei Bedarf in `frontend/.env` gesetzt werden:
 
-### 2. Voraussetzungen prüfen
+```dotenv
+VITE_MAPTILER_PUBLIC_API_KEY=your_maptiler_api_key
+```
 
-Unter Linux, macOS, WSL oder Git Bash:
+Variablen mit `VITE_` werden in das Browser-Bundle übernommen und dürfen keine Secrets enthalten.
+
+### 2. Entwicklungsumgebung starten
 
 ```bash
-java -version
-node --version
-npm --version
-git --version
-docker --version
-docker compose version
+docker compose -f docker-compose.dev.yaml up --build
 ```
 
-Unter Windows PowerShell können dieselben Befehle verwendet werden.
-
-Erwartet werden mindestens:
+Danach sind erreichbar:
 
 ```text
-Java 21
-Node.js 22.12.0
-Docker mit Docker Compose V2
+Frontend:    http://localhost:5173
+BFF:         http://localhost:8080
+Identity:    http://localhost:8081
+Routing:     http://localhost:8082
+Weather:     http://localhost:8083
+Storage:     http://localhost:8084
+Mailpit UI:  http://localhost:8025
 ```
 
-### 3. Gradle Wrapper prüfen
+Ausführliche Hinweise zum Entwicklungsmodus stehen in [`README-DEV-WATCH.md`](README-DEV-WATCH.md).
 
-Unter Linux, macOS, WSL oder Git Bash:
+## Lokaler Start ohne Docker
 
-```bash
-chmod +x gradlew
-./gradlew --version
-```
+Die vorhandenen Startskripte starten Backend und Frontend direkt auf dem Host:
 
-Unter Windows PowerShell:
-
-```powershell
-.\gradlew.bat --version
-```
-
-Die Ausgabe muss Gradle 9.8.0 und eine Java-21-Laufzeit anzeigen.
-
-### 4. Frontend-Abhängigkeiten installieren
-
-```bash
-cd frontend
-npm ci
-cd ..
-```
-
-`npm ci` verwendet die eingecheckte `package-lock.json` und installiert
-die bekannten Abhängigkeitsversionen reproduzierbar.
-
-Die lokalen Startskripte führen `npm ci` automatisch aus, wenn
-`frontend/node_modules` noch nicht existiert. Die manuelle Ausführung
-ist trotzdem sinnvoll, um Installationsprobleme früh zu erkennen.
-
-### 5. Gesamtes Projekt bauen
-
-Unter Linux, macOS, WSL oder Git Bash:
-
-```bash
-./gradlew clean build
-```
-
-Unter Windows PowerShell:
-
-```powershell
-.\gradlew.bat clean build
-```
-
-Frontend prüfen:
-
-```bash
-cd frontend
-npm run build
-cd ..
-```
-
-Erst wenn Backend und Frontend erfolgreich gebaut werden, sollte mit
-der eigentlichen Entwicklung begonnen werden.
-
-## Alle Services und das Frontend starten
-
-### Linux, macOS, WSL oder Git Bash
-
-```bash
-./scripts/start-local.sh
-```
-
-Falls das Skript noch nicht ausführbar ist:
+### macOS, Linux, WSL oder Git Bash
 
 ```bash
 chmod +x scripts/start-local.sh
@@ -212,76 +171,94 @@ chmod +x scripts/start-local.sh
 .\scripts\start-local.ps1
 ```
 
-Falls die Ausführung lokaler Skripte blockiert wird:
+Dabei werden Voraussetzungen und Ports geprüft, Services gestartet und Logs unter `logs/local/` abgelegt.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/start-local.ps1
+> Die persistenten Services benötigen erreichbare PostgreSQL-Datenbanken. Für den vollständigen Projektbetrieb ist deshalb die Docker-Entwicklungsumgebung der bevorzugte Weg.
+
+## Builds und Prüfungen
+
+### Backend vollständig prüfen
+
+```bash
+./gradlew clean build
 ```
 
-Das Startskript:
+### Backend-Tests
 
-1. prüft Java, Node.js, npm und den Gradle Wrapper,
-2. prüft die benötigten Ports,
-3. installiert bei Bedarf die Frontend-Abhängigkeiten,
-4. startet alle fünf Spring-Boot-Services,
-5. startet das React-Frontend,
-6. wartet auf die Readiness-Endpunkte,
-7. zeigt die lokalen URLs an.
+```bash
+./gradlew clean test
+```
 
-Das Skript bleibt geöffnet. Mit `Strg+C` werden alle Prozesse beendet,
-die durch das Skript gestartet wurden.
+### Einzelnen Service prüfen
 
-Die lokalen Logs befinden sich unter:
+```bash
+./gradlew :services:weather-service:test
+./gradlew :services:weather-service:build
+```
+
+### Frontend installieren und vollständig prüfen
+
+```bash
+cd frontend
+npm ci
+npm run check
+```
+
+Verfügbare Frontend-Scripts:
+
+```bash
+npm run dev        # Vite-Entwicklungsserver
+npm run typecheck  # TypeScript-Prüfung ohne Ausgabe
+npm run build      # TypeScript-Prüfung und Produktions-Build
+npm run check      # typecheck und build
+npm run preview    # lokalen Produktions-Build anzeigen
+```
+
+Der aktuelle Frontend-Stand enthält noch keine separate automatisierte Test-Suite und keinen Lint-Befehl.
+
+## Frontend-Routen
+
+| Route | Stand |
+|---|---|
+| `/` | REST-basiertes Service-Dashboard mit automatischer Aktualisierung |
+| `/system-status` | GraphQL-basiertes Systemstatus-Dashboard |
+| `/route-planner` | Leaflet-Karte; fachliche Routenplanung noch nicht implementiert |
+| `/login` | vorläufige lokale Testanmeldung |
+| `/profile` | geschützte Platzhalterseite |
+| `/saved-routes` | geschützte Platzhalterseite |
+| `*` | 404-Seite mit angefragtem Pfad |
+
+Die Testanmeldung speichert ausschließlich zu Entwicklungszwecken den Schlüssel `warp-user-authenticated` in `localStorage`. Sie ist keine produktive Authentifizierung.
+
+## BFF, REST und GraphQL
+
+REST-Systemstatus:
 
 ```text
-logs/local/
+GET /api/v1/system/health
 ```
 
-## Anwendung öffnen
-
-Nach einem erfolgreichen Start ist das Frontend erreichbar unter:
+GraphQL-Endpunkt:
 
 ```text
-http://localhost:5173
+POST /graphql
 ```
 
-Der zusammengefasste Servicezustand ist erreichbar unter:
+Der verbindliche GraphQL-Vertrag liegt unter:
 
 ```text
-http://localhost:8080/api/v1/system/health
+contracts/graphql/schema.graphqls
 ```
 
-Das Frontend aktualisiert die Servicezustände automatisch.
+Konventionen, Fehlercodes und Transportregeln stehen in `contracts/graphql/README.md`. Neue öffentliche Funktionen werden zuerst im passenden Vertrag beschrieben und anschließend in BFF und Frontend umgesetzt.
 
 ## Healthchecks
 
-### BFF-Service
-
 ```text
 http://localhost:8080/actuator/health/readiness
-```
-
-### Identity-Service
-
-```text
 http://localhost:8081/actuator/health/readiness
-```
-
-### Routing-Service
-
-```text
 http://localhost:8082/actuator/health/readiness
-```
-
-### Weather-Service
-
-```text
 http://localhost:8083/actuator/health/readiness
-```
-
-### Storage-Service
-
-```text
 http://localhost:8084/actuator/health/readiness
 ```
 
@@ -293,313 +270,67 @@ Ein erfolgreicher Readinesscheck liefert:
 }
 ```
 
-## Services einzeln starten
-
-Für die normale Entwicklung ist das gemeinsame Startskript vorgesehen.
-Ein einzelner Service kann bei Bedarf aber auch separat gestartet werden.
-
-### BFF-Service
-
-```bash
-./gradlew :services:bff-service:bootRun
-```
-
-### Identity-Service
-
-```bash
-./gradlew :services:identity-service:bootRun
-```
-
-### Routing-Service
-
-```bash
-./gradlew :services:routing-service:bootRun
-```
-
-### Weather-Service
-
-```bash
-./gradlew :services:weather-service:bootRun
-```
-
-### Storage-Service
-
-```bash
-./gradlew :services:storage-service:bootRun
-```
-
-Unter Windows wird jeweils `.\gradlew.bat` statt `./gradlew` verwendet.
-
-### Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Das Frontend erwartet den BFF lokal unter:
+Der Produktionsserver des Frontends stellt zusätzlich bereit:
 
 ```text
-http://localhost:8080
+GET /health
 ```
 
-Vite leitet lokale Requests mit dem Pfad `/api` automatisch an den BFF
-weiter.
+## Datenbanken und Migrationen
 
-## Tests und Builds
+Jeder persistierende Service besitzt eine eigene PostgreSQL-Datenbank. Ein Service darf nicht direkt auf Tabellen eines anderen Services zugreifen.
 
-### Alle Backend-Tests
-
-```bash
-./gradlew clean test
-```
-
-### Vollständiger Backend-Build
-
-```bash
-./gradlew clean build
-```
-
-### Nur einen Service testen
-
-Beispiel für den Weather-Service:
-
-```bash
-./gradlew :services:weather-service:test
-```
-
-### Nur einen Service bauen
-
-```bash
-./gradlew :services:weather-service:build
-```
-
-### Frontend bauen
-
-```bash
-cd frontend
-npm ci
-npm run build
-```
-
-Automatisierte Tests dürfen keine echten externen APIs, kostenpflichtigen
-Dienste oder echten E-Mail-Versand verwenden.
-
-## Umgang mit Änderungen
-
-### Vor Beginn einer Aufgabe
-
-Wechsle auf den aktuellen Zielbranch und aktualisiere ihn:
-
-```bash
-git switch system/live
-git pull
-```
-
-Erstelle anschließend einen kurzen Feature-Branch:
-
-```bash
-git switch -c feature/WARP-123-kurze-beschreibung
-```
-
-Beispiele:
+Migrationen liegen jeweils unter:
 
 ```text
-feature/WARP-008-registration
-feature/WARP-015-route-calculation
-fix/WARP-027-csrf-validation
+services/<service>/src/main/resources/db/migration
 ```
 
-Nicht direkt auf `system/live` entwickeln oder pushen.
+Regeln:
 
-### Während der Entwicklung
+1. Schemaänderungen erfolgen ausschließlich über neue Flyway-Migrationen.
+2. Bereits ausgeführte Migrationen werden nicht nachträglich verändert.
+3. Hibernate bleibt auf `ddl-auto=validate`.
+4. Migrationen müssen mit einer leeren und einer vorhandenen Datenbank funktionieren.
+5. Produktive Zugangsdaten werden ausschließlich als geschützte Umgebungsvariablen bereitgestellt.
 
-Änderungen sollten:
-
-- klein und nachvollziehbar bleiben,
-- nur den betroffenen Service verändern,
-- bestehende Funktionen nicht unnötig ersetzen,
-- passende Tests enthalten,
-- API-Verträge aktualisieren, wenn sich Schnittstellen ändern,
-- keine Zugangsdaten oder Tokens enthalten.
-
-Prüfe regelmäßig:
+Lokale Daten einschließlich Volumes vollständig löschen:
 
 ```bash
-git status
-git diff
+docker compose -f docker-compose.dev.yaml down -v
 ```
 
-### Vor dem Commit
+> **Achtung:** Dieser Befehl löscht alle lokalen WaRP-Datenbanken und die lokalen Mailpit-Daten unwiderruflich.
 
-Backend prüfen:
+## Lokaler Mailserver
 
-```bash
-./gradlew clean build
-```
-
-Frontend prüfen, wenn das Frontend betroffen ist:
-
-```bash
-cd frontend
-npm ci
-npm run build
-cd ..
-```
-
-Zusätzlich sollte geprüft werden:
-
-```bash
-git diff --check
-```
-
-### Commit erstellen
-
-Empfohlene Präfixe:
-
-- `feat:` für neue Funktionen
-- `fix:` für Fehlerbehebungen
-- `test:` für Tests
-- `docs:` für Dokumentation
-- `chore:` für technische Wartung
-- `refactor:` für interne Umbauten ohne neue Funktion
-
-Beispiel:
-
-```bash
-git add .
-git commit -m "feat: add weather evaluation endpoint"
-```
-
-### Feature-Branch pushen
-
-```bash
-git push -u origin HEAD
-```
-
-Danach wird auf GitHub ein Pull Request mit folgendem Ziel erstellt:
+Die Docker-Entwicklungsumgebung enthält Mailpit:
 
 ```text
-system/live
+SMTP-Host im Compose-Netz: mailpit
+SMTP-Port:                1025
+Weboberfläche:            http://localhost:8025
 ```
 
-## Pull Requests und Deployment
-
-Ein Pull Request nach `system/live` führt automatisierte Prüfungen aus:
-
-- Backend-Tests
-- Backend-Build
-- Frontend-Build
-- Docker-Builds
-
-Das Heroku-Deployment erfolgt nicht direkt aus dem ungeprüften
-Pull-Request-Code.
-
-Nach dem Merge entsteht ein Push auf `system/live`. Abhängig von den
-geänderten Pfaden werden die betroffenen Services und das Frontend über
-GitHub Actions zu Heroku deployt.
-
-Eine reine Änderung an einem Service soll nicht alle anderen Services
-unnötig deployen.
-
-## Konflikte vor dem Merge vermeiden
-
-Wenn sich `system/live` während der Bearbeitung geändert hat:
-
-```bash
-git fetch origin
-git rebase origin/system/live
-```
-
-Konflikte werden lokal gelöst. Danach:
-
-```bash
-git add DATEI
-git rebase --continue
-```
-
-Wenn der Branch bereits gepusht wurde:
-
-```bash
-git push --force-with-lease
-```
-
-`--force-with-lease` darf nur auf dem eigenen Feature-Branch verwendet
-werden, niemals auf `system/live`.
-
-## Abhängigkeiten ändern
-
-### Java-Abhängigkeiten
-
-Abhängigkeiten werden in der `build.gradle` des betroffenen Services
-ergänzt.
-
-Danach:
-
-```bash
-./gradlew clean build
-```
-
-Neue Abhängigkeiten sollen nur eingeführt werden, wenn sie für die
-Aufgabe tatsächlich benötigt werden.
-
-### Frontend-Abhängigkeiten
-
-Neue Frontend-Abhängigkeiten werden im Verzeichnis `frontend` installiert:
-
-```bash
-cd frontend
-npm install PAKETNAME
-```
-
-Dabei müssen sowohl `package.json` als auch `package-lock.json`
-committed werden.
-
-`node_modules` wird niemals committed.
-
-## API-Verträge
-
-Neue Funktionen werden zuerst vertraglich beschrieben.
-
-Die Verträge liegen unter:
-
-```text
-contracts/
-├── examples/
-├── graphql/
-└── openapi/
-```
-
-- GraphQL-Verträge gehören nach `contracts/graphql`.
-- REST-Verträge gehören nach `contracts/openapi`.
-- Beispielantworten externer APIs gehören nach `contracts/examples`.
-
-Implementierung und Vertrag müssen konsistent bleiben.
+Der Identity-Service verwendet lokal `no-reply@warp.local` als Absender. Es werden keine E-Mails ins Internet versendet.
 
 ## Umgebungsvariablen und Secrets
 
-Echte Secrets dürfen niemals committed werden.
+- `.env` und `frontend/.env` werden nicht versioniert.
+- `.env.example` enthält nur lokale Beispielwerte oder Platzhalter.
+- Datenbankzugänge werden pro Service getrennt verwaltet.
+- `VITE_*`-Variablen sind öffentlich und dürfen keine geheimen Werte enthalten.
+- Tokens, Passwörter, private Schlüssel und produktive Verbindungsdaten gehören niemals in Quellcode, Logs oder Dokumentation.
 
-Dazu gehören insbesondere:
+## Docker und Produktion
 
-- Passwörter
-- API-Schlüssel
-- Heroku-Tokens
-- Session-Werte
-- private Schlüssel
-- echte `.env`-Dateien
-- produktive Datenbankzugangsdaten
+Produktionsnahe Umgebung starten:
 
-Lokale Beispielwerte dürfen ausschließlich in einer `.env.example`
-dokumentiert werden.
+```bash
+docker compose up --build
+```
 
-## Docker
-
-Jeder Backend-Service und das Frontend besitzen ein eigenes Dockerfile.
-
-Ein einzelnes Image wird immer aus dem Projektstamm gebaut.
-
-Beispiel:
+Ein einzelnes Backend-Image wird aus dem Projektstamm gebaut:
 
 ```bash
 docker build \
@@ -608,385 +339,48 @@ docker build \
   .
 ```
 
-Frontend:
+Frontend-Image:
 
 ```bash
 docker build \
   -f frontend/Dockerfile \
   --build-arg VITE_BFF_BASE_URL=http://localhost:8080 \
+  --build-arg VITE_MAPTILER_PUBLIC_API_KEY=test-key \
   -t warp-frontend:local \
   .
 ```
 
+Das Frontend wird mehrstufig gebaut und anschließend durch `frontend/server.mjs` mit SPA-Fallback ausgeliefert.
+
 ## Projektdump erstellen
 
-Für die Übergabe an einen neuen Entwicklungs-Chat kann ein Projektdump
-erstellt werden:
+### macOS, Linux, WSL oder Git Bash
 
 ```bash
 ./scripts/create-project-dump.sh
 ```
 
-Das Ergebnis wird als folgende Datei im Projektstamm gespeichert:
-
-```text
-dump.txt
-```
-
-Der Dump schließt Buildverzeichnisse, Abhängigkeiten, Binärdateien und
-bekannte sensible Dateien aus.
-
-Trotzdem muss `dump.txt` vor dem Weitergeben manuell auf Zugangsdaten,
-Tokens und personenbezogene Informationen geprüft werden.
-
-## Typische Probleme
-
-### Java-Version ist falsch
-
-Prüfen:
-
-```bash
-java -version
-./gradlew --version
-```
-
-Beide Ausgaben müssen auf Java 21 verweisen.
-
-Falls `JAVA_HOME` falsch gesetzt ist, muss es auf das installierte JDK 21
-zeigen.
-
-### Gradle Wrapper fehlt
-
-Diese Dateien müssen im Repository vorhanden sein:
-
-```text
-gradlew
-gradlew.bat
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
-```
-
-Insbesondere `gradle-wrapper.jar` muss committed sein.
-
-### Port ist bereits belegt
-
-Benötigte Ports:
-
-```text
-5173
-8080
-8081
-8082
-8083
-8084
-```
-
-Unter Linux oder macOS kann ein belegter Port so untersucht werden:
-
-```bash
-lsof -iTCP:8080 -sTCP:LISTEN
-```
-
-Unter Windows PowerShell:
+### Windows PowerShell
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8080 -State Listen
+.\scripts\create-project-dump.ps1
 ```
 
-### Frontend zeigt den BFF als nicht erreichbar
-
-Prüfen:
-
-```bash
-curl http://localhost:8080/actuator/health/readiness
-curl http://localhost:8080/api/v1/system/health
-```
-
-Falls der BFF läuft, prüfe die Browserkonsole und den Vite-Proxy.
-
-### Ein Service bleibt beim Start auf DOWN
-
-Prüfe die zugehörige Datei unter:
-
-```text
-logs/local/
-```
-
-Danach kann der Service einzeln gestartet werden, damit seine Ausgabe
-direkt im Terminal sichtbar ist.
+Das Ergebnis wird als `dump.txt` im Projektstamm gespeichert. Obwohl bekannte sensible Dateien ausgeschlossen werden, muss der Dump vor der Weitergabe manuell auf Zugangsdaten und personenbezogene Informationen geprüft werden.
 
 ## Sicherheitsregeln
 
-- Keine Secrets im Repository
-- Keine Passwörter oder Tokens in Logs
-- Keine Datenbank eines anderen Services direkt verwenden
-- Keine internen Services direkt aus dem Browser aufrufen
-- Externe API-Schlüssel nur serverseitig verwenden
-- Eingaben validieren
-- REST-Fehler in stabile eigene Fehlercodes übersetzen
-- Keine Stacktraces an Clients ausgeben
-- Geschützte Operationen autorisieren
-- Besitzprüfungen bei benutzerbezogenen Daten durchführen
-
-## Datenbankeinrichtung
-
-WaRP verwendet PostgreSQL für die persistenten Daten der Backend-Services. Jeder datenbankgestützte Service besitzt eine eigene, logisch und technisch getrennte Datenbank:
-
-- `identity-service` verwendet `warp_identity`
-- `routing-service` verwendet `warp_routing`
-- `weather-service` verwendet `warp_weather`
-- `storage-service` verwendet `warp_storage`
-- `bff-service` besitzt keine eigene Datenbank
-
-Die Datenbankschemata werden beim Start der jeweiligen Anwendung mit Flyway-Migrationen aus `src/main/resources/db/migration` angelegt und aktualisiert. Hibernate führt keine Schemaänderungen durch, sondern validiert das von Flyway verwaltete Schema.
-
-Die Migrationen müssen deshalb immer vor dem Start der eigentlichen Anwendung erfolgreich ausgeführt werden. Schlägt eine Migration fehl oder stimmt das vorhandene Schema nicht mit den JPA-Entitäten überein, wird der Start des betroffenen Services abgebrochen.
-
-### Lokale Datenbanken mit Docker Compose
-
-Für die lokale Docker-Entwicklung werden vier voneinander getrennte PostgreSQL-Container verwendet. Die Konfiguration befindet sich in `docker-compose.dev.yaml`.
-
-Die Datenbanken sind vom Host unter folgenden Ports erreichbar:
-
-| Service | Datenbank | Host-Port |
-|---|---|---:|
-| Identity | `warp_identity` | `5434` |
-| Routing | `warp_routing` | `5435` |
-| Weather | `warp_weather` | `5436` |
-| Storage | `warp_storage` | `5437` |
-
-Die Zugangsdaten werden nicht direkt in Docker Compose hinterlegt. Stattdessen werden sie aus einer lokalen `.env`-Datei gelesen.
-
-Erstelle die lokale Konfiguration aus der Vorlage:
-
-```bash
-cp .env.example .env
-```
-
-Passe anschließend die Werte in `.env` bei Bedarf an. Die Datei enthält die Zugangsdaten für die lokalen PostgreSQL-Instanzen und darf nicht in die Versionsverwaltung aufgenommen werden.
-
-Beispielhafte Struktur:
-
-```dotenv
-POSTGRES_USER=warp
-POSTGRES_PASSWORD=warp
-
-IDENTITY_DB_NAME=warp_identity
-ROUTING_DB_NAME=warp_routing
-WEATHER_DB_NAME=warp_weather
-STORAGE_DB_NAME=warp_storage
-```
-
-> Die tatsächlich benötigten Variablennamen ergeben sich aus `.env.example` und `docker-compose.dev.yaml`. Die Vorlage ist die verbindliche Referenz für die lokale Konfiguration.
-
-Die Datenbankcontainer werden mit folgendem Befehl gestartet:
-
-```bash
-docker compose -f docker-compose.dev.yaml up -d
-```
-
-Der Status der Container kann anschließend geprüft werden:
-
-```bash
-docker compose -f docker-compose.dev.yaml ps
-```
-
-Um die Protokolle eines Datenbankcontainers anzuzeigen, kann beispielsweise folgender Befehl verwendet werden:
-
-```bash
-docker compose -f docker-compose.dev.yaml logs -f routing-db
-```
-
-Der konkrete Container- beziehungsweise Servicename kann in `docker-compose.dev.yaml` nachgesehen werden.
-
-Beim ersten Start legt PostgreSQL die konfigurierte Datenbank im zugehörigen Volume an. Danach erstellt Flyway beim Start des jeweiligen Backend-Services die benötigten Tabellen, Indizes und sonstigen Datenbankobjekte.
-
-Die lokalen Datenbankverbindungen verwenden grundsätzlich folgendes Schema:
-
-```text
-jdbc:postgresql://localhost:<HOST_PORT>/<DATENBANKNAME>
-```
-
-Beispiele:
-
-```text
-jdbc:postgresql://localhost:5434/warp_identity
-jdbc:postgresql://localhost:5435/warp_routing
-jdbc:postgresql://localhost:5436/warp_weather
-jdbc:postgresql://localhost:5437/warp_storage
-```
-
-Werden die Backend-Services ebenfalls innerhalb von Docker Compose ausgeführt, darf nicht `localhost` als Datenbankhost verwendet werden. In diesem Fall muss der jeweilige Compose-Servicename der PostgreSQL-Instanz als Host eingetragen werden.
-
-### Lokale Datenbanken zurücksetzen
-
-Die Daten bleiben durch Docker-Volumes auch nach dem Stoppen der Container erhalten.
-
-Container stoppen:
-
-```bash
-docker compose -f docker-compose.dev.yaml down
-```
-
-Container und lokale Datenbank-Volumes vollständig entfernen:
-
-```bash
-docker compose -f docker-compose.dev.yaml down -v
-```
-
-Beim nächsten Start werden die Datenbanken neu angelegt und sämtliche Flyway-Migrationen erneut ausgeführt.
-
-> **Achtung:** Durch `down -v` werden alle Daten in den lokalen WaRP-Datenbanken unwiderruflich gelöscht.
-
-### Flyway-Migrationen
-
-Die Migrationen eines Services liegen in:
-
-```text
-<service>/src/main/resources/db/migration
-```
-
-Flyway führt noch nicht angewendete Migrationen beim Anwendungsstart in aufsteigender Versionsreihenfolge aus. Versionsmigrationen folgen dem Flyway-Namensschema:
-
-```text
-V<Version>__<Beschreibung>.sql
-```
-
-Beispiel:
-
-```text
-V1__create_initial_schema.sql
-V2__add_route_status.sql
-```
-
-Für Migrationen gelten folgende Regeln:
-
-1. Bereits in einer gemeinsam genutzten oder produktiven Umgebung ausgeführte Migrationen dürfen nicht nachträglich verändert werden.
-2. Schemaänderungen werden immer durch eine neue Migration ergänzt.
-3. Jede Migration gehört ausschließlich zu dem Service, der die betreffende Datenbank besitzt.
-4. Ein Service darf nicht direkt auf Tabellen eines anderen Services zugreifen.
-5. Änderungen müssen sowohl mit einer leeren Datenbank als auch mit einem bereits vorhandenen Schema getestet werden.
-6. Hibernate bleibt auf Schema-Validierung eingestellt und darf das Schema nicht automatisch erzeugen oder verändern.
-
-Typische Spring-Konfiguration:
-
-```yaml
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-```
-
-Passwörter und vollständige produktive Verbindungs-URLs dürfen weder in `application.yml` noch in anderen versionierten Dateien gespeichert werden.
-
-### Produktive Datenbanken
-
-In der produktiven Umgebung erhält jeder datenbankgestützte Service eine eigene PostgreSQL-Datenbank beziehungsweise eine eigene, ausschließlich diesem Service zugeordnete Datenbankverbindung.
-
-| Service | Produktive Datenbankverbindung erforderlich |
-|---|---|
-| `identity-service` | Ja |
-| `routing-service` | Ja |
-| `weather-service` | Ja |
-| `storage-service` | Ja |
-| `bff-service` | Nein |
-
-Die produktive Verbindungs-URL wird über eine Umgebungsvariable beziehungsweise über die Konfiguration der Hosting-Plattform bereitgestellt. Zugangsdaten werden nicht in das Repository eingecheckt.
-
-Je nach Deployment-Konfiguration wird entweder direkt `DATABASE_URL` verwendet oder die bereitgestellte PostgreSQL-URL auf die von Spring Boot erwarteten Eigenschaften abgebildet:
-
-```text
-SPRING_DATASOURCE_URL
-SPRING_DATASOURCE_USERNAME
-SPRING_DATASOURCE_PASSWORD
-```
-
-Eine JDBC-Verbindungs-URL besitzt üblicherweise dieses Format:
-
-```text
-jdbc:postgresql://<HOST>:<PORT>/<DATENBANK>?sslmode=require
-```
-
-Viele Hosting-Anbieter stellen stattdessen zunächst eine URL im PostgreSQL-Format bereit:
-
-```text
-postgresql://<BENUTZER>:<PASSWORT>@<HOST>:<PORT>/<DATENBANK>?sslmode=require
-```
-
-Falls die Anwendung keine automatische Umwandlung vornimmt, muss diese URL vor der Übergabe an `spring.datasource.url` in das JDBC-Format überführt werden.
-
-Für jeden Service ist sicherzustellen, dass:
-
-- die konfigurierte Datenbank ausschließlich diesem Service zugeordnet ist,
-- die Zugangsdaten nur als geschützte Umgebungsvariablen hinterlegt sind,
-- SSL verwendet wird, sofern der Datenbankanbieter dies unterstützt oder voraussetzt,
-- Flyway beim Start aktiviert ist,
-- Hibernate mit `ddl-auto=validate` arbeitet,
-- die Anwendung bei einer fehlgeschlagenen Migration nicht mit einem inkonsistenten Schema weiterläuft,
-- Backups und Wiederherstellungsoptionen entsprechend der Kritikalität der Umgebung eingerichtet sind.
-
-### Direkte und gepoolte Datenbankverbindungen
-
-Falls der Datenbankanbieter sowohl eine direkte als auch eine gepoolte Verbindungs-URL bereitstellt, gilt folgende Zuordnung:
-
-- Die gepoolte URL eignet sich für die normalen Datenbankzugriffe der laufenden Anwendung.
-- Für Flyway-Migrationen sollte bevorzugt eine direkte Verbindung verwendet werden, wenn der verwendete Pooler bestimmte PostgreSQL-Funktionen oder sitzungsgebundene Operationen nicht vollständig unterstützt.
-
-Spring Boot kann für Flyway bei Bedarf eine von der normalen DataSource getrennte Verbindung verwenden:
-
-```yaml
-spring:
-  datasource:
-    url: ${DATABASE_URL_POOLED:${DATABASE_URL}}
-  flyway:
-    url: ${DATABASE_URL_DIRECT:${DATABASE_URL}}
-```
-
-Benutzername und Passwort können entweder Bestandteil der URL sein oder über separate Umgebungsvariablen bereitgestellt werden. Welche Variante verwendet wird, hängt vom Datenbankanbieter und von der konkreten Spring-Konfiguration ab.
-
-### Deployment und Migration
-
-Beim Deployment wird keine separate manuelle Schemaerstellung benötigt. Der Ablauf ist:
-
-1. Die produktive Datenbank wird bereitgestellt.
-2. Die Verbindungsdaten werden als geschützte Konfigurationsvariablen am jeweiligen Service hinterlegt.
-3. Der Service wird gestartet.
-4. Flyway prüft die Migrationstabelle und führt alle noch fehlenden Migrationen aus.
-5. Hibernate validiert anschließend das resultierende Schema.
-6. Erst nach erfolgreicher Migration und Validierung nimmt der Service den regulären Betrieb auf.
-
-Bei mehreren gleichzeitig startenden Instanzen koordiniert Flyway die Ausführung über seine Metadatentabelle. Trotzdem sollte bei größeren oder potenziell langlaufenden Schemaänderungen ein kontrollierter Migrationsschritt vor dem Hochskalieren der Anwendung vorgesehen werden.
-
-### Fehlerdiagnose
-
-Wenn ein Service wegen der Datenbankkonfiguration oder einer Migration nicht startet, sollten folgende Punkte geprüft werden:
-
-1. Ist die PostgreSQL-Instanz erreichbar?
-2. Stimmen Host, Port und Datenbankname?
-3. Sind Benutzername und Passwort korrekt gesetzt?
-4. Verwendet die Anwendung eine JDBC-kompatible URL?
-5. Ist bei einer externen Datenbank die erforderliche SSL-Konfiguration vorhanden?
-6. Besitzt der Datenbankbenutzer die erforderlichen Rechte für Migrationen?
-7. Enthält `src/main/resources/db/migration` alle erwarteten Migrationen?
-8. Wurde eine bereits ausgeführte Migration nachträglich verändert?
-9. Zeigt der Service auf seine eigene Datenbank und nicht versehentlich auf die Datenbank eines anderen Services?
-
-Für die Analyse sind insbesondere die Startprotokolle des betroffenen Services sowie die Flyway-Metadatentabelle relevant:
-
-```text
-flyway_schema_history
-```
-
-Sie enthält die bereits ausgeführten Migrationen, deren Reihenfolge, Prüfsummen und Ausführungsstatus.
-
-### Sicherheits- und Betriebsregeln
-
-- `.env` und andere Dateien mit echten Zugangsdaten dürfen nicht versioniert werden.
-- `.env.example` enthält ausschließlich Platzhalter oder ungefährliche lokale Standardwerte.
-- Produktive Zugangsdaten werden nur über die Secret- beziehungsweise Config-Verwaltung der Hosting-Plattform gesetzt.
-- Datenbankzugänge werden pro Service getrennt verwaltet.
-- Produktive Datenbanken dürfen nicht für lokale Tests verwendet werden.
-- Vor destruktiven Migrationen muss ein aktuelles Backup beziehungsweise ein getesteter Wiederherstellungsweg vorhanden sein.
-- Zugangsdaten müssen erneuert werden, wenn sie versehentlich veröffentlicht wurden.
+- Browserzugriffe ausschließlich über den BFF
+- interne Services nicht öffentlich aus dem Frontend aufrufen
+- stabile eigene Fehlercodes statt interner Fehlermeldungen
+- keine Stacktraces an Clients ausgeben
+- Eingaben validieren und geschützte Operationen autorisieren
+- Besitzprüfung bei benutzerbezogenen Daten
+- externe API-Schlüssel möglichst serverseitig halten
+- keine echten externen APIs, kostenpflichtigen Dienste oder echten E-Mail-Versand in automatisierten Tests
+
+## Weiterführende Dokumentation
+
+- [`README-DEV-WATCH.md`](README-DEV-WATCH.md): Docker-Entwicklungsmodus und Hot Reload
+- [`frontend/README.md`](frontend/README.md): Frontend, Routen und TypeScript
+- [`contracts/graphql/README.md`](contracts/graphql/README.md): GraphQL-Konventionen und Fehlerbehandlung

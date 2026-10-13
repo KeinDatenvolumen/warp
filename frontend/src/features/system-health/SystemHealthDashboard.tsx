@@ -1,17 +1,20 @@
 import {useCallback, useEffect, useState} from 'react'
-import ServiceCard from '../../components/ui/ServiceCard/ServiceCard.jsx'
-import Loader from '../../components/ui/Loader/Loader.jsx'
-import MessageCard from '../../components/ui/MessageCard/MessageCard.jsx'
+import ServiceCard from '../../components/ui/ServiceCard/ServiceCard'
+import Loader from '../../components/ui/Loader/Loader'
+import MessageCard from '../../components/ui/MessageCard/MessageCard'
 import styles from './SystemHealthDashboard.module.css'
+import type {SystemHealth} from '../../types/systemHealth'
 
 const REFRESH_INTERVAL_MS = 5000
 const BFF_BASE_URL = (import.meta.env.VITE_BFF_BASE_URL ?? '').replace(/\/$/, '')
 export default function SystemHealthDashboard() {
-    const [health, setHealth] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState(null)
-    const loadHealth = useCallback(async (manual = false) => {
+    const [health, setHealth] = useState<SystemHealth | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const loadHealth = useCallback(async (
+        manual = false
+    ): Promise<void> => {
         if (manual) setRefreshing(true);
         try {
             const response = await fetch(`${BFF_BASE_URL}/api/v1/system/health`, {
@@ -19,7 +22,8 @@ export default function SystemHealthDashboard() {
                 cache: 'no-store'
             });
             if (!response.ok) throw new Error();
-            setHealth(await response.json());
+            const result = await response.json() as SystemHealth
+            setHealth(result)
             setError(null)
         } catch {
             setError('Der BFF-Service ist nicht erreichbar. Prüfe, ob der BFF gestartet und erreichbar ist.')
