@@ -30,10 +30,7 @@ public class ActivityProfileGraphQlController {
     public record ActivityProfilePayload(
             ActivityProfileCode code,
             String displayName,
-            double averageSpeedKmh,
-            RoutingProfileCode routingProfile,
-            int weatherQueryIntervalMinutes,
-            WayPreferencesPayload wayPreferences
+            int weatherQueryIntervalMinutes
     ) {
 
         private static ActivityProfilePayload from(
@@ -42,37 +39,7 @@ public class ActivityProfileGraphQlController {
             return new ActivityProfilePayload(
                     ActivityProfileCode.valueOf(response.code()),
                     response.displayName(),
-                    response.averageSpeedKmh(),
-                    RoutingProfileCode.valueOf(
-                            response.routingProfile()
-                    ),
-                    response.weatherQueryIntervalMinutes(),
-                    WayPreferencesPayload.from(
-                            response.wayPreferences()
-                    )
-            );
-        }
-    }
-
-    public record WayPreferencesPayload(
-            boolean preferCycleways,
-            boolean avoidMotorways,
-            boolean avoidTollRoads,
-            boolean avoidUnpavedWays,
-            boolean preferPavedWays,
-            boolean preferScenicWays
-    ) {
-
-        private static WayPreferencesPayload from(
-                ActivityProfileResponse.WayPreferencesResponse response
-        ) {
-            return new WayPreferencesPayload(
-                    response.preferCycleways(),
-                    response.avoidMotorways(),
-                    response.avoidTollRoads(),
-                    response.avoidUnpavedWays(),
-                    response.preferPavedWays(),
-                    response.preferScenicWays()
+                    response.weatherQueryIntervalMinutes()
             );
         }
     }
@@ -81,11 +48,5 @@ public class ActivityProfileGraphQlController {
         BICYCLE,
         MOTORCYCLE,
         HIKING
-    }
-
-    public enum RoutingProfileCode {
-        BICYCLE,
-        MOTORCYCLE,
-        FOOT
     }
 }

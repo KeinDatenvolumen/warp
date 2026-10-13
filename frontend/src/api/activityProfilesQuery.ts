@@ -12,17 +12,7 @@ export const ACTIVITY_PROFILES_QUERY: TypedDocumentNode<
         activityProfiles {
             code
             displayName
-            averageSpeedKmh
-            routingProfile
             weatherQueryIntervalMinutes
-            wayPreferences {
-                preferCycleways
-                avoidMotorways
-                avoidTollRoads
-                avoidUnpavedWays
-                preferPavedWays
-                preferScenicWays
-            }
         }
     }
 `
