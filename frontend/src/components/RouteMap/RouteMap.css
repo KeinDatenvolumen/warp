@@ -1,0 +1,50 @@
+.route-map {
+  position: relative;
+  width: 100%;
+  height: clamp(22rem, 65vh, 50rem);
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #e5e7eb;
+}
+
+.route-map__container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-error {
+  padding: 1rem;
+  color: #7f1d1d;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+}
+
+.map-error--overlay {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 1000;
+  width: calc(100% - 1.5rem);
+  max-width: 32rem;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 600px) {
+  .route-map {
+    height: 60vh;
+    min-height: 22rem;
+    border-radius: 0.5rem;
+  }
+
+  .leaflet-control-zoom a {
+    width: 2.75rem;
+    height: 2.75rem;
+    line-height: 2.75rem;
+  }
+
+  .leaflet-control-attribution {
+    max-width: calc(100vw - 1rem);
+    font-size: 0.65rem;
+  }
+}

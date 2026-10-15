@@ -1,0 +1,162 @@
+.shell {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.header {
+    position: sticky;
+    z-index: 10;
+    top: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: rgb(255 255 255 / 94%);
+    backdrop-filter: blur(14px);
+}
+
+.headerContent, .footerContent {
+    width: min(calc(100% - (2 * var(--mobile-gutter))), var(--content-max-width));
+    margin-inline: auto;
+}
+
+.headerContent {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .875rem;
+    padding-block: .875rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.brandMark {
+    display: grid;
+    width: 2.625rem;
+    height: 2.625rem;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: .8125rem;
+    color: white;
+    background: var(--color-primary);
+    font-size: 1.15rem;
+    font-weight: 900;
+    box-shadow: var(--shadow-primary);
+}
+
+.brandText {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.brandText strong {
+    font-size: 1.1rem;
+    line-height: 1.1;
+}
+
+.brandText small {
+    margin-top: .25rem;
+    color: var(--color-text-subtle);
+    font-size: .72rem;
+}
+
+.navigation {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .375rem;
+}
+
+.navigationLink {
+    display: inline-flex;
+    min-height: var(--control-min-height);
+    flex: 1 1 calc(50% - .375rem);
+    align-items: center;
+    justify-content: center;
+    padding: .625rem .5rem;
+    border-radius: var(--border-radius-small);
+    color: #5b667a;
+    background: transparent;
+    font-size: .92rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    transition: color 160ms ease, background-color 160ms ease;
+}
+
+.navigationLink:hover {
+    color: var(--color-primary-dark);
+    background: var(--color-primary-hover);
+}
+
+.navigationLinkActive {
+    color: var(--color-primary-dark);
+    background: var(--color-primary-soft);
+}
+
+.navigationButton {
+    border: 0;
+    cursor: pointer;
+}
+
+.content {
+    flex: 1;
+}
+
+.footer {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.footerContent {
+    display: flex;
+    min-height: 4.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: .5rem;
+    color: var(--color-text-subtle);
+    font-size: .82rem;
+}
+
+@media (min-width: 30rem) {
+    .headerContent, .footerContent {
+        width: min(calc(100% - (2 * var(--desktop-gutter))), var(--content-max-width));
+    }
+}
+
+@media (min-width: 48rem) {
+    .headerContent {
+        min-height: 4.75rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        padding-block: 0;
+    }
+
+    .navigation {
+        width: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: .5rem;
+    }
+
+    .navigationLink {
+        flex: 0 0 auto;
+        padding-inline: .875rem;
+    }
+
+    .footerContent {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+}

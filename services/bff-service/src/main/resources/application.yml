@@ -2,11 +2,22 @@ spring:
   application:
     name: bff-service
 
+  graphql:
+    http:
+      path: /graphql
+    graphiql:
+      enabled: false
+    schema:
+      inspection:
+        enabled: true
+
 server:
   port: ${PORT:8080}
   shutdown: graceful
 
 warp:
+  graphql:
+    test-error: ""
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
   services:
@@ -22,10 +33,14 @@ warp:
     storage:
       name: storage-service
       url: ${STORAGE_SERVICE_URL:http://localhost:8084}
+  health:
+    connect-timeout: 2s
+    read-timeout: 2s
 
 management:
   endpoints:
     web:
+      base-path: /internal
       exposure:
         include:
           - health

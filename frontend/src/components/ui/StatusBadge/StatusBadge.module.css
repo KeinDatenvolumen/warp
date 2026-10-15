@@ -1,0 +1,34 @@
+.dot {
+    width: .875rem;
+    height: .875rem;
+    border-radius: 50%;
+}
+
+.dotAvailable {
+    background: var(--color-success);
+    box-shadow: 0 0 0 6px rgb(47 158 68 / 12%);
+}
+
+.dotUnavailable {
+    background: var(--color-danger);
+    box-shadow: 0 0 0 6px rgb(224 49 49 / 12%);
+}
+
+.badge {
+    padding: .3125rem .5625rem;
+    border-radius: var(--border-radius-round);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.badgeAvailable {
+    color: var(--color-success-dark);
+    background: var(--color-success-soft);
+}
+
+.badgeUnavailable {
+    color: var(--color-danger-dark);
+    background: var(--color-danger-soft);
+}

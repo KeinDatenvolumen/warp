@@ -1,0 +1,15 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 20rem;
+}
+
+body, h1, h2, p, dl, dd {
+    margin: 0;
+}
+
+button, input, textarea, select {
+    font: inherit;
+}

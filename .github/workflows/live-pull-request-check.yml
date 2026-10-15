@@ -112,6 +112,7 @@ jobs:
               --file "$DOCKERFILE" \
               --build-arg \
                 "VITE_BFF_BASE_URL=$BFF_PUBLIC_URL" \
+              --build-arg "VITE_MAPTILER_PUBLIC_API_KEY=test-key" \
               --tag "warp-$IMAGE_NAME:pr" \
               .
           else

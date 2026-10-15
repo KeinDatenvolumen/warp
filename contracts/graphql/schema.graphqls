@@ -1,0 +1,63 @@
+"""
+WaRP GraphQL-Schema.
+
+Die fachliche Anwendung kommuniziert über diesen Vertrag mit dem BFF.
+Interne Services werden ausschließlich durch den BFF angesprochen.
+"""
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Query {
+    """
+    Liefert den zusammengefassten Zustand des BFF und aller internen Services.
+    """
+    systemHealth: SystemHealth!
+}
+
+type Mutation {
+    """
+    Technischer Platzhalter, bis die erste fachliche Mutation implementiert wird.
+    """
+    _empty: Boolean
+}
+
+"""
+Zusammengefasster Zustand aller WaRP-Services.
+"""
+type SystemHealth {
+    status: SystemHealthStatus!
+    checkedAt: DateTime!
+    healthyServices: Int!
+    totalServices: Int!
+    services: [ServiceHealth!]!
+}
+
+"""
+Zustand eines einzelnen Services.
+"""
+type ServiceHealth {
+    service: String!
+    status: ServiceHealthStatus!
+    reachable: Boolean!
+    responseTimeMs: Int!
+}
+
+enum SystemHealthStatus {
+    UP
+    DEGRADED
+}
+
+enum ServiceHealthStatus {
+    UP
+    DOWN
+    OUT_OF_SERVICE
+    UNKNOWN
+    UNAVAILABLE
+}
+
+"""
+Zeitpunkt nach ISO 8601, beispielsweise 2026-10-08T19:01:35Z.
+"""
+scalar DateTime

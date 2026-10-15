@@ -17,8 +17,20 @@ services:
       DB_URL: jdbc:postgresql://identity-db:5432/${IDENTITY_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
       DB_USERNAME: ${IDENTITY_DB_USER}
       DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_SMTP_AUTH: "false"
+      MAIL_SMTP_STARTTLS_ENABLED: "false"
+      MAIL_FROM: "no-reply@warp.local"
+      APP_PUBLIC_URL: "http://localhost:5173"
+
     depends_on:
       identity-db:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     ports:
       - "8081:8081"
@@ -112,6 +124,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile.dev
+    working_dir: /app
     environment:
       VITE_BFF_PROXY_TARGET: "http://bff-service:8080"
       VITE_USE_POLLING: "true"
@@ -197,6 +210,18 @@ services:
       - weather-db-data:/var/lib/postgresql
     restart: unless-stopped
 
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      MP_MAX_MESSAGES: "500"
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+      - mailpit-data:/data
+    restart: unless-stopped
+
 volumes:
   bff-gradle-cache:
   identity-gradle-cache:
@@ -222,3 +247,5 @@ volumes:
   routing-db-data:
   weather-db-data:
   storage-db-data:
+
+  mailpit-data:

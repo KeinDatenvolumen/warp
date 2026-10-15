@@ -1,0 +1,49 @@
+import {Route, Routes} from 'react-router'
+import AppLayout from './AppLayout'
+import HomePage from '../pages/HomePage'
+import LoginPage from '../pages/LoginPage'
+import ProfilePage from '../pages/ProfilePage'
+import RoutePlannerPage from '../pages/RoutePlannerPage'
+import SavedRoutesPage from '../pages/SavedRoutesPage'
+import {SystemStatusPage} from "../pages/SystemStatusPage";
+import {NotFoundPage} from "../pages/NotFoundPage";
+import ProtectedRoute from '../components/routing/ProtectedRoute'
+
+export default function AppRoutes() {
+    return (
+        <Routes>
+            <Route element={<AppLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route
+                    path="/route-planner"
+                    element={<RoutePlannerPage />}
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/saved-routes"
+                    element={
+                        <ProtectedRoute>
+                            <SavedRoutesPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/system-status"
+                    element={<SystemStatusPage />}
+                />
+                <Route
+                    path="*"
+                    element={<NotFoundPage />}
+                />
+            </Route>
+        </Routes>
+    )
+}
