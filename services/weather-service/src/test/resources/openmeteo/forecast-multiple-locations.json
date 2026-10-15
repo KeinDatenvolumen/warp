@@ -1,0 +1,58 @@
+[
+  {
+    "latitude": 49.36,
+    "longitude": 9.16,
+    "generationtime_ms": 0.25,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 180.0,
+    "hourly": {
+      "time": [1791892800, 1791896400],
+      "temperature_2m": [12.4, 13.1],
+      "apparent_temperature": [11.8, 12.5],
+      "relative_humidity_2m": [78, 74],
+      "dew_point_2m": [8.7, 8.5],
+      "precipitation_probability": [30, 45],
+      "precipitation": [0.0, 0.4],
+      "rain": [0.0, 0.4],
+      "showers": [0.0, 0.0],
+      "snowfall": [0.0, 0.0],
+      "snow_depth": [0.0, 0.0],
+      "wind_speed_10m": [12.4, 13.8],
+      "wind_direction_10m": [230, 235],
+      "wind_gusts_10m": [25.0, 28.2],
+      "pressure_msl": [1014.2, 1013.8],
+      "surface_pressure": [992.1, 991.8],
+      "cloud_cover": [64, 78],
+      "cloud_cover_low": [34, 50],
+      "cloud_cover_mid": [45, 60],
+      "cloud_cover_high": [10, 12],
+      "visibility": [24000, 18000],
+      "cape": [120, 245],
+      "lifted_index": [-1.0, -2.1],
+      "convective_inhibition": [-75, -42],
+      "freezing_level_height": [2100, 2050],
+      "vapour_pressure_deficit": [0.4, 0.5],
+      "evapotranspiration": [0.0, 0.1],
+      "soil_temperature_0cm": [10.2, 11.0],
+      "weather_code": [2, 61]
+    }
+  },
+  {
+    "latitude": 49.40,
+    "longitude": 8.67,
+    "generationtime_ms": 0.20,
+    "utc_offset_seconds": 0,
+    "timezone": "GMT",
+    "timezone_abbreviation": "GMT",
+    "elevation": 115.0,
+    "hourly": {
+      "time": [1791892800, 1791896400],
+      "temperature_2m": [13.5, 14.0],
+      "precipitation": [0.0, 0.0],
+      "wind_speed_10m": [10.0, 11.0],
+      "weather_code": [1, 2]
+    }
+  }
+]

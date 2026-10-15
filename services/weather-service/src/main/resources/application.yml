@@ -20,6 +20,16 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+warp:
+  weather:
+    open-meteo:
+      base-url: ${OPEN_METEO_BASE_URL:https://api.open-meteo.com}
+      connect-timeout: ${OPEN_METEO_CONNECT_TIMEOUT:2s}
+      read-timeout: ${OPEN_METEO_READ_TIMEOUT:8s}
+      maximum-locations-per-request: ${OPEN_METEO_MAX_LOCATIONS:50}
+      forecast-hours: ${OPEN_METEO_FORECAST_HOURS:168}
+      comparison-models: []
+
 server:
   port: ${PORT:8083}
   shutdown: graceful
