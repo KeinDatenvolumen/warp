@@ -46,6 +46,33 @@ public class ActivityProfileService {
         }
     }
 
+    public ActivityProfileResponse getActivityProfile(String code) {
+        try {
+            var response = restClient
+                    .get()
+                    .uri(
+                            routingServiceUrl
+                                    + "/internal/v1/activity-profiles/"
+                                    + code
+                    )
+                    .retrieve()
+                    .body(ActivityProfileResponse.class);
+
+            if (response == null) {
+                throw new IllegalStateException(
+                        "Routing-Service lieferte kein Aktivitätsprofil."
+                );
+            }
+
+            return response;
+        } catch (RestClientException exception) {
+            throw new IllegalStateException(
+                    "Aktivitätsprofil konnte nicht geladen werden.",
+                    exception
+            );
+        }
+    }
+
     private String removeTrailingSlash(String value) {
         if (value.endsWith("/")) {
             return value.substring(0, value.length() - 1);

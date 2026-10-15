@@ -2,6 +2,7 @@ package de.warp.bff.graphql;
 
 import java.util.List;
 
+import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
@@ -25,6 +26,15 @@ public class ActivityProfileGraphQlController {
                 .stream()
                 .map(ActivityProfilePayload::from)
                 .toList();
+    }
+
+    @QueryMapping
+    public ActivityProfilePayload activityProfile(
+            @Argument ActivityProfileCode code
+    ) {
+        return ActivityProfilePayload.from(
+                activityProfileService.getActivityProfile(code.name())
+        );
     }
 
     public record ActivityProfilePayload(

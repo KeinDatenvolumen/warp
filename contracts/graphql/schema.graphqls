@@ -20,6 +20,11 @@ type Query {
     Die Profilparameter sind für Endbenutzer nicht veränderbar.
     """
     activityProfiles: [ActivityProfile!]!
+
+    """
+    Liefert ein zentral konfiguriertes Aktivitätsprofil anhand seines Codes.
+    """
+    activityProfile(code: ActivityProfileCode!): ActivityProfile!
 }
 
 type Mutation {

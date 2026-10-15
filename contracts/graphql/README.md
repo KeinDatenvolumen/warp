@@ -480,6 +480,26 @@ query ActivityProfiles {
 }
 ```
 
+Ein einzelnes Aktivitätsprofil wird über seinen Profilcode geladen:
+
+```graphql
+query GetActivityProfile($code: ActivityProfileCode!) {
+    activityProfile(code: $code) {
+        code
+        displayName
+        weatherQueryIntervalMinutes
+    }
+}
+```
+
+Beispielvariablen:
+
+```json
+{
+  "code": "BICYCLE"
+}
+```
+
 Die konkreten Werte der Profile werden zentral durch den Routing-Service
 bereitgestellt. Das Frontend darf keine eigenen Profilparameter erzeugen oder
 überschreiben.
