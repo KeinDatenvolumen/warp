@@ -11,7 +11,7 @@ import de.warp.routing.profile.application.ActivityProfileService;
 import de.warp.routing.profile.domain.ActivityProfileCode;
 
 @RestController
-@RequestMapping("/internal/activity-profiles")
+@RequestMapping("/internal/v1/activity-profiles")
 public class ActivityProfileController {
     private final ActivityProfileService activityProfileService;
 

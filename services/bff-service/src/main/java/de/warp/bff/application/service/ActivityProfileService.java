@@ -27,7 +27,7 @@ public class ActivityProfileService {
         try {
             var response = restClient
                     .get()
-                    .uri(routingServiceUrl + "/internal/activity-profiles")
+                    .uri(routingServiceUrl + "/internal/v1/activity-profiles")
                     .retrieve()
                     .body(ActivityProfileResponse[].class);
 
