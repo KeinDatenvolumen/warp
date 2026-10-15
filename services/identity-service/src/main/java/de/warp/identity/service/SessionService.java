@@ -2,9 +2,12 @@ package de.warp.identity.service;
 
 import de.warp.identity.dto.CreateSessionRequest;
 import de.warp.identity.dto.CreatedSessionResponse;
+import de.warp.identity.dto.SessionResponse;
 import de.warp.identity.entity.SessionEntity;
 import de.warp.identity.entity.UserEntity;
 import de.warp.identity.exceptions.InvalidCredentialsException;
+import de.warp.identity.exceptions.SessionExpiredException;
+import de.warp.identity.exceptions.SessionNotFoundException;
 import de.warp.identity.repository.SessionRepository;
 import de.warp.identity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,5 +101,36 @@ public class SessionService {
         return "ses_" + UUID.randomUUID()
                 .toString()
                 .replace("-", "");
+    }
+
+    @Transactional(readOnly = true)
+    public SessionResponse validateSession(String sessionToken) {
+        String tokenHash = sessionTokenService.hashToken(sessionToken);
+
+        SessionEntity session = sessionRepository
+                .findByTokenHash(tokenHash)
+                .orElseThrow(SessionNotFoundException::new);
+
+        if (!session.isValidAt(clock.instant())) {
+            throw new SessionExpiredException();
+        }
+
+        return new SessionResponse(
+                session.getId(),
+                session.getUser().getId(),
+                session.getCreatedAt(),
+                session.getExpiresAt()
+        );
+    }
+    @Transactional
+    public void invalidateSession(String sessionToken) {
+        String tokenHash = sessionTokenService.hashToken(sessionToken);
+
+        sessionRepository
+                .findByTokenHash(tokenHash)
+                .ifPresent(session -> {
+                    session.invalidate(clock.instant());
+                    sessionRepository.save(session);
+                });
     }
 }

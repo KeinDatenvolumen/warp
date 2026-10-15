@@ -198,4 +198,34 @@ public class RegistrationExceptionHandler {
             default -> "INVALID_FIELD";
         };
     }
+
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleSessionNotFound(
+            SessionNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.NOT_FOUND,
+                "session-not-found",
+                "SESSION_NOT_FOUND",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(SessionExpiredException.class)
+    public ResponseEntity<ApiErrorResponse> handleSessionExpired(
+            SessionExpiredException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.GONE,
+                "session-expired",
+                "SESSION_EXPIRED",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
 }

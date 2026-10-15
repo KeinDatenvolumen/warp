@@ -2,7 +2,10 @@ package de.warp.identity.controller;
 
 import de.warp.identity.dto.CreateSessionRequest;
 import de.warp.identity.dto.CreatedSessionResponse;
+import de.warp.identity.dto.SessionResponse;
 import de.warp.identity.exceptions.InvalidCredentialsException;
+import de.warp.identity.exceptions.SessionExpiredException;
+import de.warp.identity.exceptions.SessionNotFoundException;
 import de.warp.identity.filter.CorrelationIdFilter;
 import de.warp.identity.service.SessionService;
 import org.junit.jupiter.api.Test;
@@ -17,14 +20,9 @@ import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(InternalSessionController.class)
 class InternalSessionControllerTest {
@@ -247,5 +245,180 @@ class InternalSessionControllerTest {
 
         verify(sessionService, never())
                 .createSession(any(CreateSessionRequest.class));
+    }
+
+    @Test
+    void shouldReturnSessionForValidToken() throws Exception {
+        SessionResponse response = new SessionResponse(
+                "ses_123",
+                "usr_123",
+                Instant.parse("2026-10-15T12:00:00Z"),
+                Instant.parse("2026-10-16T00:00:00Z")
+        );
+
+        when(sessionService.validateSession("valid-session-token"))
+                .thenReturn(response);
+
+        mockMvc.perform(get(
+                        "/internal/v1/sessions/{sessionToken}",
+                        "valid-session-token"
+                )
+                        .header(
+                                CorrelationIdFilter.HEADER_NAME,
+                                CORRELATION_ID
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_JSON
+                ))
+                .andExpect(header().string(
+                        CorrelationIdFilter.HEADER_NAME,
+                        CORRELATION_ID
+                ))
+                .andExpect(jsonPath("$.id")
+                        .value("ses_123"))
+                .andExpect(jsonPath("$.userId")
+                        .value("usr_123"))
+                .andExpect(jsonPath("$.createdAt")
+                        .value("2026-10-15T12:00:00Z"))
+                .andExpect(jsonPath("$.expiresAt")
+                        .value("2026-10-16T00:00:00Z"))
+                .andExpect(jsonPath("$.sessionToken").doesNotExist())
+                .andExpect(jsonPath("$.tokenHash").doesNotExist())
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(sessionService)
+                .validateSession("valid-session-token");
+    }
+
+    @Test
+    void shouldReturnNotFoundForUnknownSession() throws Exception {
+        when(sessionService.validateSession("unknown-session-token"))
+                .thenThrow(new SessionNotFoundException());
+
+        mockMvc.perform(get(
+                        "/internal/v1/sessions/{sessionToken}",
+                        "unknown-session-token"
+                )
+                        .header(
+                                CorrelationIdFilter.HEADER_NAME,
+                                CORRELATION_ID
+                        ))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_PROBLEM_JSON
+                ))
+                .andExpect(header().string(
+                        CorrelationIdFilter.HEADER_NAME,
+                        CORRELATION_ID
+                ))
+                .andExpect(jsonPath("$.type").value(
+                        "https://warp.local/problems/session-not-found"
+                ))
+                .andExpect(jsonPath("$.title")
+                        .value("Not Found"))
+                .andExpect(jsonPath("$.status")
+                        .value(404))
+                .andExpect(jsonPath("$.code")
+                        .value("SESSION_NOT_FOUND"))
+                .andExpect(jsonPath("$.detail")
+                        .value("Die Sitzung wurde nicht gefunden."))
+                .andExpect(jsonPath("$.instance").value(
+                        "/internal/v1/sessions/unknown-session-token"
+                ))
+                .andExpect(jsonPath("$.correlationId")
+                        .value(CORRELATION_ID))
+                .andExpect(jsonPath("$.sessionToken").doesNotExist())
+                .andExpect(jsonPath("$.tokenHash").doesNotExist())
+                .andExpect(jsonPath("$.fieldErrors").doesNotExist());
+
+        verify(sessionService)
+                .validateSession("unknown-session-token");
+    }
+
+    @Test
+    void shouldReturnGoneForExpiredSession() throws Exception {
+        when(sessionService.validateSession("expired-session-token"))
+                .thenThrow(new SessionExpiredException());
+
+        mockMvc.perform(get(
+                        "/internal/v1/sessions/{sessionToken}",
+                        "expired-session-token"
+                )
+                        .header(
+                                CorrelationIdFilter.HEADER_NAME,
+                                CORRELATION_ID
+                        ))
+                .andExpect(status().isGone())
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_PROBLEM_JSON
+                ))
+                .andExpect(header().string(
+                        CorrelationIdFilter.HEADER_NAME,
+                        CORRELATION_ID
+                ))
+                .andExpect(jsonPath("$.type").value(
+                        "https://warp.local/problems/session-expired"
+                ))
+                .andExpect(jsonPath("$.title")
+                        .value("Gone"))
+                .andExpect(jsonPath("$.status")
+                        .value(410))
+                .andExpect(jsonPath("$.code")
+                        .value("SESSION_EXPIRED"))
+                .andExpect(jsonPath("$.detail").value(
+                        "Die Sitzung ist abgelaufen oder wurde invalidiert."
+                ))
+                .andExpect(jsonPath("$.correlationId")
+                        .value(CORRELATION_ID))
+                .andExpect(jsonPath("$.sessionToken").doesNotExist())
+                .andExpect(jsonPath("$.tokenHash").doesNotExist())
+                .andExpect(jsonPath("$.fieldErrors").doesNotExist());
+
+        verify(sessionService)
+                .validateSession("expired-session-token");
+    }
+    @Test
+    void shouldReturnNoContentWhenInvalidatingSession() throws Exception {
+        mockMvc.perform(delete(
+                        "/internal/v1/sessions/{sessionToken}",
+                        "valid-session-token"
+                )
+                        .header(
+                                CorrelationIdFilter.HEADER_NAME,
+                                CORRELATION_ID
+                        ))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(
+                        CorrelationIdFilter.HEADER_NAME,
+                        CORRELATION_ID
+                ))
+                .andExpect(content().string(""));
+
+        verify(sessionService)
+                .invalidateSession("valid-session-token");
+    }
+
+    @Test
+    void shouldReturnNoContentForUnknownSessionDuringLogout()
+            throws Exception {
+        mockMvc.perform(delete(
+                        "/internal/v1/sessions/{sessionToken}",
+                        "unknown-session-token"
+                )
+                        .header(
+                                CorrelationIdFilter.HEADER_NAME,
+                                CORRELATION_ID
+                        ))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(
+                        CorrelationIdFilter.HEADER_NAME,
+                        CORRELATION_ID
+                ))
+                .andExpect(content().string(""));
+
+        verify(sessionService)
+                .invalidateSession("unknown-session-token");
     }
 }
