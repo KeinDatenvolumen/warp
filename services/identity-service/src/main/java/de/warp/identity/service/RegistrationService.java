@@ -16,9 +16,6 @@ import java.util.UUID;
 @Service
 public class RegistrationService {
 
-    private static final String SUCCESS_MESSAGE =
-            "Das Benutzerkonto wurde erstellt. Eine Bestätigungs-E-Mail wurde versendet.";
-
     private static final String EMAIL_UNIQUE_INDEX =
             "uk_users_email_normalized";
     private final UserRepository userRepository;
@@ -66,8 +63,7 @@ public class RegistrationService {
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.isEmailVerified(),
-                savedUser.getCreatedAt(),
-                SUCCESS_MESSAGE
+                savedUser.getCreatedAt()
         );
     }
 

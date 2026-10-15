@@ -93,10 +93,6 @@ class RegistrationServiceTest {
         assertEquals("Max Mustermann", response.name());
         assertEquals("max@example.de", response.email());
         assertFalse(response.emailVerified());
-        assertEquals(
-                "Das Benutzerkonto wurde erstellt. Eine Bestätigungs-E-Mail wurde versendet.",
-                response.message()
-        );
     }
 
     @Test
