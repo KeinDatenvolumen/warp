@@ -29,6 +29,35 @@ export class ApiRequestError extends Error {
     }
 }
 
+function parseErrorResponse(
+    responseBody: string
+): ApiErrorResponse {
+    let parsed: unknown = responseBody
+
+    // Bis zu zweimal parsen, falls JSON als String verpackt ist.
+    for (let attempt = 0; attempt < 2; attempt++) {
+        if (typeof parsed !== 'string') {
+            break
+        }
+
+        try {
+            parsed = JSON.parse(parsed)
+        } catch {
+            return {}
+        }
+    }
+
+    if (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        !Array.isArray(parsed)
+    ) {
+        return parsed as ApiErrorResponse
+    }
+
+    return {}
+}
+
 export async function postJson<TRequest, TResponse>(
     path: string,
     body: TRequest
@@ -46,17 +75,13 @@ export async function postJson<TRequest, TResponse>(
         }
     )
 
+    const responseBody = await response.text()
+
     if (response.ok) {
-        return response.json() as Promise<TResponse>
+        return JSON.parse(responseBody) as TResponse
     }
 
-    let errorResponse: ApiErrorResponse = {}
-
-    try {
-        errorResponse = await response.json()
-    } catch {
-        // Fehlerantwort war kein gültiges JSON.
-    }
+    const errorResponse = parseErrorResponse(responseBody)
 
     throw new ApiRequestError(
         response.status,

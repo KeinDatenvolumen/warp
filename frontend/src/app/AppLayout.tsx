@@ -16,6 +16,17 @@ function navigationClassName({
 
 export default function AppLayout() {
     const {isAuthenticated, logout} = useAuth()
+
+    function handleLogout(): void {
+        const confirmed = window.confirm(
+            'Möchtest du dich wirklich abmelden?'
+        )
+
+        if (confirmed) {
+            logout()
+        }
+    }
+
     return (
         <div className={styles.shell}>
             <header className={styles.header}>
@@ -38,9 +49,9 @@ export default function AppLayout() {
                         {!isAuthenticated && <>
                                 <NavLink to="/login" className={navigationClassName}>Anmelden</NavLink>
                         </>}
-                        {isAuthenticated &&
-                            <button type="button" className={`${styles.navigationLink} ${styles.navigationButton}`}
-                                    onClick={logout}>Abmelden</button>}
+                        {isAuthenticated && (
+                            <button type="button" className={`${styles.navigationLink} ${styles.navigationButton} ${styles.logoutButton}`}
+                                    onClick={handleLogout}>Abmelden</button>)}
                     </nav>
                 </div>
             </header>

@@ -125,6 +125,21 @@
     font-size: .82rem;
 }
 
+.logoutButton {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.logoutButton:hover {
+    color: #7f1d1d;
+    background: #fecaca;
+}
+
+.logoutButton:focus-visible {
+    outline: 3px solid #ef4444;
+    outline-offset: 2px;
+}
+
 @media (min-width: 30rem) {
     .headerContent, .footerContent {
         width: min(calc(100% - (2 * var(--desktop-gutter))), var(--content-max-width));
