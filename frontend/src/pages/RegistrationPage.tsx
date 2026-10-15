@@ -75,15 +75,11 @@ export default function RegistrationPage() {
                 password: values.password
             })
 
-            if (!response.emailVerified) {
-                setSuccessMessage(
-                    'Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
-                )
-            } else {
-                setSuccessMessage(
-                    'Die Registrierung war erfolgreich.'
-                )
-            }
+            setSuccessMessage(
+                response.message ||
+                'Die Registrierung war erfolgreich.'
+            )
+
         } catch (error) {
             if (error instanceof ApiRequestError) {
                 const mapped = mapRegistrationApiErrors(
