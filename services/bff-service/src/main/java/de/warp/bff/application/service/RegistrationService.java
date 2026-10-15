@@ -2,9 +2,11 @@ package de.warp.bff.application.service;
 
 import de.warp.bff.api.dto.RegistrationRequest;
 import de.warp.bff.api.dto.RegistrationResponse;
+import de.warp.bff.api.exception.DownstreamApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 @Service
 public class RegistrationService {
@@ -26,20 +28,27 @@ public class RegistrationService {
     public RegistrationResponse register(
             RegistrationRequest request
     ) {
-        RegistrationResponse response = restClient
-                .post()
-                .uri(identityServiceUrl + "/internal/v1/users")
-                .body(request)
-                .retrieve()
-                .body(RegistrationResponse.class);
+        try {
+            RegistrationResponse response = restClient
+                    .post()
+                    .uri(identityServiceUrl + "/internal/v1/users")
+                    .body(request)
+                    .retrieve()
+                    .body(RegistrationResponse.class);
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "Identity-Service lieferte keine Registrierungsantwort."
+            if (response == null) {
+                throw new IllegalStateException(
+                        "Identity-Service lieferte keine Registrierungsantwort."
+                );
+            }
+
+            return response;
+        } catch (RestClientResponseException exception) {
+            throw new DownstreamApiException(
+                    exception.getStatusCode(),
+                    exception.getResponseBodyAsString()
             );
         }
-
-        return response;
     }
 
     private String removeTrailingSlash(String value) {
