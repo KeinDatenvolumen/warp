@@ -195,8 +195,8 @@ class RegistrationControllerTest {
                         .value("EMAIL_ALREADY_EXISTS"))
                 .andExpect(jsonPath("$.message")
                         .value("Für diese E-Mail-Adresse existiert bereits ein Benutzerkonto."))
-                .andExpect(jsonPath("$.fieldErrors").isArray())
-                .andExpect(jsonPath("$.fieldErrors").isEmpty());
+                .andExpect(jsonPath("$.fieldErrors").doesNotExist());
+
 
         verify(registrationService)
                 .register(any(RegistrationRequest.class));

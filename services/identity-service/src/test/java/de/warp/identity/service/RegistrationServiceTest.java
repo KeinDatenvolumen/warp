@@ -24,6 +24,8 @@ import static org.mockito.Mockito.never;
 
 import de.warp.identity.exceptions.EmailAlreadyExistsException;
 import org.springframework.dao.DataIntegrityViolationException;
+import java.sql.SQLException;
+import org.hibernate.exception.ConstraintViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationServiceTest {
@@ -137,10 +139,26 @@ class RegistrationServiceTest {
         when(passwordEncoder.encode("MeinSicheresPasswort123"))
                 .thenReturn("hashed-password");
 
+        SQLException sqlException = new SQLException(
+                "duplicate key value violates unique constraint",
+                "23505"
+        );
+
+        ConstraintViolationException constraintViolationException =
+                new ConstraintViolationException(
+                        "Unique index violation",
+                        sqlException,
+                        "uk_users_email_normalized"
+                );
+
+        DataIntegrityViolationException databaseException =
+                new DataIntegrityViolationException(
+                        "Database constraint violation",
+                        constraintViolationException
+                );
+
         when(userRepository.saveAndFlush(any(UserEntity.class)))
-                .thenThrow(new DataIntegrityViolationException(
-                        "Unique constraint violated"
-                ));
+                .thenThrow(databaseException);
 
         assertThrows(
                 EmailAlreadyExistsException.class,

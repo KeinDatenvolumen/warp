@@ -2,8 +2,11 @@ package de.warp.identity.exceptions;
 
 import de.warp.identity.dto.ApiErrorResponse;
 import de.warp.identity.dto.FieldErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,7 +15,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class RegistrationExceptionHandler {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(RegistrationExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
@@ -33,6 +39,21 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(response);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(
+            HttpMessageNotReadableException exception
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                "MALFORMED_REQUEST_BODY",
+                "Der Inhalt der Anfrage konnte nicht gelesen werden.",
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 
@@ -66,5 +87,22 @@ public class GlobalExceptionHandler {
             case "name" -> "INVALID_NAME";
             default -> "INVALID_FIELD";
         };
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
+            Exception exception
+    ) {
+        LOGGER.error("Unerwarteter Fehler bei der Verarbeitung der Anfrage", exception);
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                "INTERNAL_SERVER_ERROR",
+                "Bei der Verarbeitung der Anfrage ist ein unerwarteter Fehler aufgetreten.",
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
     }
 }

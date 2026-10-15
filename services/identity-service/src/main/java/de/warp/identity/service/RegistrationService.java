@@ -5,12 +5,12 @@ import de.warp.identity.dto.RegistrationResponse;
 import de.warp.identity.entity.UserEntity;
 import de.warp.identity.exceptions.EmailAlreadyExistsException;
 import de.warp.identity.repository.UserRepository;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -19,6 +19,8 @@ public class RegistrationService {
     private static final String SUCCESS_MESSAGE =
             "Das Benutzerkonto wurde erstellt. Eine Bestätigungs-E-Mail wurde versendet.";
 
+    private static final String EMAIL_UNIQUE_INDEX =
+            "uk_users_email_normalized";
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -33,8 +35,7 @@ public class RegistrationService {
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
         String normalizedName = request.name().trim();
-        String normalizedEmail = normalizeEmail(request.email());
-
+        String normalizedEmail = request.email();
         if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyExistsException();
         }
@@ -53,7 +54,11 @@ public class RegistrationService {
         try {
             savedUser = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException exception) {
-            throw new EmailAlreadyExistsException();
+            if (isEmailUniqueIndexViolation(exception)) {
+                throw new EmailAlreadyExistsException();
+            }
+
+            throw exception;
         }
 
         return new RegistrationResponse(
@@ -66,13 +71,27 @@ public class RegistrationService {
         );
     }
 
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
-
     private String generateUserId() {
         return "usr_" + UUID.randomUUID()
                 .toString()
                 .replace("-", "");
+    }
+
+    private boolean isEmailUniqueIndexViolation(
+            DataIntegrityViolationException exception
+    ) {
+        Throwable cause = exception;
+
+        while (cause != null) {
+            if (cause instanceof ConstraintViolationException constraintException) {
+                String constraintName = constraintException.getConstraintName();
+
+                return EMAIL_UNIQUE_INDEX.equalsIgnoreCase(constraintName);
+            }
+
+            cause = cause.getCause();
+        }
+
+        return false;
     }
 }
