@@ -35,7 +35,9 @@ export default function AppLayout() {
                             <NavLink to="/profile" className={navigationClassName}>Profil</NavLink>
                             <NavLink to="/saved-routes" className={navigationClassName}>Gespeicherte Routen</NavLink>
                         </>}
-                        {!isAuthenticated && <NavLink to="/login" className={navigationClassName}>Anmelden</NavLink>}
+                        {!isAuthenticated && <>
+                                <NavLink to="/login" className={navigationClassName}>Anmelden</NavLink>
+                        </>}
                         {isAuthenticated &&
                             <button type="button" className={`${styles.navigationLink} ${styles.navigationButton}`}
                                     onClick={logout}>Abmelden</button>}

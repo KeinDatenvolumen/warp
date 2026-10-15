@@ -1,5 +1,6 @@
 import type {FormEvent} from 'react'
 import {
+    Link,
     Navigate,
     useLocation,
     useNavigate,
@@ -47,6 +48,13 @@ export default function LoginPage() {
                         Testweise anmelden
                     </button>
                 </form>
+
+                <p className={styles.registrationPrompt}>
+                    Noch keinen Account?{' '}
+                    <Link to="/register">
+                        Registrieren
+                    </Link>
+                </p>
             </section>
         </main>
     )
