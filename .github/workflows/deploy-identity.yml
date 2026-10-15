@@ -29,6 +29,6 @@ jobs:
       app_name: ${{ vars.HEROKU_IDENTITY_APP }}
       dockerfile: services/identity-service/Dockerfile
       image_name: warp-identity
-      health_path: /actuator/health/readiness
+      health_path: /internal/health/readiness
     secrets:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

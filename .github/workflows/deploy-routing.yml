@@ -29,6 +29,6 @@ jobs:
       app_name: ${{ vars.HEROKU_ROUTING_APP }}
       dockerfile: services/routing-service/Dockerfile
       image_name: warp-routing
-      health_path: /actuator/health/readiness
+      health_path: /internal/health/readiness
     secrets:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.util.List;
@@ -26,6 +27,21 @@ public class RegistrationExceptionHandler {
 
     private static final String PROBLEM_BASE_URI =
             "https://warp.local/problems/";
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResourceFound(
+            NoResourceFoundException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.NOT_FOUND,
+                "not-found",
+                "RESOURCE_NOT_FOUND",
+                "Die angeforderte Ressource wurde nicht gefunden",
+                List.of(),
+                request
+        );
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
