@@ -9,6 +9,7 @@ export interface RegistrationErrorState {
 }
 
 export function mapRegistrationApiErrors(
+    status: number | undefined,
     code: string | undefined,
     fieldErrors: ApiFieldError[],
     detail: string
@@ -17,9 +18,13 @@ export function mapRegistrationApiErrors(
         fieldErrors: {}
     }
 
-    if (code === 'EMAIL_ALREADY_EXISTS') {
+    if (
+        status === 409 &&
+        code === 'EMAIL_ALREADY_EXISTS'
+    ) {
         mapped.fieldErrors.email =
             'Für diese E-Mail-Adresse ist bereits ein Benutzerkonto vorhanden.'
+        return mapped
     }
 
     for (const fieldError of fieldErrors) {

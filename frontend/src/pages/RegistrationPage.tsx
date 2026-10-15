@@ -87,6 +87,7 @@ export default function RegistrationPage() {
         } catch (error) {
             if (error instanceof ApiRequestError) {
                 const mapped = mapRegistrationApiErrors(
+                    error.status,
                     error.code,
                     error.fieldErrors,
                     error.message
@@ -177,9 +178,7 @@ export default function RegistrationPage() {
                             autoComplete="email"
                             value={values.email}
                             onChange={handleChange}
-                            aria-invalid={Boolean(
-                                errors.email
-                            )}
+                            aria-invalid={Boolean(errors.email)}
                             aria-describedby={
                                 errors.email
                                     ? 'registration-email-error'
