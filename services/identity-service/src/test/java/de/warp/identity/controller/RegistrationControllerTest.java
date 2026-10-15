@@ -53,7 +53,7 @@ class RegistrationControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post("/internal/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -86,7 +86,7 @@ class RegistrationControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post("/internal/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnprocessableEntity())
@@ -117,7 +117,7 @@ class RegistrationControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post("/internal/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnprocessableEntity())
@@ -149,7 +149,7 @@ class RegistrationControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post("/internal/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnprocessableEntity())
@@ -184,7 +184,7 @@ class RegistrationControllerTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post("/internal/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isConflict())

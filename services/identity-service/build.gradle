@@ -17,8 +17,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.21.0'
-
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
