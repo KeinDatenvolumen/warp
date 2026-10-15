@@ -424,7 +424,7 @@ type Example {
 }
 ```
 
-## Geplante Schema-Bereiche
+## Schema-Bereiche
 
 Das Schema wird schrittweise um folgende fachliche Bereiche erweitert:
 
@@ -435,6 +435,79 @@ Das Schema wird schrittweise um folgende fachliche Bereiche erweitert:
 - Wetterauswertung
 - Abfahrtsalternativen
 - gespeicherte Routen
+
+### Aktivitätsprofile
+
+Die zentral konfigurierten Aktivitätsprofile sind:
+
+- `BICYCLE`
+- `MOTORCYCLE`
+- `HIKING`
+
+Ein Aktivitätsprofil enthält:
+
+- einen stabilen fachlichen Profilcode,
+- einen Anzeigenamen,
+- eine zentrale Durchschnittsgeschwindigkeit,
+- ein zugeordnetes Routingprofil,
+- ein Wetter-Abfrageintervall,
+- zentrale Wegepräferenzen.
+
+Die Profilparameter werden zentral im Backend verwaltet. Endbenutzer dürfen
+ausschließlich ein Profil auswählen. Die Parameter eines Profils, beispielsweise
+die Geschwindigkeit, das Wetter-Abfrageintervall oder die Wegepräferenzen,
+sind nicht über die öffentliche GraphQL-API veränderbar.
+
+Die verfügbaren Profile werden über folgende Query geliefert:
+
+```graphql
+query ActivityProfiles {
+    activityProfiles {
+        code
+        displayName
+        averageSpeedKmh
+        routingProfile
+        weatherQueryIntervalMinutes
+        wayPreferences {
+            preferCycleways
+            avoidMotorways
+            avoidTollRoads
+            avoidUnpavedWays
+            preferPavedWays
+            preferScenicWays
+        }
+    }
+}
+```
+
+Ein einzelnes Aktivitätsprofil wird über seinen Profilcode geladen:
+
+```graphql
+query GetActivityProfile($code: ActivityProfileCode!) {
+    activityProfile(code: $code) {
+        code
+        displayName
+        weatherQueryIntervalMinutes
+    }
+}
+```
+
+Beispielvariablen:
+
+```json
+{
+  "code": "BICYCLE"
+}
+```
+
+Die konkreten Werte der Profile werden zentral durch den Routing-Service
+bereitgestellt. Das Frontend darf keine eigenen Profilparameter erzeugen oder
+überschreiben.
+
+Die Auswahl eines Profils im Frontend ist in diesem ersten Implementierungsschritt
+noch nicht dauerhaft an ein Backend-Benutzerkonto gebunden. Die produktive
+Benutzerpersistenz benötigt zusätzlich eine implementierte Session- und
+Benutzerverwaltung im Identity-Service.
 
 Die Bereiche bleiben Teil eines gemeinsamen öffentlichen GraphQL-Schemas des
 BFF. Die internen Services werden dadurch nicht selbst zu öffentlichen

@@ -14,6 +14,17 @@ type Query {
     Liefert den zusammengefassten Zustand des BFF und aller internen Services.
     """
     systemHealth: SystemHealth!
+
+    """
+    Liefert alle zentral konfigurierten Aktivitätsprofile.
+    Die Profilparameter sind für Endbenutzer nicht veränderbar.
+    """
+    activityProfiles: [ActivityProfile!]!
+
+    """
+    Liefert ein zentral konfiguriertes Aktivitätsprofil anhand seines Codes.
+    """
+    activityProfile(code: ActivityProfileCode!): ActivityProfile!
 }
 
 type Mutation {
@@ -42,6 +53,38 @@ type ServiceHealth {
     status: ServiceHealthStatus!
     reachable: Boolean!
     responseTimeMs: Int!
+}
+
+"""
+Ein zentral konfiguriertes Aktivitätsprofil.
+
+Die Parameter werden zentral im Backend verwaltet und können
+von Endbenutzern nicht verändert werden.
+"""
+type ActivityProfile {
+    """
+    Stabiler fachlicher Code des Aktivitätsprofils.
+    """
+    code: ActivityProfileCode!
+
+    """
+    Anzeigename für das Frontend.
+    """
+    displayName: String!
+
+    """
+    Zentrales Wetter-Abfrageintervall in Minuten.
+    """
+    weatherQueryIntervalMinutes: Int!
+}
+
+"""
+Verfügbare Aktivitätsprofile.
+"""
+enum ActivityProfileCode {
+    BICYCLE
+    MOTORCYCLE
+    HIKING
 }
 
 enum SystemHealthStatus {
