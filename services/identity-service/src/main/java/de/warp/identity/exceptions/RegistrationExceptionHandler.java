@@ -55,16 +55,32 @@ public class RegistrationExceptionHandler {
                 .map(this::toFieldErrorResponse)
                 .toList();
 
+        String requestPath = request.getRequestURI();
+
+        boolean isSessionRequest =
+                "/internal/v1/sessions".equals(requestPath);
+
+        String problemType = isSessionRequest
+                ? "invalid-session-request"
+                : "invalid-registration-request";
+
+        String code = isSessionRequest
+                ? "INVALID_SESSION_REQUEST"
+                : "INVALID_REGISTRATION_REQUEST";
+
+        String detail = isSessionRequest
+                ? "Die Anmeldedaten sind ungültig."
+                : "Die Registrierungsdaten sind ungültig.";
+
         return createProblemResponse(
                 HttpStatus.UNPROCESSABLE_CONTENT,
-                "invalid-registration-request",
-                "INVALID_REGISTRATION_REQUEST",
-                "Die Registrierungsdaten sind ungültig.",
+                problemType,
+                code,
+                detail,
                 fieldErrors,
                 request
         );
     }
-
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(
             HttpMessageNotReadableException exception,
@@ -89,6 +105,21 @@ public class RegistrationExceptionHandler {
                 HttpStatus.CONFLICT,
                 "email-already-exists",
                 "EMAIL_ALREADY_EXISTS",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.UNAUTHORIZED,
+                "invalid-credentials",
+                "INVALID_CREDENTIALS",
                 exception.getMessage(),
                 List.of(),
                 request

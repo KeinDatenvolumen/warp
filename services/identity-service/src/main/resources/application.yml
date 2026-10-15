@@ -33,6 +33,8 @@ spring:
     locations: classpath:db/migration
 
 warp:
+  session:
+    duration: ${SESSION_DURATION:PT12H}
   mail:
     from: ${MAIL_FROM:no-reply@warp.local}
   frontend:
