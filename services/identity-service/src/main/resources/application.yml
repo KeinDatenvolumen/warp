@@ -38,6 +38,10 @@ warp:
   frontend:
     public-url: ${APP_PUBLIC_URL:http://localhost:5173}
 
+logging:
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-none}]"
+
 server:
   port: ${PORT:8081}
   shutdown: graceful

@@ -1,0 +1,154 @@
+package de.warp.identity.exceptions;
+
+import de.warp.identity.dto.ApiErrorResponse;
+import de.warp.identity.dto.FieldErrorResponse;
+import de.warp.identity.filter.CorrelationIdFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.net.URI;
+import java.util.List;
+
+@RestControllerAdvice
+public class RegistrationExceptionHandler {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(RegistrationExceptionHandler.class);
+
+    private static final String PROBLEM_BASE_URI =
+            "https://warp.local/problems/";
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        List<FieldErrorResponse> fieldErrors = exception
+                .getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(this::toFieldErrorResponse)
+                .toList();
+
+        return createProblemResponse(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "invalid-registration-request",
+                "INVALID_REGISTRATION_REQUEST",
+                "Die Registrierungsdaten sind ungültig.",
+                fieldErrors,
+                request
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.BAD_REQUEST,
+                "malformed-request-body",
+                "MALFORMED_REQUEST_BODY",
+                "Der Inhalt der Anfrage konnte nicht gelesen werden.",
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailAlreadyExists(
+            EmailAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.CONFLICT,
+                "email-already-exists",
+                "EMAIL_ALREADY_EXISTS",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.error(
+                "Unerwarteter Fehler bei der Verarbeitung der Anfrage",
+                exception
+        );
+
+        return createProblemResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "internal-server-error",
+                "INTERNAL_SERVER_ERROR",
+                "Bei der Verarbeitung der Anfrage ist ein unerwarteter Fehler aufgetreten.",
+                List.of(),
+                request
+        );
+    }
+
+    private ResponseEntity<ApiErrorResponse> createProblemResponse(
+            HttpStatus status,
+            String problemType,
+            String code,
+            String detail,
+            List<FieldErrorResponse> fieldErrors,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                URI.create(PROBLEM_BASE_URI + problemType),
+                status.getReasonPhrase(),
+                status.value(),
+                code,
+                detail,
+                request.getRequestURI(),
+                getCorrelationId(request),
+                fieldErrors
+        );
+
+        return ResponseEntity
+                .status(status)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(response);
+    }
+
+    private String getCorrelationId(HttpServletRequest request) {
+        Object correlationId =
+                request.getAttribute(CorrelationIdFilter.REQUEST_ATTRIBUTE);
+
+        if (correlationId instanceof String value && !value.isBlank()) {
+            return value;
+        }
+
+        return "unknown";
+    }
+
+    private FieldErrorResponse toFieldErrorResponse(FieldError fieldError) {
+        return new FieldErrorResponse(
+                fieldError.getField(),
+                determineFieldErrorCode(fieldError),
+                fieldError.getDefaultMessage()
+        );
+    }
+
+    private String determineFieldErrorCode(FieldError fieldError) {
+        return switch (fieldError.getField()) {
+            case "password" -> "INVALID_PASSWORD";
+            case "email" -> "INVALID_EMAIL";
+            case "name" -> "INVALID_NAME";
+            default -> "INVALID_FIELD";
+        };
+    }
+}
