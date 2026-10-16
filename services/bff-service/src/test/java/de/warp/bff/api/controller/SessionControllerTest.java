@@ -3,6 +3,7 @@ package de.warp.bff.api.controller;
 import de.warp.bff.application.exception.InvalidCredentialsException;
 import de.warp.bff.application.service.CreatedSession;
 import de.warp.bff.application.service.SessionService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -13,9 +14,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -101,5 +104,44 @@ class SessionControllerTest {
                 .andExpect(jsonPath("$.sessionToken").doesNotExist());
 
         verify(sessionService).createSession(any());
-    }}
+    }
+
+    @Test
+    void shouldInvalidateSessionAndDeleteCookie() throws Exception {
+        mockMvc.perform(delete("/api/v1/sessions")
+                        .cookie(new Cookie(
+                                "session",
+                                "valid-session-token"
+                        )))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("session=")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("Max-Age=0")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("Path=/")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("Secure")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("HttpOnly")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("SameSite=Lax")
+                ));
+
+        verify(sessionService)
+                .invalidateSession("valid-session-token");
+    }
+}
+
 

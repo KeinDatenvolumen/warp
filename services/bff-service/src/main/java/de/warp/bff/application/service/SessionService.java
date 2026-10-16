@@ -33,4 +33,9 @@ public class SessionService {
                 internalResponse.expiresAt()
         );
     }
+
+    public void invalidateSession(String sessionToken) {
+        identityClient.invalidateSession(sessionToken);
+    }
 }
+

@@ -8,10 +8,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/v1/sessions")
@@ -50,5 +54,34 @@ public class SessionController {
                         sessionCookie.toString()
                 )
                 .body(response);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> invalidateSession(
+            @CookieValue(
+                    name = "session",
+                    required = false
+            )
+            String sessionToken
+    ) {
+        if (sessionToken != null && !sessionToken.isBlank()) {
+            sessionService.invalidateSession(sessionToken);
+        }
+
+        ResponseCookie deletedSessionCookie = ResponseCookie
+                .from("session", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ZERO)
+                .build();
+
+        return ResponseEntity.noContent()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        deletedSessionCookie.toString()
+                )
+                .build();
     }
 }
