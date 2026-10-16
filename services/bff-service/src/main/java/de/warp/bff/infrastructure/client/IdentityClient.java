@@ -1,5 +1,6 @@
 package de.warp.bff.infrastructure.client;
 
+import de.warp.bff.application.exception.InvalidCredentialsException;
 import de.warp.bff.infrastructure.client.dto.InternalCreateSessionRequest;
 import de.warp.bff.infrastructure.client.dto.InternalCreatedSessionResponse;
 import de.warp.bff.infrastructure.client.dto.InternalRegistrationRequest;
@@ -7,6 +8,7 @@ import de.warp.bff.infrastructure.client.dto.InternalRegistrationResponse;
 import de.warp.bff.infrastructure.client.dto.InternalSessionResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Component
@@ -47,20 +49,24 @@ public class IdentityClient {
     public InternalCreatedSessionResponse createSession(
             InternalCreateSessionRequest request
     ) {
-        InternalCreatedSessionResponse response = restClient
-                .post()
-                .uri(identityServiceUrl + "/internal/v1/sessions")
-                .body(request)
-                .retrieve()
-                .body(InternalCreatedSessionResponse.class);
+        try {
+            InternalCreatedSessionResponse response = restClient
+                    .post()
+                    .uri(identityServiceUrl + "/internal/v1/sessions")
+                    .body(request)
+                    .retrieve()
+                    .body(InternalCreatedSessionResponse.class);
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "Der Identity-Service lieferte keine Sitzung."
-            );
+            if (response == null) {
+                throw new IllegalStateException(
+                        "Der Identity-Service lieferte keine Sitzung."
+                );
+            }
+
+            return response;
+        } catch (HttpClientErrorException.Unauthorized exception) {
+            throw new InvalidCredentialsException();
         }
-
-        return response;
     }
 
     public InternalSessionResponse validateSession(
