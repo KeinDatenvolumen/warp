@@ -7,7 +7,6 @@ public record RegistrationResponse(
         String name,
         String email,
         boolean emailVerified,
-        Instant createdAt,
-        String message
+        Instant createdAt
 ) {
 }

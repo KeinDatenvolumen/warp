@@ -10,5 +10,4 @@ export interface RegistrationResponse {
     email: string
     emailVerified: boolean
     createdAt: string
-    message: string
 }
