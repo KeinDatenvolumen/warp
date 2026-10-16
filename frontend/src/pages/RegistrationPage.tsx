@@ -69,15 +69,14 @@ export default function RegistrationPage() {
         setIsSubmitting(true)
 
         try {
-            const response = await registerUser({
+            await registerUser({
                 name: values.name.trim(),
                 email: values.email.trim(),
                 password: values.password
             })
 
             setSuccessMessage(
-                response.message ||
-                'Die Registrierung war erfolgreich.'
+                'Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
             )
 
         } catch (error) {

@@ -27,8 +27,7 @@ const validResponse: RegistrationResponse = {
     name: 'Max Mustermann',
     email: 'max@example.de',
     emailVerified: false,
-    createdAt: '2026-10-15T10:00:00Z',
-    message: 'Die Registrierung war erfolgreich.'
+    createdAt: '2026-10-15T10:00:00Z'
 }
 
 function renderRegistrationPage() {
@@ -460,12 +459,8 @@ describe('RegistrationPage', () => {
         })
     })
 
-    it('zeigt die Erfolgsmeldung des Backends an', async () => {
-        mockedRegisterUser.mockResolvedValue({
-            ...validResponse,
-            message:
-                'Bitte bestätige deine E-Mail-Adresse.'
-        })
+    it('zeigt nach erfolgreicher Registrierung die Bestätigungsmeldung an', async () => {
+        mockedRegisterUser.mockResolvedValue(validResponse)
 
         const user = await fillValidForm()
 
@@ -478,7 +473,7 @@ describe('RegistrationPage', () => {
         expect(
             await screen.findByRole('status')
         ).toHaveTextContent(
-            'Bitte bestätige deine E-Mail-Adresse.'
+            'Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
         )
     })
 

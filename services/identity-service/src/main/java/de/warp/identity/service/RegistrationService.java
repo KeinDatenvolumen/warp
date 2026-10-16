@@ -63,8 +63,7 @@ public class RegistrationService {
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.isEmailVerified(),
-                savedUser.getCreatedAt(),
-                "Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse."
+                savedUser.getCreatedAt()
         );
     }
 
