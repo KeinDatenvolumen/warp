@@ -11,6 +11,7 @@ import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Component;
 import java.util.Map;
+import de.warp.bff.infrastructure.geocoding.GeocodingServiceUnavailableException;
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -37,6 +38,19 @@ public class GlobalGraphQlExceptionResolver
                     ErrorType.BAD_REQUEST,
                     GraphQlErrorCode.BAD_REQUEST,
                     BAD_REQUEST_MESSAGE
+            );
+        }
+        if (exception instanceof GeocodingServiceUnavailableException) {
+            LOGGER.warn(
+                    "Der Geocoding-Dienst ist nicht verfügbar.",
+                    exception
+            );
+
+            return createError(
+                    environment,
+                    ErrorType.INTERNAL_ERROR,
+                    GraphQlErrorCode.GEOCODING_SERVICE_UNAVAILABLE,
+                    "Die Ortssuche ist momentan nicht verfügbar."
             );
         }
 

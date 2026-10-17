@@ -37,4 +37,27 @@ public class HttpClientConfiguration {
                 .requestFactory(requestFactory)
                 .build();
     }
+    @Bean
+    RestClient mapTilerRestClient(
+            @Value("${warp.geocoding.maptiler.base-url}") String baseUrl,
+            @Value("${warp.geocoding.maptiler.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.geocoding.maptiler.read-timeout}")
+            Duration readTimeout
+    )
+    {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(connectTimeout)
+                .build();
+
+        JdkClientHttpRequestFactory requestFactory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        requestFactory.setReadTimeout(readTimeout);
+
+        return RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
+                .build();
+    }
 }
