@@ -14,7 +14,8 @@ import type { Place } from '../types/searchPlaces'
 
 import styles from './PagePlaceholder.module.css'
 
-const SELECTED_PROFILE_STORAGE_KEY = 'warp-selected-activity-profile'
+const SELECTED_PROFILE_STORAGE_KEY =
+    'warp-selected-activity-profile'
 
 const MINIMUM_SEARCH_LENGTH = 3
 const MAXIMUM_SEARCH_LENGTH = 200
@@ -55,6 +56,7 @@ export default function RoutePlannerPage() {
         useState<Place | null>(null)
 
     const [startResults, setStartResults] = useState<Place[]>([])
+
     const [destinationResults, setDestinationResults] =
         useState<Place[]>([])
 
@@ -68,6 +70,23 @@ export default function RoutePlannerPage() {
 
     const startRequestId = useRef(0)
     const destinationRequestId = useRef(0)
+
+    const routeCoordinates =
+        selectedStart && selectedDestination
+            ? {
+                start: {
+                    latitude: selectedStart.latitude,
+                    longitude: selectedStart.longitude,
+                },
+                destination: {
+                    latitude: selectedDestination.latitude,
+                    longitude: selectedDestination.longitude,
+                },
+            }
+            : null
+
+    const canCalculateRoute =
+        selectedProfile !== null && routeCoordinates !== null
 
     const [
         searchStartPlaces,
@@ -91,11 +110,13 @@ export default function RoutePlannerPage() {
                 SELECTED_PROFILE_STORAGE_KEY,
                 selectedProfile,
             )
-        } else {
-            window.localStorage.removeItem(
-                SELECTED_PROFILE_STORAGE_KEY,
-            )
+
+            return
         }
+
+        window.localStorage.removeItem(
+            SELECTED_PROFILE_STORAGE_KEY,
+        )
     }, [selectedProfile])
 
     useEffect(() => {
@@ -411,6 +432,13 @@ export default function RoutePlannerPage() {
                         </p>
                     )}
                 </div>
+
+                <button
+                    type="button"
+                    disabled={!canCalculateRoute}
+                >
+                    Route berechnen
+                </button>
             </section>
 
             <div style={{ marginTop: '1.5rem' }}>
