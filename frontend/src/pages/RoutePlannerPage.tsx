@@ -3,10 +3,17 @@ import { useLazyQuery } from '@apollo/client/react'
 import RouteMap from '../components/RouteMap/RouteMap'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import styles from './PagePlaceholder.module.css'
+import type { Place } from '../types/searchPlaces'
 
 export default function RoutePlannerPage() {
     const [startInput, setStartInput] = useState("");
     const [destinationInput, setDestinationInput] = useState("");
+
+    const [selectedStart, setSelectedStart] =
+            useState<Place | null>(null)
+
+    const [selectedDestination, setSelectedDestination] =
+            useState<Place | null>(null)
 
     const [
         searchStartPlaces,
@@ -29,7 +36,7 @@ export default function RoutePlannerPage() {
     useEffect(() => {
         const trimmedInput = startInput.trim()
 
-        if (trimmedInput.length < 3) {
+        if (trimmedInput.length < 3 || selectedStart) {
             return
         }
 
@@ -45,12 +52,12 @@ export default function RoutePlannerPage() {
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [startInput, searchStartPlaces])
+    }, [startInput, selectedStart, searchStartPlaces])
 
     useEffect(() => {
         const trimmedInput = destinationInput.trim()
 
-        if (trimmedInput.length < 3) {
+        if (trimmedInput.length < 3 || selectedDestination) {
             return
         }
 
@@ -66,7 +73,17 @@ export default function RoutePlannerPage() {
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [destinationInput, searchDestinationPlaces])
+    }, [destinationInput, selectedDestination, searchDestinationPlaces])
+
+    function handleStartSelection(place: Place) {
+        setSelectedStart(place)
+        setStartInput(place.displayName)
+    }
+
+    function handleDestinationSelection(place: Place) {
+        setSelectedDestination(place)
+        setDestinationInput(place.displayName)
+    }
 
     return (
         <main className={styles.page}>
@@ -89,7 +106,10 @@ export default function RoutePlannerPage() {
                                     name="start"
                                     type="text"
                                     value={startInput}
-                                    onChange={(event) => setStartInput(event.target.value)}
+                                    onChange={(event) => {
+                                            setStartInput(event.target.value)
+                                            setSelectedStart(null)
+                                        }}
                                     placeholder="Ort oder Adresse eingeben"
                                     autoComplete="street-address"
                                 />
@@ -101,10 +121,39 @@ export default function RoutePlannerPage() {
                                 </p>
                                 )}
 
-                                {startData && (
-                                <p>
-                                {startData.searchPlaces.length} Ergebnisse gefunden
-                                </p>
+                                {startData &&
+                                    !startLoading &&
+                                    !startError &&
+                                    startInput.trim().length >= 3 &&
+                                    !selectedStart &&
+                                    startData.searchPlaces.length === 0 && (
+                                        <p role="status">
+                                            Kein passender Startpunkt gefunden.
+                                        </p>
+                                    )}
+
+                                {startData &&
+                                    !selectedStart &&
+                                    startData.searchPlaces.length > 0 && (
+                                        <ul aria-label="Suchergebnisse für den Startpunkt">
+                                            {startData.searchPlaces.map((place) => (
+                                                <li key={place.placeId}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleStartSelection(place)}
+                                                    >
+                                                        {place.displayName}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                {selectedStart && (
+                                    <p role="status">
+                                        Ausgewählter Startpunkt: {selectedStart.displayName}
+                                        {' – '}
+                                        {selectedStart.latitude}, {selectedStart.longitude}
+                                    </p>
                                 )}
                             </div>
 
@@ -116,9 +165,10 @@ export default function RoutePlannerPage() {
                                     name="destination"
                                     type="text"
                                     value={destinationInput}
-                                    onChange={(event) =>
-                                        setDestinationInput(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                            setDestinationInput(event.target.value)
+                                            setSelectedDestination(null)
+                                        }}
                                     placeholder="Ort oder Adresse eingeben"
                                     autoComplete="street-address"
                                 />
@@ -130,9 +180,41 @@ export default function RoutePlannerPage() {
                                     </p>
                                 )}
 
-                                {destinationData && (
-                                    <p>
-                                        {destinationData.searchPlaces.length} Ergebnisse gefunden
+                                {destinationData &&
+                                    !destinationLoading &&
+                                    !destinationError &&
+                                    destinationInput.trim().length >= 3 &&
+                                    !selectedDestination &&
+                                    destinationData.searchPlaces.length === 0 && (
+                                        <p role="status">
+                                            Kein passender Zielpunkt gefunden.
+                                        </p>
+                                    )}
+
+                                {destinationData &&
+                                    !selectedDestination &&
+                                    destinationData.searchPlaces.length > 0 && (
+                                        <ul aria-label="Suchergebnisse für den Zielpunkt">
+                                            {destinationData.searchPlaces.map((place) => (
+                                                <li key={place.placeId}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDestinationSelection(place)
+                                                        }
+                                                    >
+                                                        {place.displayName}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                {selectedDestination && (
+                                    <p role="status">
+                                        Ausgewählter Zielpunkt: {selectedDestination.displayName}
+                                        {' – '}
+                                        {selectedDestination.latitude},{' '}
+                                        {selectedDestination.longitude}
                                     </p>
                                 )}
                             </div>
