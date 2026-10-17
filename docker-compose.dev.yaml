@@ -104,6 +104,7 @@ services:
       SERVICE_NAME: bff-service
       PORT: "8080"
       FRONTEND_URL: "http://localhost:5173"
+      MAPTILER_API_KEY: ${MAPTILER_API_KEY}
       IDENTITY_SERVICE_URL: "http://identity-service:8081"
       ROUTING_SERVICE_URL: "http://routing-service:8082"
       WEATHER_SERVICE_URL: "http://weather-service:8083"

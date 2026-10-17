@@ -8,7 +8,7 @@ const MAP_CENTER: LatLngExpression = [49.354111, 9.150306]
 
 export default function RouteMap() {
     const [hasError, setHasError] = useState(false)
-    const apiKey = import.meta.env.VITE_MAPTILER_PUBLIC_API_KEY
+    const apiKey = import.meta.env.VITE_MAPTILER_API_KEY
 
     if (!apiKey) {
         return (
