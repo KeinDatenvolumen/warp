@@ -221,7 +221,10 @@ export default function RoutePlannerPage() {
                         </section>
 
             <div style={{marginTop: '1.5rem'}}>
-                <RouteMap />
+                <RouteMap
+                    startPlace={selectedStart}
+                    destinationPlace={selectedDestination}
+                />
             </div>
         </main>
     )
