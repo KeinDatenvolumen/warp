@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+    useEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+} from 'react'
 import { useLazyQuery } from '@apollo/client/react'
 
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
@@ -12,12 +17,18 @@ import styles from './PagePlaceholder.module.css'
 const SELECTED_PROFILE_STORAGE_KEY = 'warp-selected-activity-profile'
 
 const MINIMUM_SEARCH_LENGTH = 3
+const MAXIMUM_SEARCH_LENGTH = 200
 const SEARCH_RESULT_LIMIT = 5
 const SEARCH_DEBOUNCE_MS = 400
-const MAXIMUM_SEARCH_LENGTH = 200
 
 function readSelectedProfile(): ActivityProfileCode | null {
-    const value = localStorage.getItem(SELECTED_PROFILE_STORAGE_KEY)
+    if (typeof window === 'undefined') {
+        return null
+    }
+
+    const value = window.localStorage.getItem(
+        SELECTED_PROFILE_STORAGE_KEY,
+    )
 
     if (
         value === 'BICYCLE' ||
@@ -76,12 +87,14 @@ export default function RoutePlannerPage() {
 
     useEffect(() => {
         if (selectedProfile) {
-            localStorage.setItem(
+            window.localStorage.setItem(
                 SELECTED_PROFILE_STORAGE_KEY,
                 selectedProfile,
             )
         } else {
-            localStorage.removeItem(SELECTED_PROFILE_STORAGE_KEY)
+            window.localStorage.removeItem(
+                SELECTED_PROFILE_STORAGE_KEY,
+            )
         }
     }, [selectedProfile])
 
@@ -143,7 +156,9 @@ export default function RoutePlannerPage() {
                     limit: SEARCH_RESULT_LIMIT,
                 },
             }).then((result) => {
-                if (requestId !== destinationRequestId.current) {
+                if (
+                    requestId !== destinationRequestId.current
+                ) {
                     return
                 }
 
@@ -164,7 +179,7 @@ export default function RoutePlannerPage() {
     ])
 
     function handleStartInputChange(
-        event: React.ChangeEvent<HTMLInputElement>,
+        event: ChangeEvent<HTMLInputElement>,
     ) {
         setStartInput(event.target.value)
         setSelectedStart(null)
@@ -173,7 +188,7 @@ export default function RoutePlannerPage() {
     }
 
     function handleDestinationInputChange(
-        event: React.ChangeEvent<HTMLInputElement>,
+        event: ChangeEvent<HTMLInputElement>,
     ) {
         setDestinationInput(event.target.value)
         setSelectedDestination(null)
@@ -198,13 +213,16 @@ export default function RoutePlannerPage() {
     return (
         <main className={styles.page}>
             <section className={styles.card}>
-                <p className={styles.eyebrow}>Routenplanung</p>
+                <p className={styles.eyebrow}>
+                    Routenplanung
+                </p>
 
                 <h1>Routenplaner</h1>
 
                 <p className={styles.description}>
-                    Wähle ein Aktivitätsprofil sowie Start und Ziel für
-                    deine zukünftige wetterabhängige Routenplanung.
+                    Wähle ein Aktivitätsprofil sowie Start und Ziel
+                    für deine zukünftige wetterabhängige
+                    Routenplanung.
                 </p>
             </section>
 
@@ -220,7 +238,9 @@ export default function RoutePlannerPage() {
                 style={{ marginTop: '1.5rem' }}
                 aria-labelledby="route-input-heading"
             >
-                <h2 id="route-input-heading">Start und Ziel</h2>
+                <h2 id="route-input-heading">
+                    Start und Ziel
+                </h2>
 
                 <div>
                     <label htmlFor="start-input">
@@ -246,7 +266,8 @@ export default function RoutePlannerPage() {
 
                     {startError && (
                         <p role="alert">
-                            Der Startpunkt konnte nicht gesucht werden.
+                            Der Startpunkt konnte nicht gesucht
+                            werden.
                         </p>
                     )}
 
@@ -327,7 +348,8 @@ export default function RoutePlannerPage() {
 
                     {destinationError && (
                         <p role="alert">
-                            Der Zielpunkt konnte nicht gesucht werden.
+                            Der Zielpunkt konnte nicht gesucht
+                            werden.
                         </p>
                     )}
 
@@ -355,20 +377,26 @@ export default function RoutePlannerPage() {
                                 </p>
 
                                 <ul aria-label="Suchergebnisse für den Zielpunkt">
-                                    {destinationResults.map((place) => (
-                                        <li key={place.placeId}>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleDestinationSelection(
-                                                        place,
-                                                    )
-                                                }
+                                    {destinationResults.map(
+                                        (place) => (
+                                            <li
+                                                key={place.placeId}
                                             >
-                                                {place.displayName}
-                                            </button>
-                                        </li>
-                                    ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleDestinationSelection(
+                                                            place,
+                                                        )
+                                                    }
+                                                >
+                                                    {
+                                                        place.displayName
+                                                    }
+                                                </button>
+                                            </li>
+                                        ),
+                                    )}
                                 </ul>
                             </>
                         )}
@@ -386,7 +414,10 @@ export default function RoutePlannerPage() {
             </section>
 
             <div style={{ marginTop: '1.5rem' }}>
-                <RouteMap />
+                <RouteMap
+                    startPlace={selectedStart}
+                    destinationPlace={selectedDestination}
+                />
             </div>
         </main>
     )

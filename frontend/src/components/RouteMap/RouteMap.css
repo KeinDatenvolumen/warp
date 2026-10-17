@@ -48,3 +48,29 @@
     font-size: 0.65rem;
   }
 }
+
+.route-map__marker {
+    background: transparent;
+    border: none;
+}
+
+.route-map__marker span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #ffffff;
+    font-weight: 700;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+
+.route-map__marker--start span {
+    background-color: #16803c;
+}
+
+.route-map__marker--destination span {
+    background-color: #c72c41;
+}
