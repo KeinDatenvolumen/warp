@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import de.warp.bff.application.service.SystemHealthService;
 import de.warp.bff.config.GraphQlConfig;
 import de.warp.bff.graphql.SystemHealthGraphQlController;
+import de.warp.bff.graphql.SessionInvalidException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.graphql.test.autoconfigure.GraphQlTest;
@@ -108,6 +109,51 @@ class GraphQlExceptionIntegrationTests {
                     assertThat(error.getMessage())
                             .doesNotContain(
                                     "Internes ungültiges Argument"
+                            );
+                });
+    }
+
+    @Test
+    void returnsSessionInvalidForInvalidSession() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(
+                        new SessionInvalidException(
+                                new IllegalStateException(
+                                        "Interner Session-Token darf nicht erscheinen"
+                                )
+                        )
+                );
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors)
+                            .hasSize(1);
+
+                    var error = errors.getFirst();
+
+                    assertThat(error.getMessage())
+                            .isEqualTo(
+                                    "Die Sitzung ist ungültig oder abgelaufen."
+                            );
+
+                    assertThat(error.getExtensions())
+                            .containsEntry(
+                                    "code",
+                                    "SESSION_INVALID"
+                            );
+
+                    assertThat(error.getMessage())
+                            .doesNotContain(
+                                    "Interner Session-Token"
                             );
                 });
     }

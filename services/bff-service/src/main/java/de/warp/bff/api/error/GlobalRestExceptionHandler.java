@@ -3,7 +3,9 @@ package de.warp.bff.api.error;
 import de.warp.bff.api.dto.ApiErrorResponse;
 import de.warp.bff.api.dto.FieldErrorResponse;
 import de.warp.bff.application.exception.InvalidCredentialsException;
+import de.warp.bff.application.exception.TooManyLoginAttemptsException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import de.warp.bff.application.exception.DownstreamServiceUnavailableException;
 
 import java.net.URI;
 import java.util.List;
@@ -35,6 +38,37 @@ public class GlobalRestExceptionHandler {
                 List.of(),
                 request
         );
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ApiErrorResponse> handleTooManyLoginAttempts(
+            TooManyLoginAttemptsException exception,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                URI.create(
+                        PROBLEM_BASE_URI
+                                + "too-many-login-attempts"
+                ),
+                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "TOO_MANY_LOGIN_ATTEMPTS",
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .header(
+                        HttpHeaders.RETRY_AFTER,
+                        String.valueOf(
+                                TooManyLoginAttemptsException
+                                        .RETRY_AFTER_SECONDS
+                        )
+                )
+                .body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -114,5 +148,21 @@ public class GlobalRestExceptionHandler {
             case "password" -> "INVALID_PASSWORD";
             default -> "INVALID_FIELD";
         };
+    }
+
+    @ExceptionHandler(DownstreamServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleDownstreamServiceUnavailable(
+            DownstreamServiceUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "downstream-service-unavailable",
+                "DOWNSTREAM_SERVICE_UNAVAILABLE",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
     }
 }

@@ -4,6 +4,8 @@ import de.warp.bff.api.dto.CreateSessionRequest;
 import de.warp.bff.api.dto.CreateSessionResponse;
 import de.warp.bff.application.service.CreatedSession;
 import de.warp.bff.application.service.SessionService;
+import de.warp.bff.security.LoginRateLimiter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -22,20 +24,34 @@ import java.time.Duration;
 public class SessionController {
 
     private final SessionService sessionService;
+    private final LoginRateLimiter loginRateLimiter;
 
-    public SessionController(SessionService sessionService) {
+    public SessionController(
+            SessionService sessionService,
+            LoginRateLimiter loginRateLimiter
+    ) {
         this.sessionService = sessionService;
+        this.loginRateLimiter = loginRateLimiter;
     }
 
     @PostMapping
     public ResponseEntity<CreateSessionResponse> createSession(
-            @Valid @RequestBody CreateSessionRequest request
+            @Valid @RequestBody CreateSessionRequest loginRequest,
+            HttpServletRequest httpRequest
     ) {
+        loginRateLimiter.checkLoginAllowed(
+                loginRequest.email(),
+                httpRequest.getRemoteAddr()
+        );
+
         CreatedSession createdSession =
-                sessionService.createSession(request);
+                sessionService.createSession(loginRequest);
 
         ResponseCookie sessionCookie = ResponseCookie
-                .from("session", createdSession.sessionToken())
+                .from(
+                        "session",
+                        createdSession.sessionToken()
+                )
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
@@ -56,7 +72,8 @@ public class SessionController {
                 .body(response);
     }
 
-    @DeleteMapping
+
+    @DeleteMapping("/current")
     public ResponseEntity<Void> invalidateSession(
             @CookieValue(
                     name = "session",

@@ -28,3 +28,10 @@ dependencies {
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+tasks.named('test') {
+    systemProperty(
+            'warp.security.internal-service-token',
+            'test-internal-service-token'
+    )
+}

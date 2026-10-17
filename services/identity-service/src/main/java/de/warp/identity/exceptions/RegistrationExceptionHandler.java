@@ -58,8 +58,9 @@ public class RegistrationExceptionHandler {
         String requestPath = request.getRequestURI();
 
         boolean isSessionRequest =
-                "/internal/v1/sessions".equals(requestPath);
-
+                requestPath.startsWith(
+                        "/internal/v1/sessions"
+                );
         String problemType = isSessionRequest
                 ? "invalid-session-request"
                 : "invalid-registration-request";

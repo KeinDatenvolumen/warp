@@ -15,12 +15,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-json'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'com.graphql-java:graphql-java-extended-scalars:24.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.boot:spring-boot-graphql-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 def graphqlContractDirectory = rootProject.file('contracts/graphql')
@@ -30,4 +32,19 @@ tasks.named('processResources') {
         include '*.graphqls'
         into 'graphql'
     }
+}
+
+
+tasks.withType(Test).configureEach {
+    systemProperty(
+            'warp.security.internal-service-token',
+            'test-internal-service-token'
+    )
+}
+
+tasks.named('test') {
+    systemProperty(
+            'warp.security.internal-service-token',
+            'test-internal-service-token'
+    )
 }

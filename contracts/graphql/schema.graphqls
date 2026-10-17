@@ -14,7 +14,13 @@ type Query {
     Liefert den zusammengefassten Zustand des BFF und aller internen Services.
     """
     systemHealth: SystemHealth!
+    """
+    Liefert die aktuell authentifizierte Sitzung.
 
+    Fehlt die Sitzung oder ist sie abgelaufen beziehungsweise invalidiert,
+    wird der Fehler SESSION_INVALID zurückgegeben.
+    """
+    currentSession: CurrentSession!
     """
     Liefert alle zentral konfigurierten Aktivitätsprofile.
     Die Profilparameter sind für Endbenutzer nicht veränderbar.
@@ -53,6 +59,16 @@ type ServiceHealth {
     status: ServiceHealthStatus!
     reachable: Boolean!
     responseTimeMs: Int!
+}
+
+"""
+Eine gültige, aktuell authentifizierte Sitzung.
+Die interne Session-ID und der rohe Session-Token werden nicht ausgegeben.
+"""
+type CurrentSession {
+    userId: ID!
+    createdAt: DateTime!
+    expiresAt: DateTime!
 }
 
 """

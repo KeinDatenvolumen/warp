@@ -1,11 +1,12 @@
 package de.warp.bff.infrastructure.client;
 
 import de.warp.bff.application.exception.InvalidCredentialsException;
-import de.warp.bff.infrastructure.client.dto.InternalCreateSessionRequest;
-import de.warp.bff.infrastructure.client.dto.InternalCreatedSessionResponse;
-import de.warp.bff.infrastructure.client.dto.InternalRegistrationRequest;
-import de.warp.bff.infrastructure.client.dto.InternalRegistrationResponse;
-import de.warp.bff.infrastructure.client.dto.InternalSessionResponse;
+import de.warp.bff.graphql.SessionInvalidException;
+import de.warp.bff.infrastructure.client.dto.*;
+import de.warp.bff.application.exception.DownstreamServiceUnavailableException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -52,55 +53,89 @@ public class IdentityClient {
         try {
             InternalCreatedSessionResponse response = restClient
                     .post()
-                    .uri(identityServiceUrl + "/internal/v1/sessions")
+                    .uri(
+                            identityServiceUrl
+                                    + "/internal/v1/sessions"
+                    )
                     .body(request)
                     .retrieve()
-                    .body(InternalCreatedSessionResponse.class);
+                    .body(
+                            InternalCreatedSessionResponse.class
+                    );
 
             if (response == null) {
-                throw new IllegalStateException(
-                        "Der Identity-Service lieferte keine Sitzung."
-                );
+                throw new DownstreamServiceUnavailableException();
             }
 
             return response;
         } catch (HttpClientErrorException.Unauthorized exception) {
             throw new InvalidCredentialsException();
+        } catch (HttpServerErrorException
+                 | ResourceAccessException exception) {
+            throw new DownstreamServiceUnavailableException(
+                    exception
+            );
+        } catch (RestClientException exception) {
+            throw new DownstreamServiceUnavailableException(
+                    exception
+            );
         }
     }
 
     public InternalSessionResponse validateSession(
             String sessionToken
     ) {
-        InternalSessionResponse response = restClient
-                .get()
-                .uri(
-                        identityServiceUrl
-                                + "/internal/v1/sessions/{sessionToken}",
-                        sessionToken
-                )
-                .retrieve()
-                .body(InternalSessionResponse.class);
+        try {
+            InternalSessionResponse response = restClient
+                    .post()
+                    .uri(
+                            identityServiceUrl
+                                    + "/internal/v1/sessions/validation"
+                    )
+                    .body(
+                            new InternalSessionTokenRequest(
+                                    sessionToken
+                            )
+                    )
+                    .retrieve()
+                    .body(InternalSessionResponse.class);
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "Der Identity-Service lieferte keine Sitzungsinformationen."
+            if (response == null) {
+                throw new DownstreamServiceUnavailableException();
+            }
+
+            return response;
+        } catch (HttpClientErrorException.NotFound
+                 | HttpClientErrorException.Gone exception) {
+            throw new SessionInvalidException(exception);
+        } catch (RestClientException exception) {
+            throw new DownstreamServiceUnavailableException(
+                    exception
             );
         }
-
-        return response;
     }
 
+
     public void invalidateSession(String sessionToken) {
-        restClient
-                .delete()
-                .uri(
-                        identityServiceUrl
-                                + "/internal/v1/sessions/{sessionToken}",
-                        sessionToken
-                )
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient
+                    .post()
+                    .uri(
+                            identityServiceUrl
+                                    + "/internal/v1/sessions/invalidation"
+                    )
+                    .body(
+                            new InternalSessionTokenRequest(
+                                    sessionToken
+                            )
+                    )
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException exception) {
+            throw new DownstreamServiceUnavailableException(
+                    exception
+            );
+        }
     }
 
     private String removeTrailingSlash(String value) {
