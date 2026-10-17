@@ -15,6 +15,20 @@ export default function RoutePlannerPage() {
     const [selectedDestination, setSelectedDestination] =
             useState<Place | null>(null)
 
+    const routeCoordinates =
+        selectedStart && selectedDestination
+            ? {
+                  start: {
+                      latitude: selectedStart.latitude,
+                      longitude: selectedStart.longitude,
+                  },
+                  destination: {
+                      latitude: selectedDestination.latitude,
+                      longitude: selectedDestination.longitude,
+                  },
+              }
+            : null
+
     const [
         searchStartPlaces,
         {
@@ -218,6 +232,14 @@ export default function RoutePlannerPage() {
                                     </p>
                                 )}
                             </div>
+
+                            <button
+                                    type="button"
+                                    disabled={!routeCoordinates}
+                                >
+                                    Route berechnen
+                            </button>
+
                         </section>
 
             <div style={{marginTop: '1.5rem'}}>
