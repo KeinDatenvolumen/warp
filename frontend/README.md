@@ -378,4 +378,98 @@ npm run check
 npm run dev
 ```
 
-Der aktuelle Projektstand enthält keine separate automatisierte Test-Suite und keinen Lint-Befehl. Die verbindlichen automatisierten Frontend-Prüfungen sind daher derzeit die TypeScript-Prüfung und der Produktions-Build.
+## Frontend-Tests
+
+### Testabhängigkeiten installieren
+
+Im Verzeichnis `frontend` ausführen:
+
+```powershell
+npm install
+```
+
+Die Tests verwenden Vitest, JSDOM und React Testing Library.
+
+### Tests ausführen
+
+Alle Frontend-Tests einmal ausführen:
+
+```powershell
+npm test
+```
+
+Tests im Watch-Modus ausführen:
+
+```powershell
+npm run test:watch
+```
+
+TypeScript prüfen:
+
+```powershell
+npm run typecheck
+```
+
+Den vollständigen Frontend-Check ausführen:
+
+```powershell
+npm run check
+```
+
+### Teststruktur
+
+Die gemeinsame Testkonfiguration befindet sich in:
+
+```text
+frontend/vite.config.ts
+frontend/vite.config.dev.ts
+frontend/src/test/setup.ts
+```
+
+Die Registrierungstests befinden sich in:
+
+```text
+frontend/src/features/registration/registrationValidation.test.ts
+frontend/src/features/registration/registrationErrorMapping.test.ts
+frontend/src/pages/RegistrationPage.test.tsx
+```
+
+### Neue Tests anlegen
+
+Vitest erkennt Testdateien automatisch, wenn sie nach einem dieser Muster benannt sind:
+
+```text
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+```
+
+Beispiele:
+
+```text
+src/features/example/example.test.ts
+src/pages/ExamplePage.test.tsx
+```
+
+### Aktuelle Testabdeckung der Registrierung
+
+Die Registrierungstests prüfen:
+
+- Pflichtfeldvalidierung für Name, E-Mail-Adresse und Passwort
+- formale Prüfung der E-Mail-Adresse
+- Mindestlänge des Passworts von zwölf Zeichen
+- verständliche Feldfehlermeldungen
+- Entfernung von Feldfehlern nach einer Korrektur
+- korrekte HTML-Typen und Autocomplete-Attribute
+- barrierearme Fehlerzuordnung über `aria-invalid` und `aria-describedby`
+- Übergabe gültiger Daten an die Registrierungs-API
+- Ladezustand während der Anfrage
+- Schutz vor mehrfacher Übermittlung
+- Backendfehler `EMAIL_ALREADY_EXISTS`
+- serverseitige `fieldErrors`
+- allgemeine Fehlermeldungen bei technischen Fehlern
+- Anzeige der Erfolgsmeldung des Backends
+- Bedienung des Formulars per Tastatur
+
+Der aktuelle Projektstand enthält automatisierte Frontend-Tests mit Vitest, JSDOM und React Testing Library. Ein separater Lint-Befehl ist derzeit nicht konfiguriert.

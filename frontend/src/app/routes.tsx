@@ -8,6 +8,7 @@ import SavedRoutesPage from '../pages/SavedRoutesPage'
 import {SystemStatusPage} from "../pages/SystemStatusPage";
 import {NotFoundPage} from "../pages/NotFoundPage";
 import ProtectedRoute from '../components/routing/ProtectedRoute'
+import RegistrationPage from '../pages/RegistrationPage'
 
 export default function AppRoutes() {
     return (
@@ -15,10 +16,8 @@ export default function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
-                <Route
-                    path="/route-planner"
-                    element={<RoutePlannerPage />}
-                />
+                <Route path="/register" element={<RegistrationPage />} />
+                <Route path="/route-planner" element={<RoutePlannerPage />} />
                 <Route
                     path="/profile"
                     element={
@@ -35,14 +34,8 @@ export default function AppRoutes() {
                         </ProtectedRoute>
                     }
                 />
-                <Route
-                    path="/system-status"
-                    element={<SystemStatusPage />}
-                />
-                <Route
-                    path="*"
-                    element={<NotFoundPage />}
-                />
+                <Route path="/system-status" element={<SystemStatusPage />} />
+                <Route path="*" element={<NotFoundPage />} />
             </Route>
         </Routes>
     )
