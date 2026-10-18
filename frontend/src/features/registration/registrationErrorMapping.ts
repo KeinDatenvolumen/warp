@@ -27,10 +27,22 @@ export function mapRegistrationApiErrors(
         return mapped
     }
 
+    if (
+        status === 422 &&
+        code === 'INVALID_PASSWORD'
+    ) {
+        mapped.fieldErrors.password =
+            'Das Passwort erfüllt die Anforderungen nicht.'
+        return mapped
+    }
+
+    let containsUnknownFieldError = false
+
     for (const fieldError of fieldErrors) {
         const message = fieldError.message
 
         if (!message) {
+            containsUnknownFieldError = true
             continue
         }
 
@@ -52,10 +64,16 @@ export function mapRegistrationApiErrors(
 
         if (fieldError.field === 'name') {
             mapped.fieldErrors.name = message
+            continue
         }
+
+        containsUnknownFieldError = true
     }
 
-    if (Object.keys(mapped.fieldErrors).length === 0) {
+    if (
+        Object.keys(mapped.fieldErrors).length === 0 ||
+        containsUnknownFieldError
+    ) {
         mapped.formError =
             detail ||
             'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.'

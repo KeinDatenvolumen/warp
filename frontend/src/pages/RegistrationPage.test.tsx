@@ -27,7 +27,9 @@ const validResponse: RegistrationResponse = {
     name: 'Max Mustermann',
     email: 'max@example.de',
     emailVerified: false,
-    createdAt: '2026-10-15T10:00:00Z'
+    createdAt: '2026-10-15T10:00:00Z',
+    message:
+        'Das Benutzerkonto wurde erfolgreich erstellt.'
 }
 
 function renderRegistrationPage() {
@@ -420,9 +422,15 @@ describe('RegistrationPage', () => {
             expect(
                 screen.getByRole('status')
             ).toHaveTextContent(
-                'Die Registrierung war erfolgreich.'
+                'Das Benutzerkonto wurde erfolgreich erstellt.'
             )
         })
+
+        expect(
+            screen.getByRole('button', {
+                name: 'Registrieren'
+            })
+        ).toBeEnabled()
     })
 
     it('verhindert mehrfaches Absenden während der Anfrage', async () => {
@@ -459,7 +467,7 @@ describe('RegistrationPage', () => {
         })
     })
 
-    it('zeigt nach erfolgreicher Registrierung die Bestätigungsmeldung an', async () => {
+    it('zeigt nach erfolgreicher Registrierung die Meldung des BFF an', async () => {
         mockedRegisterUser.mockResolvedValue(validResponse)
 
         const user = await fillValidForm()
@@ -473,7 +481,38 @@ describe('RegistrationPage', () => {
         expect(
             await screen.findByRole('status')
         ).toHaveTextContent(
-            'Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
+            'Das Benutzerkonto wurde erfolgreich erstellt.'
+        )
+    })
+
+    it('ordnet Top-Level-INVALID_PASSWORD dem Passwortfeld zu', async () => {
+        mockedRegisterUser.mockRejectedValue(
+            new ApiRequestError(422, {
+                code: 'INVALID_PASSWORD',
+                detail: 'Das Passwort ist ungültig.'
+            })
+        )
+
+        const user = await fillValidForm()
+
+        await user.click(
+            screen.getByRole('button', {
+                name: 'Registrieren'
+            })
+        )
+
+        const passwordInput =
+            screen.getByLabelText('Passwort')
+
+        expect(
+            await screen.findByText(
+                'Das Passwort erfüllt die Anforderungen nicht.'
+            )
+        ).toBeInTheDocument()
+
+        expect(passwordInput).toHaveAttribute(
+            'aria-invalid',
+            'true'
         )
     })
 

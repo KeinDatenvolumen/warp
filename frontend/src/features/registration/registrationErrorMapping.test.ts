@@ -41,6 +41,49 @@ describe('mapRegistrationApiErrors', () => {
         })
     })
 
+    it('ordnet Top-Level-INVALID_PASSWORD dem Passwortfeld zu', () => {
+        expect(
+            mapRegistrationApiErrors(
+                422,
+                'INVALID_PASSWORD',
+                [],
+                'Das Passwort ist ungültig.'
+            )
+        ).toEqual({
+            fieldErrors: {
+                password:
+                    'Das Passwort erfüllt die Anforderungen nicht.'
+            }
+        })
+    })
+
+    it('zeigt unbekannte fieldErrors zusätzlich allgemein an', () => {
+        expect(
+            mapRegistrationApiErrors(
+                422,
+                'INVALID_REGISTRATION_REQUEST',
+                [
+                    {
+                        field: 'email',
+                        code: 'INVALID_EMAIL',
+                        message: 'Die E-Mail-Adresse ist ungültig.'
+                    },
+                    {
+                        field: 'unknownField',
+                        code: 'INVALID_FIELD',
+                        message: 'Unbekannter Feldfehler.'
+                    }
+                ],
+                'Die Registrierungsdaten sind ungültig.'
+            )
+        ).toEqual({
+            fieldErrors: {
+                email: 'Die E-Mail-Adresse ist ungültig.'
+            },
+            formError: 'Die Registrierungsdaten sind ungültig.'
+        })
+    })
+
     it('ordnet einen E-Mail-fieldError dem E-Mail-Feld zu', () => {
         expect(
             mapRegistrationApiErrors(

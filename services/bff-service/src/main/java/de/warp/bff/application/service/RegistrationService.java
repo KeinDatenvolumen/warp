@@ -2,60 +2,45 @@ package de.warp.bff.application.service;
 
 import de.warp.bff.api.dto.RegistrationRequest;
 import de.warp.bff.api.dto.RegistrationResponse;
-import de.warp.bff.api.exception.DownstreamApiException;
-import org.springframework.beans.factory.annotation.Value;
+import de.warp.bff.infrastructure.client.IdentityClient;
+import de.warp.bff.infrastructure.client.dto.InternalRegistrationRequest;
+import de.warp.bff.infrastructure.client.dto.InternalRegistrationResponse;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 @Service
 public class RegistrationService {
 
-    private final RestClient restClient;
-    private final String identityServiceUrl;
+    private static final String SUCCESS_MESSAGE =
+            "Das Benutzerkonto wurde erfolgreich erstellt.";
+
+    private final IdentityClient identityClient;
 
     public RegistrationService(
-            RestClient restClient,
-            @Value("${warp.services.identity.url}")
-            String identityServiceUrl
+            IdentityClient identityClient
     ) {
-        this.restClient = restClient;
-        this.identityServiceUrl = removeTrailingSlash(
-                identityServiceUrl
-        );
+        this.identityClient = identityClient;
     }
 
     public RegistrationResponse register(
             RegistrationRequest request
     ) {
-        try {
-            RegistrationResponse response = restClient
-                    .post()
-                    .uri(identityServiceUrl + "/internal/v1/users")
-                    .body(request)
-                    .retrieve()
-                    .body(RegistrationResponse.class);
-
-            if (response == null) {
-                throw new IllegalStateException(
-                        "Identity-Service lieferte keine Registrierungsantwort."
+        InternalRegistrationRequest internalRequest =
+                new InternalRegistrationRequest(
+                        request.name(),
+                        request.email(),
+                        request.password()
                 );
-            }
 
-            return response;
-        } catch (RestClientResponseException exception) {
-            throw new DownstreamApiException(
-                    exception.getStatusCode(),
-                    exception.getResponseBodyAsString()
-            );
-        }
-    }
+        InternalRegistrationResponse internalResponse =
+                identityClient.register(internalRequest);
 
-    private String removeTrailingSlash(String value) {
-        if (value.endsWith("/")) {
-            return value.substring(0, value.length() - 1);
-        }
-
-        return value;
+        return new RegistrationResponse(
+                internalResponse.id(),
+                internalResponse.name(),
+                internalResponse.email(),
+                internalResponse.emailVerified(),
+                internalResponse.createdAt(),
+                SUCCESS_MESSAGE
+        );
     }
 }

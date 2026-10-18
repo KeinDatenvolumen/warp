@@ -29,7 +29,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http
-    ) throws Exception {
+    ) {
         CookieCsrfTokenRepository csrfTokenRepository =
                 CookieCsrfTokenRepository.withHttpOnlyFalse();
 
@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 csrfTokenRepository
                         )
                         .ignoringRequestMatchers(
-                                "/api/v1/sessions"
+                                "/api/v1/sessions",
+                                "/api/v1/users"
                         )
                         .ignoringRequestMatchers(
                                 request -> Boolean.TRUE.equals(

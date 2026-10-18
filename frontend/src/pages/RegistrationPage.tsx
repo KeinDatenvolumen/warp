@@ -55,6 +55,10 @@ export default function RegistrationPage() {
     ): Promise<void> {
         event.preventDefault()
 
+        if (isSubmitting) {
+            return
+        }
+
         const validationErrors =
             validateRegistration(values)
 
@@ -69,15 +73,13 @@ export default function RegistrationPage() {
         setIsSubmitting(true)
 
         try {
-            await registerUser({
+            const response = await registerUser({
                 name: values.name.trim(),
                 email: values.email.trim(),
                 password: values.password
             })
 
-            setSuccessMessage(
-                'Die Registrierung war erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
-            )
+            setSuccessMessage(response.message)
 
         } catch (error) {
             if (error instanceof ApiRequestError) {

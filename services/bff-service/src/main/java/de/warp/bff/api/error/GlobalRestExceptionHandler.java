@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import de.warp.bff.application.exception.DownstreamServiceUnavailableException;
+import de.warp.bff.application.exception.RegistrationRejectedException;
 
 import java.net.URI;
 import java.util.List;
@@ -36,6 +37,24 @@ public class GlobalRestExceptionHandler {
                 "INVALID_CREDENTIALS",
                 exception.getMessage(),
                 List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(RegistrationRejectedException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleRegistrationRejected(
+            RegistrationRejectedException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                exception.getStatus(),
+                exception.getCode()
+                        .toLowerCase(java.util.Locale.ROOT)
+                        .replace('_', '-'),
+                exception.getCode(),
+                exception.getMessage(),
+                exception.getFieldErrors(),
                 request
         );
     }
@@ -83,11 +102,26 @@ public class GlobalRestExceptionHandler {
                 .map(this::toFieldErrorResponse)
                 .toList();
 
+        boolean isRegistrationRequest =
+                "/api/v1/users".equals(request.getRequestURI());
+
+        String problemType = isRegistrationRequest
+                ? "invalid-registration-request"
+                : "invalid-session-request";
+
+        String code = isRegistrationRequest
+                ? "INVALID_REGISTRATION_REQUEST"
+                : "INVALID_SESSION_REQUEST";
+
+        String detail = isRegistrationRequest
+                ? "Die Registrierungsdaten sind ungültig."
+                : "Die Anmeldedaten sind ungültig.";
+
         return createProblemResponse(
                 HttpStatus.UNPROCESSABLE_CONTENT,
-                "invalid-session-request",
-                "INVALID_SESSION_REQUEST",
-                "Die Anmeldedaten sind ungültig.",
+                problemType,
+                code,
+                detail,
                 fieldErrors,
                 request
         );
@@ -95,7 +129,6 @@ public class GlobalRestExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(
-            HttpMessageNotReadableException exception,
             HttpServletRequest request
     ) {
         return createProblemResponse(
@@ -142,8 +175,11 @@ public class GlobalRestExceptionHandler {
         );
     }
 
-    private String determineFieldErrorCode(FieldError fieldError) {
+    private String determineFieldErrorCode(
+            FieldError fieldError
+    ) {
         return switch (fieldError.getField()) {
+            case "name" -> "INVALID_NAME";
             case "email" -> "INVALID_EMAIL";
             case "password" -> "INVALID_PASSWORD";
             default -> "INVALID_FIELD";

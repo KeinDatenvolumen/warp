@@ -421,7 +421,8 @@ npm run check
 Die gemeinsame Testkonfiguration befindet sich in:
 
 ```text
-frontend/vitest.config.ts
+frontend/vite.config.ts
+frontend/vite.config.dev.ts
 frontend/src/test/setup.ts
 ```
 
@@ -471,4 +472,4 @@ Die Registrierungstests prüfen:
 - Anzeige der Erfolgsmeldung des Backends
 - Bedienung des Formulars per Tastatur
 
-Der aktuelle Projektstand enthält keine separate automatisierte Test-Suite und keinen Lint-Befehl. Die verbindlichen automatisierten Frontend-Prüfungen sind daher derzeit die TypeScript-Prüfung und der Produktions-Build.
+Der aktuelle Projektstand enthält automatisierte Frontend-Tests mit Vitest, JSDOM und React Testing Library. Ein separater Lint-Befehl ist derzeit nicht konfiguriert.
