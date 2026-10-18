@@ -18,6 +18,16 @@ server:
 warp:
   graphql:
     test-error: ""
+
+  security:
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN}
+    login-rate-limit:
+      maximum-attempts: 5
+      window: 60s
+  session:
+    duration: ${SESSION_DURATION:PT12H}
+    mail:
+      from: ${MAIL_FROM:no-reply@warp.local}
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
   services:

@@ -5,6 +5,8 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import de.warp.bff.infrastructure.web.CorrelationIdClientHttpRequestInterceptor;
+import de.warp.bff.infrastructure.web.InternalServiceAuthenticationInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +23,14 @@ public class HttpClientConfiguration {
 
     @Bean
     RestClient serviceHealthRestClient(
-            @Value("${warp.health.connect-timeout}") Duration connectTimeout,
-            @Value("${warp.health.read-timeout}") Duration readTimeout
+            @Value("${warp.health.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.health.read-timeout}")
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
     ) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(connectTimeout)
@@ -35,6 +43,12 @@ public class HttpClientConfiguration {
 
         return RestClient.builder()
                 .requestFactory(requestFactory)
+                .requestInterceptor(
+                        correlationIdInterceptor
+                )
+                .requestInterceptor(
+                        serviceAuthenticationInterceptor
+                )
                 .build();
     }
 }

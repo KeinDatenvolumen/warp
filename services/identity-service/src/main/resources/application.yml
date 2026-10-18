@@ -33,6 +33,10 @@ spring:
     locations: classpath:db/migration
 
 warp:
+  security:
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN}
+  session:
+    duration: ${SESSION_DURATION:PT12H}
   mail:
     from: ${MAIL_FROM:no-reply@warp.local}
   frontend:

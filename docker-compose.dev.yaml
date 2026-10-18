@@ -26,6 +26,7 @@ services:
       MAIL_SMTP_STARTTLS_ENABLED: "false"
       MAIL_FROM: "no-reply@warp.local"
       APP_PUBLIC_URL: "http://localhost:5173"
+      WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
 
     depends_on:
       identity-db:
@@ -107,6 +108,7 @@ services:
       ROUTING_SERVICE_URL: "http://routing-service:8082"
       WEATHER_SERVICE_URL: "http://weather-service:8083"
       STORAGE_SERVICE_URL: "http://storage-service:8084"
+      WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
     ports:
       - "8080:8080"
     depends_on:
