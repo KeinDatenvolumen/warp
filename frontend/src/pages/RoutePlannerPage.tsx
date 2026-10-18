@@ -76,10 +76,12 @@ export default function RoutePlannerPage() {
         selectedStart && selectedDestination
             ? {
                 start: {
+                    label: selectedStart.displayName,
                     latitude: selectedStart.latitude,
                     longitude: selectedStart.longitude,
                 },
                 destination: {
+                    label: selectedDestination.displayName,
                     latitude: selectedDestination.latitude,
                     longitude: selectedDestination.longitude,
                 },
@@ -238,6 +240,17 @@ export default function RoutePlannerPage() {
         setDestinationInput(place.displayName)
         setDestinationResults([])
         setLastCompletedDestinationQuery(null)
+    }
+
+    function handleRouteCalculation() {
+        if (!selectedProfile || !routeCoordinates) {
+            return
+        }
+
+        console.info('Route calculation requested', {
+            activityProfile: selectedProfile,
+            ...routeCoordinates,
+        })
     }
 
     return (
@@ -445,6 +458,7 @@ export default function RoutePlannerPage() {
                 <button
                     type="button"
                     disabled={!canCalculateRoute}
+                    onClick={handleRouteCalculation}
                 >
                     Route berechnen
                 </button>
