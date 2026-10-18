@@ -130,6 +130,27 @@ export default function RoutePlannerPage() {
         setDestinationInput(place.displayName)
     }
 
+    function handleRouteCalculation() {
+        if (!selectedStart || !selectedDestination) {
+            return
+        }
+
+        const coordinates = {
+            start: {
+                label: selectedStart.displayName,
+                latitude: selectedStart.latitude,
+                longitude: selectedStart.longitude,
+            },
+            destination: {
+                label: selectedDestination.displayName,
+                latitude: selectedDestination.latitude,
+                longitude: selectedDestination.longitude,
+            },
+        }
+
+        console.info('Route calculation requested', coordinates)
+    }
+
     return (
         <main className={styles.page}>
             <section className={styles.card}>
@@ -265,6 +286,7 @@ export default function RoutePlannerPage() {
                             <button
                                     type="button"
                                     disabled={!routeCoordinates}
+                                    onClick={handleRouteCalculation}
                                 >
                                     Route berechnen
                             </button>
