@@ -21,10 +21,12 @@ public class GeocodingController {
     }
 
     @GetMapping("/internal/v1/places")
-    public List<Place> searchPlaces(
+    public PlaceSearchResponse searchPlaces(
             @RequestParam String query,
             @RequestParam(defaultValue = "5") Integer limit
     ) {
-        return geocodingService.searchPlaces(query, limit);
+        return new PlaceSearchResponse(
+                geocodingService.searchPlaces(query, limit)
+        );
     }
 }

@@ -3,7 +3,6 @@ package de.warp.bff.infrastructure.geocoding;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -27,24 +26,20 @@ public class RoutingGeocodingClient {
             int limit
     ) {
         try {
-            List < Place > places = restClient.get()
+            PlaceSearchResponse response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/internal/v1/places")
                             .queryParam("query", query)
                             .queryParam("limit", limit)
                             .build())
                     .retrieve()
-                    .body(
-                            new ParameterizedTypeReference
-                                    < List < Place > >() {
-                            }
-                    );
+                    .body(PlaceSearchResponse.class);
 
-            if (places == null) {
+            if (response == null || response.items() == null) {
                 return List.of();
             }
 
-            return places;
+            return response.items();
         } catch (RestClientException exception) {
             throw new GeocodingServiceUnavailableException(
                     "Der Geocoding-Dienst ist nicht verfügbar.",
