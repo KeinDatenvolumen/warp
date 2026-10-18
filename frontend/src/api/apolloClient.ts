@@ -1,12 +1,13 @@
 import {
     ApolloClient,
+    ApolloLink,
     HttpLink,
     InMemoryCache
 } from '@apollo/client'
-
-const BFF_BASE_URL = (
-    import.meta.env.VITE_BFF_BASE_URL ?? ''
-).replace(/\/$/, '')
+import {tap} from 'rxjs'
+import {notifySessionInvalid} from '../features/auth/sessionEvents'
+import {BFF_BASE_URL} from './bffBaseUrl'
+import {containsSessionInvalidCode} from './graphqlErrors'
 
 const httpLink = new HttpLink({
     uri: `${BFF_BASE_URL}/graphql`,
@@ -16,7 +17,22 @@ const httpLink = new HttpLink({
     }
 })
 
+export const sessionInvalidLink = new ApolloLink(
+    (operation, forward) =>
+        forward(operation).pipe(
+            tap((result) => {
+                if (containsSessionInvalidCode(result.errors)) {
+                    notifySessionInvalid()
+                }
+            })
+        )
+)
+
 export const apolloClient = new ApolloClient({
-    link: httpLink,
+    link: ApolloLink.from([sessionInvalidLink, httpLink]),
     cache: new InMemoryCache()
 })
+
+export function clearApolloCache(): Promise<void> {
+    return apolloClient.clearStore().then(() => undefined)
+}
