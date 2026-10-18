@@ -1,13 +1,23 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLazyQuery } from '@apollo/client/react'
 import RouteMap from '../components/RouteMap/RouteMap'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import styles from './PagePlaceholder.module.css'
 import type { Place } from '../types/searchPlaces'
+import { isLatestRequest } from '../utils/latestRequest'
 
 export default function RoutePlannerPage() {
     const [startInput, setStartInput] = useState("");
     const [destinationInput, setDestinationInput] = useState("");
+
+    const [startResults, setStartResults] =
+            useState < Place[] >([])
+
+    const [destinationResults, setDestinationResults] =
+            useState < Place[] >([])
+
+    const startRequestId = useRef(0)
+    const destinationRequestId = useRef(0)
 
     const [selectedStart, setSelectedStart] =
             useState<Place | null>(null)
@@ -32,7 +42,6 @@ export default function RoutePlannerPage() {
     const [
         searchStartPlaces,
         {
-            data: startData,
             loading: startLoading,
             error: startError,
         },
@@ -41,7 +50,6 @@ export default function RoutePlannerPage() {
     const [
         searchDestinationPlaces,
         {
-            data: destinationData,
             loading: destinationLoading,
             error: destinationError,
         },
@@ -49,8 +57,10 @@ export default function RoutePlannerPage() {
 
     useEffect(() => {
         const trimmedInput = startInput.trim()
+        const requestId = ++startRequestId.current
 
         if (trimmedInput.length < 3 || selectedStart) {
+            setStartResults([])
             return
         }
 
@@ -60,6 +70,12 @@ export default function RoutePlannerPage() {
                     query: trimmedInput,
                     limit: 5,
                 },
+            }).then((result) => {
+                if (!isLatestRequest(requestId, startRequestId.current)) {
+                    return
+                }
+
+                setStartResults(result.data?.searchPlaces ?? [])
             })
         }, 400)
 
@@ -68,26 +84,41 @@ export default function RoutePlannerPage() {
         }
     }, [startInput, selectedStart, searchStartPlaces])
 
-    useEffect(() => {
-        const trimmedInput = destinationInput.trim()
 
-        if (trimmedInput.length < 3 || selectedDestination) {
-            return
-        }
+   useEffect(() => {
+       const trimmedInput = destinationInput.trim()
+       const requestId = ++destinationRequestId.current
 
-        const timeoutId = window.setTimeout(() => {
-            void searchDestinationPlaces({
-                variables: {
-                    query: trimmedInput,
-                    limit: 5,
-                },
-            })
-        }, 400)
+       if (trimmedInput.length < 3 || selectedDestination) {
+           setDestinationResults([])
+           return
+       }
 
-        return () => {
-            window.clearTimeout(timeoutId)
-        }
-    }, [destinationInput, selectedDestination, searchDestinationPlaces])
+       const timeoutId = window.setTimeout(() => {
+           void searchDestinationPlaces({
+               variables: {
+                   query: trimmedInput,
+                   limit: 5,
+               },
+           }).then((result) => {
+               if (!isLatestRequest(requestId, destinationRequestId.current)) {
+                   return
+               }
+
+               setDestinationResults(
+                   result.data?.searchPlaces ?? []
+               )
+           })
+       }, 400)
+
+       return () => {
+           window.clearTimeout(timeoutId)
+       }
+   }, [
+       destinationInput,
+       selectedDestination,
+       searchDestinationPlaces,
+   ])
 
     function handleStartSelection(place: Place) {
         setSelectedStart(place)
@@ -119,6 +150,7 @@ export default function RoutePlannerPage() {
                                     id="start-input"
                                     name="start"
                                     type="text"
+                                    maxLength={200}
                                     value={startInput}
                                     onChange={(event) => {
                                             setStartInput(event.target.value)
@@ -135,22 +167,20 @@ export default function RoutePlannerPage() {
                                 </p>
                                 )}
 
-                                {startData &&
-                                    !startLoading &&
+                                {!startLoading &&
                                     !startError &&
                                     startInput.trim().length >= 3 &&
                                     !selectedStart &&
-                                    startData.searchPlaces.length === 0 && (
+                                    startResults.length === 0 && (
                                         <p role="status">
                                             Kein passender Startpunkt gefunden.
                                         </p>
                                     )}
 
-                                {startData &&
-                                    !selectedStart &&
-                                    startData.searchPlaces.length > 0 && (
+                                {!selectedStart &&
+                                    startResults.length > 0 && (
                                         <ul aria-label="Suchergebnisse für den Startpunkt">
-                                            {startData.searchPlaces.map((place) => (
+                                            {startResults.map((place) => (
                                                 <li key={place.placeId}>
                                                     <button
                                                         type="button"
@@ -178,6 +208,7 @@ export default function RoutePlannerPage() {
                                     id="destination-input"
                                     name="destination"
                                     type="text"
+                                    maxLength={200}
                                     value={destinationInput}
                                     onChange={(event) => {
                                             setDestinationInput(event.target.value)
@@ -194,22 +225,20 @@ export default function RoutePlannerPage() {
                                     </p>
                                 )}
 
-                                {destinationData &&
-                                    !destinationLoading &&
+                                {!destinationLoading &&
                                     !destinationError &&
                                     destinationInput.trim().length >= 3 &&
                                     !selectedDestination &&
-                                    destinationData.searchPlaces.length === 0 && (
+                                    destinationResults.length === 0 && (
                                         <p role="status">
                                             Kein passender Zielpunkt gefunden.
                                         </p>
                                     )}
 
-                                {destinationData &&
-                                    !selectedDestination &&
-                                    destinationData.searchPlaces.length > 0 && (
+                                {!selectedDestination &&
+                                    destinationResults.length > 0 && (
                                         <ul aria-label="Suchergebnisse für den Zielpunkt">
-                                            {destinationData.searchPlaces.map((place) => (
+                                            {destinationResults.map((place) => (
                                                 <li key={place.placeId}>
                                                     <button
                                                         type="button"

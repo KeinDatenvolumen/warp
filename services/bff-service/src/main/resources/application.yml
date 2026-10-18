@@ -37,11 +37,8 @@ warp:
     connect-timeout: 2s
     read-timeout: 2s
   geocoding:
-    maptiler:
-      base-url: https://api.maptiler.com
-      api-key: ${MAPTILER_API_KEY:}
-      connect-timeout: 2s
-      read-timeout: 5s
+    connect-timeout: 2s
+    read-timeout: 5s
 
 management:
   endpoints:
