@@ -52,14 +52,13 @@ public class HttpClientConfiguration {
                 .build();
     }
     @Bean
-    RestClient mapTilerRestClient(
-            @Value("${warp.geocoding.maptiler.base-url}") String baseUrl,
-            @Value("${warp.geocoding.maptiler.connect-timeout}")
+    RestClient routingGeocodingRestClient(
+            @Value("${warp.services.routing.url}") String baseUrl,
+            @Value("${warp.geocoding.connect-timeout}")
             Duration connectTimeout,
-            @Value("${warp.geocoding.maptiler.read-timeout}")
+            @Value("${warp.geocoding.read-timeout}")
             Duration readTimeout
-    )
-    {
+    ) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(connectTimeout)
                 .build();

@@ -1,4 +1,4 @@
-package de.warp.bff.infrastructure.geocoding;
+package de.warp.routing.infrastructure.geocoding;
 
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-import de.warp.bff.domain.model.Place;
+import de.warp.routing.domain.model.Place;
 
 @Component
 public class MapTilerGeocodingClient {
@@ -35,10 +35,7 @@ public class MapTilerGeocodingClient {
         try {
             MapTilerGeocodingResponse response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .pathSegment(
-                                    "geocoding",
-                                    query + ".json"
-                            )
+                            .pathSegment("geocoding", query + ".json")
                             .queryParam("key", apiKey)
                             .queryParam("limit", limit)
                             .queryParam("language", "de")
@@ -51,8 +48,7 @@ public class MapTilerGeocodingClient {
                 return List.of();
             }
 
-            return response.features()
-                    .stream()
+            return response.features().stream()
                     .map(this::toPlace)
                     .filter(Objects::nonNull)
                     .toList();
@@ -64,11 +60,12 @@ public class MapTilerGeocodingClient {
         }
     }
 
-    private Place toPlace(
-            MapTilerGeocodingResponse.Feature feature
-    ) {
-        if (feature.id() == null
+    Place toPlace(MapTilerGeocodingResponse.Feature feature) {
+        if (feature == null
+                || feature.id() == null
+                || feature.id().isBlank()
                 || feature.placeName() == null
+                || feature.placeName().isBlank()
                 || feature.center() == null
                 || feature.center().size() < 2
                 || feature.center().get(0) == null
@@ -78,6 +75,15 @@ public class MapTilerGeocodingClient {
 
         double longitude = feature.center().get(0);
         double latitude = feature.center().get(1);
+
+        if (!Double.isFinite(longitude)
+                || !Double.isFinite(latitude)
+                || longitude < -180
+                || longitude > 180
+                || latitude < -90
+                || latitude > 90) {
+            return null;
+        }
 
         return new Place(
                 feature.id(),

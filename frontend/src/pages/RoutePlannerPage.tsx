@@ -11,6 +11,7 @@ import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
 import type { ActivityProfileCode } from '../types/activityProfile'
 import type { Place } from '../types/searchPlaces'
+import { isLatestRequest } from '../utils/latestRequest'
 
 import styles from './PagePlaceholder.module.css'
 
@@ -140,7 +141,12 @@ export default function RoutePlannerPage() {
                     limit: SEARCH_RESULT_LIMIT,
                 },
             }).then((result) => {
-                if (requestId !== startRequestId.current) {
+                if (
+                    !isLatestRequest(
+                        requestId,
+                        startRequestId.current,
+                    )
+                ) {
                     return
                 }
 
@@ -178,7 +184,10 @@ export default function RoutePlannerPage() {
                 },
             }).then((result) => {
                 if (
-                    requestId !== destinationRequestId.current
+                    !isLatestRequest(
+                        requestId,
+                        destinationRequestId.current,
+                    )
                 ) {
                     return
                 }

@@ -47,3 +47,11 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+warp:
+  geocoding:
+    maptiler:
+      base-url: ${MAPTILER_GEOCODING_BASE_URL:https://api.maptiler.com}
+      api-key: ${MAPTILER_GEOCODING_API_KEY:}
+      connect-timeout: 2s
+      read-timeout: 5s

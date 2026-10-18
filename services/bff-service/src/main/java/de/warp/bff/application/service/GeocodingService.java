@@ -5,19 +5,20 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import de.warp.bff.domain.model.Place;
-import de.warp.bff.infrastructure.geocoding.MapTilerGeocodingClient;
+import de.warp.bff.infrastructure.geocoding.RoutingGeocodingClient;
 
 @Service
 public class GeocodingService {
 
     private static final int MINIMUM_QUERY_LENGTH = 3;
+    private static final int MAXIMUM_QUERY_LENGTH = 200;
     private static final int MINIMUM_LIMIT = 1;
     private static final int MAXIMUM_LIMIT = 10;
 
-    private final MapTilerGeocodingClient geocodingClient;
+    private final RoutingGeocodingClient geocodingClient;
 
     public GeocodingService(
-            MapTilerGeocodingClient geocodingClient
+            RoutingGeocodingClient geocodingClient
     ) {
         this.geocodingClient = geocodingClient;
     }
@@ -27,6 +28,14 @@ public class GeocodingService {
                 || query.trim().length() < MINIMUM_QUERY_LENGTH) {
             throw new IllegalArgumentException(
                     "Der Suchbegriff muss mindestens drei Zeichen enthalten."
+            );
+        }
+
+        String normalizedQuery = query.trim();
+
+        if (normalizedQuery.length() > MAXIMUM_QUERY_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Der Suchbegriff darf maximal 200 Zeichen enthalten."
             );
         }
 
@@ -40,7 +49,7 @@ public class GeocodingService {
         }
 
         return geocodingClient.searchPlaces(
-                query.trim(),
+                normalizedQuery,
                 effectiveLimit
         );
     }
