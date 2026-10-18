@@ -12,6 +12,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import de.warp.bff.application.exception
+        .DownstreamServiceUnavailableException;
+import org.springframework.http.MediaType;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 
@@ -31,12 +35,92 @@ class SessionAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
 
         sessionService = mock(SessionService.class);
-        filter = new SessionAuthenticationFilter(sessionService);
+        filter = new SessionAuthenticationFilter(
+                sessionService,
+                JsonMapper.builder().build()
+        );
     }
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void shouldReturnServiceUnavailableWhenIdentityServiceFails()
+            throws Exception {
+        String sessionToken = "sensitive-session-token";
+
+        when(sessionService.validateSession(sessionToken))
+                .thenThrow(
+                        new DownstreamServiceUnavailableException(
+                                new IllegalStateException(
+                                        "Interne technische Information"
+                                )
+                        )
+                );
+
+        MockHttpServletRequest request =
+                new MockHttpServletRequest(
+                        "POST",
+                        "/graphql"
+                );
+
+        request.setCookies(
+                new Cookie(
+                        "session",
+                        sessionToken
+                )
+        );
+
+        MockHttpServletResponse response =
+                new MockHttpServletResponse();
+
+        MockFilterChain filterChain =
+                new MockFilterChain();
+
+        filter.doFilter(
+                request,
+                response,
+                filterChain
+        );
+
+        assertThat(response.getStatus())
+                .isEqualTo(503);
+
+        assertThat(response.getContentType())
+                .startsWith(
+                        MediaType.APPLICATION_PROBLEM_JSON_VALUE
+                );
+
+        assertThat(response.getContentAsString())
+                .contains(
+                        "\"code\":"
+                                + "\"DOWNSTREAM_SERVICE_UNAVAILABLE\""
+                )
+                .contains(
+                        "\"status\":503"
+                )
+                .contains(
+                        "\"instance\":\"/graphql\""
+                )
+                .contains(
+                        "Der Identitätsdienst ist momentan "
+                                + "nicht verfügbar."
+                )
+                .doesNotContain(sessionToken)
+                .doesNotContain(
+                        "Interne technische Information"
+                );
+
+        assertThat(filterChain.getRequest())
+                .isNull();
+
+        assertThat(
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+        ).isNull();
     }
 
     @Test
@@ -129,6 +213,7 @@ class SessionAuthenticationFilterTest {
                 (AuthenticatedSessionPrincipal)
                         authentication.getPrincipal();
 
+        assert principal != null;
         assertThat(principal.userId())
                 .isEqualTo("user-123");
 
@@ -172,6 +257,12 @@ class SessionAuthenticationFilterTest {
                 response,
                 filterChain
         );
+
+        assertThat(response.getStatus())
+                .isEqualTo(200);
+
+        assertThat(filterChain.getRequest())
+                .isSameAs(request);
 
         assertThat(
                 SecurityContextHolder

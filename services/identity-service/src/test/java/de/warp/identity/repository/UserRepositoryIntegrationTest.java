@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class UserRepositoryIntegrationTest {
 
     @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:17")
+    static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:18")
                     .withDatabaseName("warp_identity_test")
                     .withUsername("test")
                     .withPassword("test");
