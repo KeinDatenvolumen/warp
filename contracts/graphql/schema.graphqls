@@ -31,6 +31,11 @@ type Query {
     Liefert ein zentral konfiguriertes Aktivitätsprofil anhand seines Codes.
     """
     activityProfile(code: ActivityProfileCode!): ActivityProfile!
+
+    """
+    Sucht passende Orte und Adressen anhand eines Suchbegriffs.
+    """
+    searchPlaces(query: String!, limit: Int = 5): [Place!]!
 }
 
 type Mutation {
@@ -101,6 +106,16 @@ enum ActivityProfileCode {
     BICYCLE
     MOTORCYCLE
     HIKING
+}
+
+"""
+Ein durch die Geocodierung gefundener Ort oder eine gefundene Adresse.
+"""
+type Place {
+    placeId: ID!
+    displayName: String!
+    latitude: Float!
+    longitude: Float!
 }
 
 enum SystemHealthStatus {

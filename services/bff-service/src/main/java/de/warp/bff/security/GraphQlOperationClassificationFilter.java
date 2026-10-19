@@ -1,5 +1,6 @@
 package de.warp.bff.security;
 
+import org.jspecify.annotations.NonNull;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import graphql.language.Document;
@@ -13,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.BufferedReader;
@@ -49,7 +49,7 @@ public class GraphQlOperationClassificationFilter
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
-            HttpServletResponse response,
+            @NonNull HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
         byte[] requestBody =
@@ -83,8 +83,8 @@ public class GraphQlOperationClassificationFilter
             JsonNode queryNode = body.get("query");
 
             if (queryNode == null
-                    || !queryNode.isTextual()
-                    || queryNode.textValue().isBlank()) {
+                    || !queryNode.isString()
+                    || queryNode.stringValue().isBlank()) {
                 return false;
             }
 
@@ -94,14 +94,16 @@ public class GraphQlOperationClassificationFilter
                     body.get("operationName");
 
             if (operationNameNode != null
-                    && operationNameNode.isTextual()
-                    && !operationNameNode.textValue().isBlank()) {
+                    && operationNameNode.isString()
+                    && !operationNameNode.stringValue().isBlank()) {
                 operationName =
-                        operationNameNode.textValue();
+                        operationNameNode.stringValue();
             }
 
             Document document =
-                    Parser.parse(queryNode.textValue());
+                    new Parser().parseDocument(
+                            queryNode.stringValue()
+                    );
 
             List<OperationDefinition> operations =
                     document.getDefinitionsOfType(

@@ -15,6 +15,7 @@ import de.warp.bff.infrastructure.identity.dto.IdentityProblemResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.json.JsonMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class IdentityClient {
     private final JsonMapper jsonMapper;
 
     public IdentityClient(
+            @Qualifier("identityRestClient")
             RestClient restClient,
             JsonMapper jsonMapper,
             @Value("${warp.services.identity.url}")

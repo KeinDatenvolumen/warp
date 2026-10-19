@@ -46,6 +46,9 @@ warp:
   health:
     connect-timeout: 2s
     read-timeout: 2s
+  geocoding:
+    connect-timeout: 2s
+    read-timeout: 5s
 
 management:
   endpoints:

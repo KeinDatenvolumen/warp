@@ -1,14 +1,85 @@
-import {useState} from 'react'
-import {MapContainer, TileLayer} from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import {MapContainer, Marker, Popup, TileLayer, useMap} from 'react-leaflet'
+import {divIcon, latLngBounds, type LatLngExpression} from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import type { Place } from '../../types/searchPlaces'
 import './RouteMap.css'
-import type {LatLngExpression} from 'leaflet'
 
 const MAP_CENTER: LatLngExpression = [49.354111, 9.150306]
 
-export default function RouteMap() {
+interface RouteMapProps {
+    startPlace: Place | null
+    destinationPlace: Place | null
+}
+
+const startIcon = divIcon({
+    className: 'route-map__marker route-map__marker--start',
+    html: '<span>S</span>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36],
+})
+
+const destinationIcon = divIcon({
+    className: 'route-map__marker route-map__marker--destination',
+    html: '<span>Z</span>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36],
+})
+
+interface MapViewportUpdaterProps {
+    startPlace: Place | null
+    destinationPlace: Place | null
+}
+
+function MapViewportUpdater({
+    startPlace,
+    destinationPlace,
+}: MapViewportUpdaterProps) {
+    const map = useMap()
+
+    useEffect(() => {
+        if (startPlace && destinationPlace) {
+            const bounds = latLngBounds([
+                [startPlace.latitude, startPlace.longitude],
+                [
+                    destinationPlace.latitude,
+                    destinationPlace.longitude,
+                ],
+            ])
+
+            map.fitBounds(bounds, {
+                padding: [50, 50],
+                maxZoom: 14,
+            })
+
+            return
+        }
+
+        const selectedPlace = startPlace ?? destinationPlace
+
+        if (selectedPlace) {
+            map.setView(
+                [
+                    selectedPlace.latitude,
+                    selectedPlace.longitude,
+                ],
+                14,
+            )
+        }
+    }, [map, startPlace, destinationPlace])
+
+    return null
+}
+
+export default function RouteMap({
+    startPlace,
+    destinationPlace,
+}: RouteMapProps) {
     const [hasError, setHasError] = useState(false)
-    const apiKey = import.meta.env.VITE_MAPTILER_PUBLIC_API_KEY
+    const apiKey =
+        import.meta.env.VITE_MAPTILER_PUBLIC_API_KEY
 
     if (!apiKey) {
         return (
@@ -59,6 +130,43 @@ export default function RouteMap() {
                         tileerror: () => setHasError(true),
                     }}
                 />
+
+                <MapViewportUpdater
+                    startPlace={startPlace}
+                    destinationPlace={destinationPlace}
+                />
+
+                {startPlace && (
+                    <Marker
+                        position={[
+                            startPlace.latitude,
+                            startPlace.longitude,
+                        ]}
+                        icon={startIcon}
+                    >
+                        <Popup>
+                            <strong>Startpunkt</strong>
+                            <br />
+                            {startPlace.displayName}
+                        </Popup>
+                    </Marker>
+                )}
+
+                {destinationPlace && (
+                    <Marker
+                        position={[
+                            destinationPlace.latitude,
+                            destinationPlace.longitude,
+                        ]}
+                        icon={destinationIcon}
+                    >
+                        <Popup>
+                            <strong>Zielpunkt</strong>
+                            <br />
+                            {destinationPlace.displayName}
+                        </Popup>
+                    </Marker>
+                )}
             </MapContainer>
         </section>
     )
