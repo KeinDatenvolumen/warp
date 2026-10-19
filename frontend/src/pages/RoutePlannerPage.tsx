@@ -247,10 +247,13 @@ export default function RoutePlannerPage() {
             return
         }
 
-        console.info('Route calculation requested', {
+        const routeRequest = {
             activityProfile: selectedProfile,
             ...routeCoordinates,
-        })
+        }
+
+        // TODO: Im Ticket WARP-012 an die Routenberechnung übergeben.
+        console.info('Route calculation requested', routeRequest)
     }
 
     return (
@@ -422,9 +425,7 @@ export default function RoutePlannerPage() {
                                 <ul aria-label="Suchergebnisse für den Zielpunkt">
                                     {destinationResults.map(
                                         (place) => (
-                                            <li
-                                                key={place.placeId}
-                                            >
+                                            <li key={place.placeId}>
                                                 <button
                                                     type="button"
                                                     onClick={() =>

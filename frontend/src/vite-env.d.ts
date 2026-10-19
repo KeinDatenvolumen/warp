@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
     readonly VITE_BFF_BASE_URL?: string
-    readonly VITE_MAPTILER_API_KEY?: string
+    readonly VITE_MAPTILER_PUBLIC_API_KEY?: string
 }
 
 interface ImportMeta {
