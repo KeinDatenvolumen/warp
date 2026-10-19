@@ -12,7 +12,7 @@ public class GeocodingService {
 
     private static final int DEFAULT_LIMIT = 5;
     private static final int MAXIMUM_LIMIT = 10;
-    private static final int MINIMUM_QUERY_LENGTH = 2;
+    private static final int MINIMUM_QUERY_LENGTH = 3;
     private static final int MAXIMUM_QUERY_LENGTH = 200;
 
     private final MapTilerGeocodingClient geocodingClient;
@@ -40,7 +40,7 @@ public class GeocodingService {
 
         int effectiveLimit = limit == null
                 ? DEFAULT_LIMIT
-                : Math.min(Math.max(limit, 1), MAXIMUM_LIMIT);
+                : Math.clamp(limit, 1, MAXIMUM_LIMIT);
 
         return geocodingClient.searchPlaces(
                 normalizedQuery,

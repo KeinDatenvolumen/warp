@@ -16,6 +16,14 @@ export default function RoutePlannerPage() {
     const [destinationResults, setDestinationResults] =
             useState < Place[] >([])
 
+    const [lastCompletedStartQuery, setLastCompletedStartQuery] =
+        useState<string | null>(null)
+
+    const [
+        lastCompletedDestinationQuery,
+        setLastCompletedDestinationQuery,
+    ] = useState<string | null>(null)
+
     const startRequestId = useRef(0)
     const destinationRequestId = useRef(0)
 
@@ -59,6 +67,8 @@ export default function RoutePlannerPage() {
         const trimmedInput = startInput.trim()
         const requestId = ++startRequestId.current
 
+        setLastCompletedStartQuery(null)
+
         if (trimmedInput.length < 3 || selectedStart) {
             setStartResults([])
             return
@@ -76,6 +86,7 @@ export default function RoutePlannerPage() {
                 }
 
                 setStartResults(result.data?.searchPlaces ?? [])
+                setLastCompletedStartQuery(trimmedInput)
             })
         }, 400)
 
@@ -85,40 +96,49 @@ export default function RoutePlannerPage() {
     }, [startInput, selectedStart, searchStartPlaces])
 
 
-   useEffect(() => {
-       const trimmedInput = destinationInput.trim()
-       const requestId = ++destinationRequestId.current
 
-       if (trimmedInput.length < 3 || selectedDestination) {
-           setDestinationResults([])
-           return
-       }
+    useEffect(() => {
+        const trimmedInput = destinationInput.trim()
+        const requestId = ++destinationRequestId.current
 
-       const timeoutId = window.setTimeout(() => {
-           void searchDestinationPlaces({
-               variables: {
-                   query: trimmedInput,
-                   limit: 5,
-               },
-           }).then((result) => {
-               if (!isLatestRequest(requestId, destinationRequestId.current)) {
-                   return
-               }
+        setLastCompletedDestinationQuery(null)
 
-               setDestinationResults(
-                   result.data?.searchPlaces ?? []
-               )
-           })
-       }, 400)
+        if (trimmedInput.length < 3 || selectedDestination) {
+            setDestinationResults([])
+            return
+        }
 
-       return () => {
-           window.clearTimeout(timeoutId)
-       }
-   }, [
-       destinationInput,
-       selectedDestination,
-       searchDestinationPlaces,
-   ])
+        const timeoutId = window.setTimeout(() => {
+            void searchDestinationPlaces({
+                variables: {
+                    query: trimmedInput,
+                    limit: 5,
+                },
+            }).then((result) => {
+                if (
+                    !isLatestRequest(
+                        requestId,
+                        destinationRequestId.current,
+                    )
+                ) {
+                    return
+                }
+
+                setDestinationResults(
+                    result.data?.searchPlaces ?? [],
+                )
+                setLastCompletedDestinationQuery(trimmedInput)
+            })
+        }, 400)
+
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [
+        destinationInput,
+        selectedDestination,
+        searchDestinationPlaces,
+    ])
 
     function handleStartSelection(place: Place) {
         setSelectedStart(place)
@@ -148,6 +168,7 @@ export default function RoutePlannerPage() {
             },
         }
 
+        // TODO: Im Ticket WARP-012 an die Routenberechnung übergeben.
         console.info('Route calculation requested', coordinates)
     }
 
@@ -190,8 +211,8 @@ export default function RoutePlannerPage() {
 
                                 {!startLoading &&
                                     !startError &&
-                                    startInput.trim().length >= 3 &&
                                     !selectedStart &&
+                                    lastCompletedStartQuery === startInput.trim() &&
                                     startResults.length === 0 && (
                                         <p role="status">
                                             Kein passender Startpunkt gefunden.
@@ -248,8 +269,9 @@ export default function RoutePlannerPage() {
 
                                 {!destinationLoading &&
                                     !destinationError &&
-                                    destinationInput.trim().length >= 3 &&
                                     !selectedDestination &&
+                                    lastCompletedDestinationQuery ===
+                                    destinationInput.trim() &&
                                     destinationResults.length === 0 && (
                                         <p role="status">
                                             Kein passender Zielpunkt gefunden.

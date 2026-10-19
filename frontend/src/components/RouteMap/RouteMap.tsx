@@ -78,7 +78,8 @@ export default function RouteMap({
     destinationPlace,
 }: RouteMapProps) {
     const [hasError, setHasError] = useState(false)
-    const apiKey = import.meta.env.VITE_MAPTILER_API_KEY
+    const apiKey =
+        import.meta.env.VITE_MAPTILER_PUBLIC_API_KEY
 
     if (!apiKey) {
         return (

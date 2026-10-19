@@ -27,10 +27,10 @@ class GeocodingServiceTest {
 
     @Test
     void returnsEmptyListForQueryThatIsTooShort() {
-        List < Place > result = geocodingService.searchPlaces("a", 5);
+        List<Place> result = geocodingService.searchPlaces("ab", 5);
 
         assertEquals(List.of(), result);
-        verify(geocodingClient, never()).searchPlaces("a", 5);
+        verify(geocodingClient, never()).searchPlaces("ab", 5);
     }
 
     @Test
