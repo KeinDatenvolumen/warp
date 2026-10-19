@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import de.warp.bff.api.dto.ActuatorHealthResponse;
 import de.warp.bff.api.dto.ServiceHealthResponse;
@@ -30,6 +31,7 @@ public class SystemHealthService {
     private final Executor healthCheckExecutor;
 
     public SystemHealthService(
+            @Qualifier("serviceHealthRestClient")
             RestClient serviceHealthRestClient,
             Executor healthCheckExecutor,
             @Value("${warp.services.identity.name}") String identityName,

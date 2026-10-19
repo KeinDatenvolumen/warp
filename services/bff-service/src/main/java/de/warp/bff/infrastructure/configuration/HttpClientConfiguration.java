@@ -74,4 +74,20 @@ public class HttpClientConfiguration {
                 .requestFactory(requestFactory)
                 .build();
     }
+
+    @Bean
+    RestClient identityRestClient(
+            @Value("${warp.services.identity.url}")
+            String identityServiceUrl,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        return RestClient.builder()
+                .baseUrl(identityServiceUrl)
+                .requestInterceptor(correlationIdInterceptor)
+                .requestInterceptor(serviceAuthenticationInterceptor)
+                .build();
+    }
 }
