@@ -36,7 +36,25 @@ class ActivityProfileServiceTests {
         assertThat(profile.averageSpeedKmh())
                 .isEqualTo(18.0);
 
-        assertThat(profile.weatherQueryIntervalMinutes())
-                .isEqualTo(15);
+        assertThat(profile.weatherQueryIntervalKm())
+                .isEqualTo(5);
+    }
+
+    @Test
+    void providesWeatherQueryIntervalsInKilometers() {
+        assertThat(
+                service.getProfile(ActivityProfileCode.HIKING)
+                        .weatherQueryIntervalKm()
+        ).isEqualTo(2);
+
+        assertThat(
+                service.getProfile(ActivityProfileCode.BICYCLE)
+                        .weatherQueryIntervalKm()
+        ).isEqualTo(5);
+
+        assertThat(
+                service.getProfile(ActivityProfileCode.MOTORCYCLE)
+                        .weatherQueryIntervalKm()
+        ).isEqualTo(15);
     }
 }

@@ -5,7 +5,7 @@ public record ActivityProfile(
         String displayName,
         double averageSpeedKmh,
         RoutingProfileCode routingProfile,
-        int weatherQueryIntervalMinutes,
+        int weatherQueryIntervalKm,
         WayPreferences wayPreferences
 ) {
 }

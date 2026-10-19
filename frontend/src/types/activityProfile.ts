@@ -6,5 +6,4 @@ export type ActivityProfileCode =
 export interface ActivityProfile {
     code: ActivityProfileCode
     displayName: string
-    weatherQueryIntervalMinutes: number
 }

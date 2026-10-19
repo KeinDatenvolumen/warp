@@ -20,7 +20,6 @@ export const ACTIVITY_PROFILES_QUERY: TypedDocumentNode<
         activityProfiles {
             code
             displayName
-            weatherQueryIntervalMinutes
         }
     }
 `
@@ -33,7 +32,6 @@ export const ACTIVITY_PROFILE_QUERY: TypedDocumentNode<
         activityProfile(code: $code) {
             code
             displayName
-            weatherQueryIntervalMinutes
         }
     }
 `

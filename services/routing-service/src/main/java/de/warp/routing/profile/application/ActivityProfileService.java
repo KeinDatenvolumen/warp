@@ -18,7 +18,7 @@ public class ActivityProfileService {
                     "Fahrrad",
                     18.0,
                     RoutingProfileCode.BICYCLE,
-                    15,
+                    5,
                     new WayPreferences(
                             true,
                             true,
@@ -33,7 +33,7 @@ public class ActivityProfileService {
                     "Motorrad",
                     60.0,
                     RoutingProfileCode.MOTORCYCLE,
-                    30,
+                    15,
                     new WayPreferences(
                             false,
                             false,
@@ -48,7 +48,7 @@ public class ActivityProfileService {
                     "Wandern",
                     5.0,
                     RoutingProfileCode.FOOT,
-                    10,
+                    2,
                     new WayPreferences(
                             false,
                             true,

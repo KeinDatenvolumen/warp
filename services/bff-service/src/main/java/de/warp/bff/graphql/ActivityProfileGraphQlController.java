@@ -39,8 +39,7 @@ public class ActivityProfileGraphQlController {
 
     public record ActivityProfilePayload(
             ActivityProfileCode code,
-            String displayName,
-            int weatherQueryIntervalMinutes
+            String displayName
     ) {
 
         private static ActivityProfilePayload from(
@@ -48,8 +47,7 @@ public class ActivityProfileGraphQlController {
         ) {
             return new ActivityProfilePayload(
                     ActivityProfileCode.valueOf(response.code()),
-                    response.displayName(),
-                    response.weatherQueryIntervalMinutes()
+                    response.displayName()
             );
         }
     }

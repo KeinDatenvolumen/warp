@@ -92,11 +92,6 @@ type ActivityProfile {
     Anzeigename für das Frontend.
     """
     displayName: String!
-
-    """
-    Zentrales Wetter-Abfrageintervall in Minuten.
-    """
-    weatherQueryIntervalMinutes: Int!
 }
 
 """

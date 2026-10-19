@@ -126,20 +126,6 @@ export default function ActivityProfileSelector({
                             <span className={styles.description}>
                                 {PROFILE_DESCRIPTIONS[profile.code]}
                             </span>
-
-                            <dl className={styles.details}>
-                                <div className={styles.detail}>
-                                    <dt className={styles.detailName}>
-                                        Wetterabfrage
-                                    </dt>
-
-                                    <dd className={styles.detailValue}>
-                                        alle{' '}
-                                        {profile.weatherQueryIntervalMinutes}{' '}
-                                        Minuten
-                                    </dd>
-                                </div>
-                            </dl>
                         </button>
                     )
                 })}
