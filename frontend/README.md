@@ -184,19 +184,13 @@ Für die Darstellung muss `VITE_MAPTILER_PUBLIC_API_KEY` gesetzt sein. Die eigen
 
 ### `/login`
 
-Zeigt eine vorläufige Testanmeldung. Die Anmeldung ist noch nicht mit dem Identity-Service verbunden.
+Zeigt das Anmeldeformular mit E-Mail-Adresse und Passwort. Die Anmeldung läuft über den BFF (`POST /api/v1/sessions`). Details siehe Abschnitt [Anmeldung und Sitzungsstatus](#anmeldung-und-sitzungsstatus).
 
-Der aktuelle Authentifizierungsstatus wird ausschließlich zu Entwicklungszwecken im `localStorage` des Browsers gespeichert:
-
-```text
-warp-user-authenticated
-```
-
-Diese Testanmeldung ist keine produktive Authentifizierung.
+Bereits angemeldete Benutzer werden von `/login` automatisch weitergeleitet.
 
 ### `/profile`
 
-Geschützte Platzhalterseite für zukünftige Profildaten. Nicht angemeldete Benutzer werden zu `/login` weitergeleitet und nach der Testanmeldung zur ursprünglich angeforderten Seite zurückgeführt.
+Geschützte Platzhalterseite für zukünftige Profildaten. Nicht angemeldete Benutzer werden zu `/login` weitergeleitet und nach der Anmeldung zur ursprünglich angeforderten Seite zurückgeführt. Während der Sitzungsprüfung beim Start wird kein geschützter Inhalt angezeigt.
 
 ### `/saved-routes`
 
@@ -221,7 +215,52 @@ Alle regulären Seiten werden innerhalb eines gemeinsamen Anwendungslayouts darg
 - Inhaltsbereich für die aktuelle Route
 - Anwendungsfooter
 
-Die aktive Route wird in der Navigation hervorgehoben. Abhängig vom lokalen Test-Anmeldestatus werden außerdem die Links zu Profil und gespeicherten Routen oder der Link zur Anmeldung angezeigt.
+Die aktive Route wird in der Navigation hervorgehoben. Abhängig vom Sitzungsstatus werden außerdem die Links zu Profil und gespeicherten Routen samt Abmelden-Schaltfläche (angemeldet) oder der Link zur Anmeldung (abgemeldet) angezeigt. Während der Sitzungsprüfung beim Start wird weder das eine noch das andere angezeigt.
+
+## Anmeldung und Sitzungsstatus
+
+### Ablauf
+
+1. Beim Start der Anwendung fragt der `AuthProvider` die Sitzung über die GraphQL-Query `currentSession` ab.
+2. Die Anmeldung erfolgt über `POST /api/v1/sessions`. Der BFF setzt das Session-Cookie (`HttpOnly`, `Secure`, `SameSite=Lax`).
+3. Danach wird `currentSession` erneut abgefragt. Erst diese Antwort setzt den Status auf `authenticated`.
+4. Die Abmeldung erfolgt nach einer Rückfrage („Wirklich abmelden?“) über `DELETE /api/v1/sessions/current`. Danach werden Status und Apollo-Cache zurückgesetzt und zur Startseite weitergeleitet.
+
+### Authentifizierungsstatus
+
+Der zentrale Status (`useAuth().status`) hat genau drei Werte:
+
+```text
+loading            Sitzung wird geprüft
+authenticated      Benutzer ist angemeldet
+unauthenticated    Benutzer ist nicht angemeldet
+```
+
+Das Session-Cookie ist `HttpOnly` und wird vom Frontend nie gelesen oder verändert. Maßgeblich ist ausschließlich die Antwort des Backends. Es wird nichts über den Anmeldestatus in `localStorage` oder `sessionStorage` gespeichert. Das Passwort liegt nur im Zustand der Anmeldeseite und wird nach einem Fehlversuch geleert.
+
+Meldet das Backend bei einer GraphQL-Operation `SESSION_INVALID`, wechselt der Status automatisch zu `unauthenticated` (`sessionInvalidLink` in `src/api/apolloClient.ts`).
+
+### CSRF
+
+`POST /api/v1/sessions` und `POST /api/v1/users` sind von CSRF ausgenommen. Für alle anderen zustandsverändernden REST-Requests (derzeit `DELETE /api/v1/sessions/current`) lädt `src/api/restClient.ts` den Token über `GET /api/v1/csrf`, hält ihn nur im Arbeitsspeicher und sendet ihn im vom BFF genannten Header (`X-XSRF-TOKEN`). Bei einem `403` wird der Token einmal erneuert und der Request wiederholt.
+
+> GraphQL-Mutationen benötigen ebenfalls den CSRF-Token. Sobald die erste Mutation im Frontend verwendet wird, muss dafür ein Apollo-Link ergänzt werden, der `getCsrfToken` aus dem REST-Client nutzt.
+
+### Rückfrage bei der Abmeldung
+
+Die Rückfrage verwendet die wiederverwendbare Komponente `src/components/ui/ConfirmDialog/ConfirmDialog.tsx` auf Basis des nativen `<dialog>`-Elements. Der Browser übernimmt Fokus-Falle, Abdunkeln des Hintergrunds und Schließen mit `Esc`. Beim Öffnen liegt der Fokus auf „Abbrechen“, damit ein versehentliches `Enter` nicht abmeldet. Der Dialog kann auch für andere Rückfragen genutzt werden (Titel, Beschreibung und Beschriftung des Bestätigen-Buttons sind Props).
+
+### Fehlermeldungen der Anmeldung
+
+| Ursache | Anzeige |
+|---|---|
+| `INVALID_CREDENTIALS` (401) | Die E-Mail-Adresse oder das Passwort ist nicht korrekt. (bewusst keinem Feld zugeordnet) |
+| `429` | Zu viele Anmeldeversuche, mit Wartezeit aus `Retry-After`. Das Absenden ist bis zum Ablauf gesperrt. |
+| alle anderen Fehler | Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut. |
+
+### Weiterleitung
+
+Nach der Anmeldung wird zur ursprünglich angefragten geschützten Seite (`location.state.from`) weitergeleitet, sonst zu `DEFAULT_AUTHENTICATED_PATH` (`src/features/auth/authRedirect.ts`). Es werden nur interne Pfade akzeptiert. Nach der Abmeldung wird zur öffentlichen Startseite weitergeleitet.
 
 ## BFF- und GraphQL-Anbindung
 
@@ -361,13 +400,15 @@ Erwartetes Verhalten:
 1. `/` zeigt das REST-basierte Service-Dashboard.
 2. `/system-status` zeigt das GraphQL-basierte Service-Dashboard.
 3. `/route-planner` zeigt bei konfiguriertem MapTiler-Key die Karte.
-4. `/login` ermöglicht eine vorläufige lokale Testanmeldung.
-5. `/profile` und `/saved-routes` leiten ohne Testanmeldung zu `/login` weiter.
-6. Nach der Testanmeldung wird zur ursprünglich angeforderten geschützten Route zurückgeleitet.
-7. `/unbekannte-route` zeigt die 404-Seite.
-8. Die Navigation markiert die aktive Route.
-9. Das direkte Neuladen einer Client-Route funktioniert im Produktionsserver durch den SPA-Fallback.
-10. Fehler des BFF oder der Kartenkacheln werden in der Oberfläche angezeigt.
+4. `/login` zeigt das Anmeldeformular. Leere Felder und eine ungültige E-Mail-Adresse werden direkt am Feld gemeldet.
+5. `/profile` und `/saved-routes` leiten ohne Anmeldung zu `/login` weiter. Beim Neuladen einer geschützten Seite wird kein Inhalt kurzzeitig angezeigt.
+6. Nach der Anmeldung wird zur ursprünglich angeforderten geschützten Route zurückgeleitet. Ein Neuladen behält die Anmeldung.
+7. Falsche Zugangsdaten zeigen die allgemeine Fehlermeldung.
+8. **Abmelden** öffnet die Rückfrage „Wirklich abmelden?“. „Abbrechen“, `Esc` und ein Klick neben das Fenster schließen sie ohne Abmeldung. „Abmelden“ beendet die Sitzung und leitet zur Startseite weiter. Geschützte Seiten sind danach gesperrt.
+9. `/unbekannte-route` zeigt die 404-Seite.
+10. Die Navigation markiert die aktive Route.
+11. Das direkte Neuladen einer Client-Route funktioniert im Produktionsserver durch den SPA-Fallback.
+12. Fehler des BFF oder der Kartenkacheln werden in der Oberfläche angezeigt.
 
 ## Empfohlener Prüfablauf
 
@@ -434,6 +475,23 @@ frontend/src/features/registration/registrationErrorMapping.test.ts
 frontend/src/pages/RegistrationPage.test.tsx
 ```
 
+Die Tests zu Anmeldung und Sitzungsstatus befinden sich in:
+
+```text
+frontend/src/api/restClient.test.ts
+frontend/src/api/sessionApi.test.ts
+frontend/src/api/apolloClient.test.ts
+frontend/src/features/auth/AuthContext.test.tsx
+frontend/src/features/auth/authRedirect.test.ts
+frontend/src/features/auth/loginErrorMapping.test.ts
+frontend/src/features/auth/loginValidation.test.ts
+frontend/src/features/auth/sessionEvents.test.ts
+frontend/src/features/auth/useCountdown.test.ts
+frontend/src/components/routing/ProtectedRoute.test.tsx
+frontend/src/pages/LoginPage.test.tsx
+frontend/src/app/AppLayout.test.tsx
+```
+
 ### Neue Tests anlegen
 
 Vitest erkennt Testdateien automatisch, wenn sie nach einem dieser Muster benannt sind:
@@ -473,3 +531,25 @@ Die Registrierungstests prüfen:
 - Bedienung des Formulars per Tastatur
 
 Der aktuelle Projektstand enthält automatisierte Frontend-Tests mit Vitest, JSDOM und React Testing Library. Ein separater Lint-Befehl ist derzeit nicht konfiguriert.
+
+### Aktuelle Testabdeckung der Anmeldung
+
+Die Tests zu Anmeldung und Sitzungsstatus prüfen:
+
+- Pflichtfeld- und E-Mail-Formatvalidierung, Fokus auf dem ersten fehlerhaften Feld
+- Eingabetypen und Autocomplete-Werte (`email`, `current-password`)
+- barrierearme Fehlerzuordnung über `aria-invalid`, `aria-describedby` und `role="alert"`
+- Aufruf von `POST /api/v1/sessions` mit getrimmter E-Mail-Adresse
+- Ladezustand und Schutz vor mehrfachem Absenden
+- allgemeine Fehlermeldung bei `INVALID_CREDENTIALS` ohne Feldzuordnung
+- Behandlung von `429` mit und ohne `Retry-After`
+- technische Fehler und nicht bestätigte Sitzungen
+- Sitzungsprüfung beim Start (`loading`, `authenticated`, `unauthenticated`)
+- automatischen Wechsel in den abgemeldeten Zustand bei `SESSION_INVALID`
+- Schutz geschützter Seiten, auch während der Sitzungsprüfung
+- Weiterleitung nach Anmeldung und Abmeldung, nur interne Zielpfade
+- Abmeldung inklusive Ladezustand, Fehlerfall und Zurücksetzen des Apollo-Caches
+- Rückfrage vor der Abmeldung: Fokus auf „Abbrechen“, Schließen per Button, `Esc` und Hintergrundklick ohne Abmeldung
+- CSRF-Token bei `DELETE /api/v1/sessions/current`, einmalige Wiederholung bei `403`
+- keine Nutzung von `localStorage`, `sessionStorage` und `document.cookie`
+- Bedienung des Formulars per Tastatur
