@@ -32,6 +32,11 @@ public class SecurityConfig {
     ) throws Exception {
         CookieCsrfTokenRepository csrfTokenRepository =
                 CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokenRepository.setCookieCustomizer(customizer -> customizer
+                .sameSite("None")
+                .secure(true)
+                .path("/")
+        );
 
         GraphQlOperationClassificationFilter
                 graphQlOperationClassificationFilter =

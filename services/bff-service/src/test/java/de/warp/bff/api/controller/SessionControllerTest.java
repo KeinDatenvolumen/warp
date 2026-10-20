@@ -71,7 +71,7 @@ class SessionControllerTest {
                 ))
                 .andExpect(header().string(
                         HttpHeaders.SET_COOKIE,
-                        "session=generated-session-token; Path=/; Secure; HttpOnly; SameSite=Lax"
+                        "session=generated-session-token; Path=/; Secure; HttpOnly; SameSite=None"
                 ))
                 .andExpect(jsonPath("$.userId")
                         .value("usr_123"))
@@ -154,7 +154,7 @@ class SessionControllerTest {
                 ))
                 .andExpect(header().string(
                         HttpHeaders.SET_COOKIE,
-                        containsString("SameSite=Lax")
+                        containsString("SameSite=None")
                 ));
 
         verify(sessionService)

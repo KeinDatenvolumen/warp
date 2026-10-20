@@ -138,6 +138,12 @@ class CsrfSecurityIntegrationTest {
                 )
                 .andExpect(
                         cookie().exists("XSRF-TOKEN")
+                )
+                .andExpect(
+                        cookie().sameSite("XSRF-TOKEN", "None")
+                )
+                .andExpect(
+                        cookie().secure("XSRF-TOKEN", true)
                 );
     }
 
