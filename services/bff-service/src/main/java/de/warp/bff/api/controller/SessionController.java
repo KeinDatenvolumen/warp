@@ -54,7 +54,7 @@ public class SessionController {
                 )
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
+                .sameSite("None")
                 .path("/")
                 .build();
 
