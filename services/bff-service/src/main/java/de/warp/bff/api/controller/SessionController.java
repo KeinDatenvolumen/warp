@@ -89,7 +89,7 @@ public class SessionController {
                 .from("session", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
+                .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ZERO)
                 .build();
