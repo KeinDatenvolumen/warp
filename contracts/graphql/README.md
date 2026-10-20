@@ -157,14 +157,14 @@ Jeder operationsweite Fehler enthält einen stabilen Maschinen-Code:
 
 ```json
 {
-  "errors": [
-    {
-      "message": "Der Dienst ist derzeit nicht verfügbar.",
-      "extensions": {
-        "code": "SERVICE_UNAVAILABLE"
+   "errors": [
+      {
+         "message": "Der Dienst ist derzeit nicht verfügbar.",
+         "extensions": {
+            "code": "SERVICE_UNAVAILABLE"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -226,18 +226,18 @@ Ein Fehler kann einem konkreten Eingabefeld zugeordnet werden:
 
 ```json
 {
-  "data": {
-    "updateCurrentUser": {
-      "user": null,
-      "errors": [
-        {
-          "field": "preferredActivityProfile",
-          "code": "INVALID_ACTIVITY_PROFILE",
-          "message": "Das Aktivitätsprofil ist ungültig."
-        }
-      ]
-    }
-  }
+   "data": {
+      "updateCurrentUser": {
+         "user": null,
+         "errors": [
+            {
+               "field": "preferredActivityProfile",
+               "code": "INVALID_ACTIVITY_PROFILE",
+               "message": "Das Aktivitätsprofil ist ungültig."
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -246,18 +246,18 @@ zurückgegeben:
 
 ```json
 {
-  "data": {
-    "savedRoute": null
-  },
-  "errors": [
-    {
-      "message": "Die gespeicherte Route wurde nicht gefunden.",
-      "path": ["savedRoute"],
-      "extensions": {
-        "code": "SAVED_ROUTE_NOT_FOUND"
+   "data": {
+      "savedRoute": null
+   },
+   "errors": [
+      {
+         "message": "Die gespeicherte Route wurde nicht gefunden.",
+         "path": ["savedRoute"],
+         "extensions": {
+            "code": "SAVED_ROUTE_NOT_FOUND"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -280,9 +280,9 @@ Ein Request besitzt grundsätzlich folgende JSON-Struktur:
 
 ```json
 {
-  "query": "query SystemHealth { systemHealth { status } }",
-  "operationName": "SystemHealth",
-  "variables": {}
+   "query": "query SystemHealth { systemHealth { status } }",
+   "operationName": "SystemHealth",
+   "variables": {}
 }
 ```
 
@@ -444,19 +444,32 @@ Die zentral konfigurierten Aktivitätsprofile sind:
 - `MOTORCYCLE`
 - `HIKING`
 
-Ein Aktivitätsprofil enthält:
+Intern, im Routing-Service, enthält ein Aktivitätsprofil:
 
 - einen stabilen fachlichen Profilcode,
 - einen Anzeigenamen,
 - eine zentrale Durchschnittsgeschwindigkeit,
 - ein zugeordnetes Routingprofil,
-- ein Wetter-Abfrageintervall,
+- ein Wetter-Abfrageintervall in Kilometern,
 - zentrale Wegepräferenzen.
+
+Über die öffentliche GraphQL-API werden ausschließlich der Profilcode und der
+Anzeigename ausgeliefert. Alle übrigen Profilparameter sind rein intern und
+werden dem Frontend nicht angezeigt.
 
 Die Profilparameter werden zentral im Backend verwaltet. Endbenutzer dürfen
 ausschließlich ein Profil auswählen. Die Parameter eines Profils, beispielsweise
 die Geschwindigkeit, das Wetter-Abfrageintervall oder die Wegepräferenzen,
-sind nicht über die öffentliche GraphQL-API veränderbar.
+sind weder sichtbar noch über die öffentliche GraphQL-API veränderbar.
+
+Das Wetter-Abfrageintervall legt fest, in welchem Streckenabstand entlang
+der Route Wetterdaten abgefragt werden:
+
+| Profil        | Code         | Wetter-Abfrageintervall |
+|---------------|--------------|-------------------------|
+| Wandern       | `HIKING`     | 2 km                    |
+| Fahrrad       | `BICYCLE`    | 5 km                    |
+| Motorrad      | `MOTORCYCLE` | 15 km                   |
 
 Die verfügbaren Profile werden über folgende Query geliefert:
 
@@ -465,17 +478,6 @@ query ActivityProfiles {
     activityProfiles {
         code
         displayName
-        averageSpeedKmh
-        routingProfile
-        weatherQueryIntervalMinutes
-        wayPreferences {
-            preferCycleways
-            avoidMotorways
-            avoidTollRoads
-            avoidUnpavedWays
-            preferPavedWays
-            preferScenicWays
-        }
     }
 }
 ```
@@ -487,7 +489,6 @@ query GetActivityProfile($code: ActivityProfileCode!) {
     activityProfile(code: $code) {
         code
         displayName
-        weatherQueryIntervalMinutes
     }
 }
 ```
@@ -501,7 +502,8 @@ Beispielvariablen:
 ```
 
 Die konkreten Werte der Profile werden zentral durch den Routing-Service
-bereitgestellt. Das Frontend darf keine eigenen Profilparameter erzeugen oder
+bereitgestellt. Der BFF gibt davon nur Profilcode und Anzeigename an das
+Frontend weiter. Das Frontend darf keine eigenen Profilparameter erzeugen oder
 überschreiben.
 
 Die Auswahl eines Profils im Frontend ist in diesem ersten Implementierungsschritt
@@ -530,3 +532,4 @@ Struktur besitzen:
     "code": "INTERNAL_SERVER_ERROR"
   }
 }
+```

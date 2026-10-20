@@ -7,7 +7,7 @@ public record ActivityProfileResponse(
         String displayName,
         double averageSpeedKmh,
         String routingProfile,
-        int weatherQueryIntervalMinutes,
+        int weatherQueryIntervalKm,
         WayPreferencesResponse wayPreferences
 ) {
 
@@ -19,7 +19,7 @@ public record ActivityProfileResponse(
                 profile.displayName(),
                 profile.averageSpeedKmh(),
                 profile.routingProfile().name(),
-                profile.weatherQueryIntervalMinutes(),
+                profile.weatherQueryIntervalKm(),
                 WayPreferencesResponse.from(profile)
         );
     }
