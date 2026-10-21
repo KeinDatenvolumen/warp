@@ -28,9 +28,23 @@ public class RouteCalculationService {
 
     @Transactional
     public RouteCalculationAcceptedResponse startCalculation(
+            String idempotencyKey,
             StartRouteCalculationRequest request
     ) {
+        validateIdempotencyKey(idempotencyKey);
         validateRequest(request);
+
+        String normalizedIdempotencyKey =
+                idempotencyKey.trim();
+
+        RouteCalculationEntity existingCalculation =
+                repository.findByIdempotencyKey(
+                        normalizedIdempotencyKey
+                ).orElse(null);
+
+        if (existingCalculation != null) {
+            return toAcceptedResponse(existingCalculation);
+        }
 
         Instant createdAt = clock.instant();
 
@@ -38,6 +52,7 @@ public class RouteCalculationService {
                 new RouteCalculationEntity(
                         generateCalculationId(),
                         request.requestedByUserId().trim(),
+                        normalizedIdempotencyKey,
                         request.start().label().trim(),
                         request.start().latitude(),
                         request.start().longitude(),
@@ -55,11 +70,7 @@ public class RouteCalculationService {
         RouteCalculationEntity savedCalculation =
                 repository.save(calculation);
 
-        return new RouteCalculationAcceptedResponse(
-                savedCalculation.getId(),
-                savedCalculation.getStatus(),
-                savedCalculation.getCreatedAt()
-        );
+        return toAcceptedResponse(savedCalculation);
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +96,34 @@ public class RouteCalculationService {
         return "calc_" + UUID.randomUUID()
                 .toString()
                 .replace("-", "");
+    }
+
+    private void validateIdempotencyKey(
+            String idempotencyKey
+    ) {
+        if (idempotencyKey == null
+                || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Der Idempotency-Key darf nicht leer sein."
+            );
+        }
+
+        if (idempotencyKey.trim().length() > 128) {
+            throw new IllegalArgumentException(
+                    "Der Idempotency-Key darf höchstens "
+                            + "128 Zeichen enthalten."
+            );
+        }
+    }
+
+    private RouteCalculationAcceptedResponse toAcceptedResponse(
+            RouteCalculationEntity calculation
+    ) {
+        return new RouteCalculationAcceptedResponse(
+                calculation.getId(),
+                calculation.getStatus(),
+                calculation.getCreatedAt()
+        );
     }
 
     private void validateRequest(
