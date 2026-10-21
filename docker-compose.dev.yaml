@@ -88,6 +88,7 @@ services:
       DB_URL: jdbc:postgresql://storage-db:5432/${STORAGE_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
       DB_USERNAME: ${STORAGE_DB_USER}
       DB_PASSWORD: ${STORAGE_DB_PASSWORD}
+      WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
     depends_on:
       storage-db:
         condition: service_healthy
