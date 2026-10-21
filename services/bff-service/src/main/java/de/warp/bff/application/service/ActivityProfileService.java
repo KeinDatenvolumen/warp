@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import de.warp.bff.api.dto.ActivityProfileResponse;
 
@@ -16,6 +17,7 @@ public class ActivityProfileService {
     private final String routingServiceUrl;
 
     public ActivityProfileService(
+            @Qualifier("serviceHealthRestClient")
             RestClient restClient,
             @Value("${warp.services.routing.url}") String routingServiceUrl
     ) {

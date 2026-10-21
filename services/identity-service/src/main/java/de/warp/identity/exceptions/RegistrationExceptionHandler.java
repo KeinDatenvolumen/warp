@@ -95,6 +95,21 @@ public class RegistrationExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidEmailVerificationTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidVerificationToken(
+            InvalidEmailVerificationTokenException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.BAD_REQUEST,
+                "invalid-verification-token",
+                "INVALID_VERIFICATION_TOKEN",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,

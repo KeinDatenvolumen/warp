@@ -21,8 +21,38 @@ public class HttpClientConfiguration {
 
     @Bean
     RestClient serviceHealthRestClient(
-            @Value("${warp.health.connect-timeout}") Duration connectTimeout,
-            @Value("${warp.health.read-timeout}") Duration readTimeout
+            @Value("${warp.health.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.health.read-timeout}")
+            Duration readTimeout
+    ) {
+        return createRestClient(
+                connectTimeout,
+                readTimeout,
+                null
+        );
+    }
+
+    @Bean
+    RestClient identityRestClient(
+            @Value("${warp.health.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.health.read-timeout}")
+            Duration readTimeout,
+            @Value("${warp.services.identity.url}")
+            String identityServiceUrl
+    ) {
+        return createRestClient(
+                connectTimeout,
+                readTimeout,
+                removeTrailingSlash(identityServiceUrl)
+        );
+    }
+
+    private RestClient createRestClient(
+            Duration connectTimeout,
+            Duration readTimeout,
+            String baseUrl
     ) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(connectTimeout)
@@ -33,8 +63,24 @@ public class HttpClientConfiguration {
 
         requestFactory.setReadTimeout(readTimeout);
 
-        return RestClient.builder()
-                .requestFactory(requestFactory)
-                .build();
+        RestClient.Builder builder = RestClient.builder()
+                .requestFactory(requestFactory);
+
+        if (baseUrl != null) {
+            builder.baseUrl(baseUrl);
+        }
+
+        return builder.build();
+    }
+
+    private String removeTrailingSlash(String value) {
+        if (value.endsWith("/")) {
+            return value.substring(
+                    0,
+                    value.length() - 1
+            );
+        }
+
+        return value;
     }
 }

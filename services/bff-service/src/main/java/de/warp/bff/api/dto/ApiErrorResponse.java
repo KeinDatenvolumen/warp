@@ -1,0 +1,18 @@
+package de.warp.bff.api.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.net.URI;
+import java.util.List;
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public record ApiErrorResponse(
+        URI type,
+        String title,
+        int status,
+        String code,
+        String detail,
+        String instance,
+        List<?> fieldErrors
+) {
+}

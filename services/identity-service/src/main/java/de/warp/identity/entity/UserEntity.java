@@ -79,4 +79,9 @@ import java.time.Instant;
         public Instant getCreatedAt() {
             return createdAt;
         }
+
+        public void markEmailAsVerified() {
+            this.emailVerified = true;
+        }
+
     }
