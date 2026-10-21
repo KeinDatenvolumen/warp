@@ -1,9 +1,12 @@
 package de.warp.bff.graphql.error;
 
+import de.warp.bff.application.exception.SavedRouteNotFoundException;
+import de.warp.bff.application.exception.StorageServiceUnavailableException;
+import de.warp.bff.graphql.SessionInvalidException;
+import de.warp.bff.infrastructure.geocoding.GeocodingServiceUnavailableException;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
-import de.warp.bff.graphql.SessionInvalidException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -11,8 +14,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Component;
+
 import java.util.Map;
-import de.warp.bff.infrastructure.geocoding.GeocodingServiceUnavailableException;
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -52,6 +55,27 @@ public class GlobalGraphQlExceptionResolver
                     BAD_REQUEST_MESSAGE
             );
         }
+        if (exception instanceof SavedRouteNotFoundException) {
+            return createError(
+                    environment,
+                    ErrorType.NOT_FOUND,
+                    GraphQlErrorCode.SAVED_ROUTE_NOT_FOUND,
+                    "Die gespeicherte Route wurde nicht gefunden."
+            );
+        }
+        if (exception instanceof StorageServiceUnavailableException) {
+            LOGGER.warn(
+                    "Der Speicherdienst ist nicht verfügbar.",
+                    exception
+            );
+
+            return createError(
+                    environment,
+                    ErrorType.INTERNAL_ERROR,
+                    GraphQlErrorCode.DOWNSTREAM_SERVICE_UNAVAILABLE,
+                    "Der Speicherdienst ist momentan nicht verfügbar."
+            );
+        }
         if (exception instanceof GeocodingServiceUnavailableException) {
             LOGGER.warn(
                     "Der Geocoding-Dienst ist nicht verfügbar.",
@@ -89,10 +113,7 @@ public class GlobalGraphQlExceptionResolver
                 .newError(environment)
                 .errorType(errorType)
                 .message(message)
-                .extensions(Map.of(
-                        "code",
-                        errorCode.name()
-                ))
+                .extensions(Map.of("code", errorCode.name()))
                 .build();
     }
 }
