@@ -37,6 +37,14 @@ public class RouteCalculationEntity {
     private String requestedByUserId;
 
     @Column(
+            name = "idempotency_key",
+            nullable = false,
+            unique = true,
+            length = 128
+    )
+    private String idempotencyKey;
+
+    @Column(
             name = "start_label",
             nullable = false,
             length = 255
@@ -158,6 +166,7 @@ public class RouteCalculationEntity {
     public RouteCalculationEntity(
             String id,
             String requestedByUserId,
+            String idempotencyKey,
             String startLabel,
             double startLatitude,
             double startLongitude,
@@ -171,6 +180,7 @@ public class RouteCalculationEntity {
     ) {
         this.id = id;
         this.requestedByUserId = requestedByUserId;
+        this.idempotencyKey = idempotencyKey;
         this.startLabel = startLabel;
         this.startLatitude = startLatitude;
         this.startLongitude = startLongitude;
@@ -257,6 +267,10 @@ public class RouteCalculationEntity {
 
     public String getRequestedByUserId() {
         return requestedByUserId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public String getStartLabel() {

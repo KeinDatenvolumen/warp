@@ -3,6 +3,7 @@ package de.warp.routing.route.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +54,12 @@ class RouteCalculationServiceTest {
 
     @Test
     void createsPendingRouteCalculation() {
+        when(
+                repository.findByIdempotencyKey(
+                        "idempotency-key-123"
+                )
+        ).thenReturn(Optional.empty());
+
         when(repository.save(any(RouteCalculationEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -60,7 +67,10 @@ class RouteCalculationServiceTest {
                 validRequest();
 
         RouteCalculationAcceptedResponse response =
-                service.startCalculation(request);
+                service.startCalculation(
+                        "idempotency-key-123",
+                        request
+                );
 
         ArgumentCaptor<RouteCalculationEntity> captor =
                 ArgumentCaptor.forClass(
@@ -78,6 +88,9 @@ class RouteCalculationServiceTest {
 
         assertThat(savedCalculation.getRequestedByUserId())
                 .isEqualTo("usr_123");
+
+        assertThat(savedCalculation.getIdempotencyKey())
+                .isEqualTo("idempotency-key-123");
 
         assertThat(savedCalculation.getRoutingProfile())
                 .isEqualTo("cycling-regular");
@@ -101,7 +114,10 @@ class RouteCalculationServiceTest {
     @Test
     void returnsExistingRouteCalculation() {
         RouteCalculationEntity calculation =
-                createCalculation("calc_123");
+                createCalculation(
+                        "calc_123",
+                        "idempotency-key-123"
+                );
 
         when(repository.findById("calc_123"))
                 .thenReturn(Optional.of(calculation));
@@ -129,6 +145,40 @@ class RouteCalculationServiceTest {
     }
 
     @Test
+    void returnsExistingCalculationForSameIdempotencyKey() {
+        RouteCalculationEntity existingCalculation =
+                createCalculation(
+                        "calc_existing",
+                        "idempotency-key-123"
+                );
+
+        when(
+                repository.findByIdempotencyKey(
+                        "idempotency-key-123"
+                )
+        ).thenReturn(Optional.of(existingCalculation));
+
+        RouteCalculationAcceptedResponse response =
+                service.startCalculation(
+                        "idempotency-key-123",
+                        validRequest()
+                );
+
+        assertThat(response.id())
+                .isEqualTo("calc_existing");
+
+        assertThat(response.status())
+                .isEqualTo(RouteCalculationStatus.PENDING);
+
+        verify(repository).findByIdempotencyKey(
+                "idempotency-key-123"
+        );
+
+        verify(repository, never())
+                .save(any(RouteCalculationEntity.class));
+    }
+
+    @Test
     void rejectsInvalidCoordinates() {
         StartRouteCalculationRequest request =
                 new StartRouteCalculationRequest(
@@ -153,7 +203,10 @@ class RouteCalculationServiceTest {
                 );
 
         assertThatThrownBy(
-                () -> service.startCalculation(request)
+                () -> service.startCalculation(
+                        "idempotency-key-123",
+                        request
+                )
         )
                 .isInstanceOf(
                         IllegalArgumentException.class
@@ -185,11 +238,13 @@ class RouteCalculationServiceTest {
     }
 
     private RouteCalculationEntity createCalculation(
-            String id
+            String id,
+            String idempotencyKey
     ) {
         return new RouteCalculationEntity(
                 id,
                 "usr_123",
+                idempotencyKey,
                 "Mosbach",
                 49.3536,
                 9.1511,

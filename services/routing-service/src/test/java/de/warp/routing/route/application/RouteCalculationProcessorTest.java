@@ -59,6 +59,7 @@ class RouteCalculationProcessorTest {
         calculation = new RouteCalculationEntity(
                 "calc_123",
                 "usr_123",
+                "test-idempotency-key",
                 "Mosbach",
                 49.3536,
                 9.1511,
