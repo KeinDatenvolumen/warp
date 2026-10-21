@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.warp.routing.route.api.RouteCalculationAcceptedResponse;
 import de.warp.routing.route.api.StartRouteCalculationRequest;
@@ -17,15 +18,17 @@ public class RouteCalculationService {
 
     private final RouteCalculationRepository repository;
     private final Clock clock;
+    private final ApplicationEventPublisher eventPublisher;
 
     public RouteCalculationService(
             RouteCalculationRepository repository,
-            Clock clock
+            Clock clock,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.repository = repository;
         this.clock = clock;
+        this.eventPublisher = eventPublisher;
     }
-
     @Transactional
     public RouteCalculationAcceptedResponse startCalculation(
             String idempotencyKey,
@@ -69,6 +72,12 @@ public class RouteCalculationService {
 
         RouteCalculationEntity savedCalculation =
                 repository.save(calculation);
+
+        eventPublisher.publishEvent(
+                new RouteCalculationCreatedEvent(
+                        savedCalculation.getId()
+                )
+        );
 
         return toAcceptedResponse(savedCalculation);
     }

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.warp.routing.profile.domain.ActivityProfileCode;
 import de.warp.routing.route.api.ActivityProfileSnapshotRequest;
@@ -37,6 +38,9 @@ class RouteCalculationServiceTest {
     @Mock
     private RouteCalculationRepository repository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private RouteCalculationService service;
 
     @BeforeEach
@@ -48,7 +52,8 @@ class RouteCalculationServiceTest {
 
         service = new RouteCalculationService(
                 repository,
-                clock
+                clock,
+                eventPublisher
         );
     }
 
@@ -109,6 +114,22 @@ class RouteCalculationServiceTest {
 
         assertThat(response.createdAt())
                 .isEqualTo(NOW);
+
+        ArgumentCaptor<Object> eventCaptor =
+                ArgumentCaptor.forClass(Object.class);
+
+        verify(eventPublisher).publishEvent(
+                eventCaptor.capture()
+        );
+
+        assertThat(eventCaptor.getValue())
+                .isInstanceOf(RouteCalculationCreatedEvent.class);
+
+        RouteCalculationCreatedEvent publishedEvent =
+                (RouteCalculationCreatedEvent) eventCaptor.getValue();
+
+        assertThat(publishedEvent.calculationId())
+                .isEqualTo(savedCalculation.getId());
     }
 
     @Test
@@ -176,6 +197,9 @@ class RouteCalculationServiceTest {
 
         verify(repository, never())
                 .save(any(RouteCalculationEntity.class));
+
+        verify(eventPublisher, never())
+                .publishEvent(any(Object.class));
     }
 
     @Test
