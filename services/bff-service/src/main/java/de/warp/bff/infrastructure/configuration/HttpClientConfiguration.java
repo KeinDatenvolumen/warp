@@ -10,6 +10,7 @@ import de.warp.bff.infrastructure.web.InternalServiceAuthenticationInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -32,51 +33,37 @@ public class HttpClientConfiguration {
             InternalServiceAuthenticationInterceptor
                     serviceAuthenticationInterceptor
     ) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
-                .build();
-
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
-
-        requestFactory.setReadTimeout(readTimeout);
-
-        return RestClient.builder()
-                .requestFactory(requestFactory)
-                .requestInterceptor(
-                        correlationIdInterceptor
-                )
-                .requestInterceptor(
-                        serviceAuthenticationInterceptor
-                )
-                .build();
+        return createRestClient(
+                connectTimeout,
+                readTimeout,
+                null,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
     }
 
     @Bean
     RestClient routingGeocodingRestClient(
-            @Value("${warp.services.routing.url}") String baseUrl,
+            @Value("${warp.services.routing.url}")
+            String routingServiceUrl,
             @Value("${warp.geocoding.connect-timeout}")
             Duration connectTimeout,
             @Value("${warp.geocoding.read-timeout}")
             Duration readTimeout
     ) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
-                .build();
-
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
-
-        requestFactory.setReadTimeout(readTimeout);
-
-        return RestClient.builder()
-                .baseUrl(baseUrl)
-                .requestFactory(requestFactory)
-                .build();
+        return createRestClient(
+                connectTimeout,
+                readTimeout,
+                routingServiceUrl
+        );
     }
 
     @Bean
     RestClient identityRestClient(
+            @Value("${warp.health.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.health.read-timeout}")
+            Duration readTimeout,
             @Value("${warp.services.identity.url}")
             String identityServiceUrl,
             CorrelationIdClientHttpRequestInterceptor
@@ -84,10 +71,52 @@ public class HttpClientConfiguration {
             InternalServiceAuthenticationInterceptor
                     serviceAuthenticationInterceptor
     ) {
-        return RestClient.builder()
-                .baseUrl(identityServiceUrl)
-                .requestInterceptor(correlationIdInterceptor)
-                .requestInterceptor(serviceAuthenticationInterceptor)
+        return createRestClient(
+                connectTimeout,
+                readTimeout,
+                identityServiceUrl,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
+    }
+
+    private RestClient createRestClient(
+            Duration connectTimeout,
+            Duration readTimeout,
+            String baseUrl,
+            ClientHttpRequestInterceptor... interceptors
+    ) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(connectTimeout)
                 .build();
+
+        JdkClientHttpRequestFactory requestFactory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        requestFactory.setReadTimeout(readTimeout);
+
+        RestClient.Builder builder = RestClient.builder()
+                .requestFactory(requestFactory);
+
+        if (baseUrl != null) {
+            builder.baseUrl(removeTrailingSlash(baseUrl));
+        }
+
+        for (ClientHttpRequestInterceptor interceptor : interceptors) {
+            builder.requestInterceptor(interceptor);
+        }
+
+        return builder.build();
+    }
+
+    private String removeTrailingSlash(String value) {
+        if (value.endsWith("/")) {
+            return value.substring(
+                    0,
+                    value.length() - 1
+            );
+        }
+
+        return value;
     }
 }

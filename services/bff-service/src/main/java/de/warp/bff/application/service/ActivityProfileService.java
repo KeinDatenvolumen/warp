@@ -17,7 +17,7 @@ public class ActivityProfileService {
     private final String routingServiceUrl;
 
     public ActivityProfileService(
-            @Qualifier("routingGeocodingRestClient")
+            @Qualifier("serviceHealthRestClient")
             RestClient restClient,
             @Value("${warp.services.routing.url}")
             String routingServiceUrl
