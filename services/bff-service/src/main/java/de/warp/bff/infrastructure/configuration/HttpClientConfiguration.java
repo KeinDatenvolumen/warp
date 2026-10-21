@@ -90,4 +90,20 @@ public class HttpClientConfiguration {
                 .requestInterceptor(serviceAuthenticationInterceptor)
                 .build();
     }
+
+    @Bean
+    RestClient storageRestClient(
+            @Value("${warp.services.storage.url}")
+            String storageServiceUrl,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        return RestClient.builder()
+                .baseUrl(storageServiceUrl)
+                .requestInterceptor(correlationIdInterceptor)
+                .requestInterceptor(serviceAuthenticationInterceptor)
+                .build();
+    }
 }
