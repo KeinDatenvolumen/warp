@@ -9,6 +9,7 @@ import {SystemStatusPage} from "../pages/SystemStatusPage";
 import {NotFoundPage} from "../pages/NotFoundPage";
 import ProtectedRoute from '../components/routing/ProtectedRoute'
 import RegistrationPage from '../pages/RegistrationPage'
+import EmailVerificationPage from '../pages/EmailVerificationPage'
 
 export default function AppRoutes() {
     return (
@@ -17,6 +18,7 @@ export default function AppRoutes() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegistrationPage />} />
+                <Route path="/verify-email" element={<EmailVerificationPage />} />
                 <Route path="/route-planner" element={<RoutePlannerPage />} />
                 <Route
                     path="/profile"

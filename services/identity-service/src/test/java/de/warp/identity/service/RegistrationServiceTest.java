@@ -3,29 +3,30 @@ package de.warp.identity.service;
 import de.warp.identity.dto.RegistrationRequest;
 import de.warp.identity.dto.RegistrationResponse;
 import de.warp.identity.entity.UserEntity;
+import de.warp.identity.exceptions.EmailAlreadyExistsException;
 import de.warp.identity.repository.UserRepository;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-
-import de.warp.identity.exceptions.EmailAlreadyExistsException;
-import org.springframework.dao.DataIntegrityViolationException;
-import java.sql.SQLException;
-import org.hibernate.exception.ConstraintViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationServiceTest {
@@ -36,32 +37,49 @@ class RegistrationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
+    @Mock
+    private VerificationEmailSender verificationEmailSender;
+
     private RegistrationService registrationService;
 
     @BeforeEach
     void setUp() {
         registrationService = new RegistrationService(
                 userRepository,
-                passwordEncoder
+                passwordEncoder,
+                emailVerificationService,
+                verificationEmailSender
         );
     }
 
     @Test
-    void shouldRegisterUserWithNormalizedDataAndHashedPassword() {
+    void shouldRegisterUserAndSendVerificationEmail() {
         RegistrationRequest request = new RegistrationRequest(
                 "  Max Mustermann  ",
                 "  Max@Example.de  ",
                 "MeinSicheresPasswort123"
         );
 
-        when(userRepository.existsByEmailIgnoreCase("max@example.de"))
-                .thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(
+                "max@example.de"
+        )).thenReturn(false);
 
-        when(passwordEncoder.encode("MeinSicheresPasswort123"))
-                .thenReturn("hashed-password");
+        when(passwordEncoder.encode(
+                "MeinSicheresPasswort123"
+        )).thenReturn("hashed-password");
 
-        when(userRepository.saveAndFlush(any(UserEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.saveAndFlush(
+                any(UserEntity.class)
+        )).thenAnswer(
+                invocation -> invocation.getArgument(0)
+        );
+
+        when(emailVerificationService.createVerificationToken(
+                any(UserEntity.class)
+        )).thenReturn("plain-verification-token");
 
         RegistrationResponse response =
                 registrationService.register(request);
@@ -80,9 +98,27 @@ class RegistrationServiceTest {
 
         UserEntity savedUser = userCaptor.getValue();
 
-        assertEquals("Max Mustermann", savedUser.getName());
-        assertEquals("max@example.de", savedUser.getEmail());
-        assertEquals("hashed-password", savedUser.getPasswordHash());
+        verify(emailVerificationService)
+                .createVerificationToken(savedUser);
+
+        verify(verificationEmailSender)
+                .sendVerificationEmail(
+                        savedUser,
+                        "plain-verification-token"
+                );
+
+        assertEquals(
+                "Max Mustermann",
+                savedUser.getName()
+        );
+        assertEquals(
+                "max@example.de",
+                savedUser.getEmail()
+        );
+        assertEquals(
+                "hashed-password",
+                savedUser.getPasswordHash()
+        );
         assertNotEquals(
                 "MeinSicheresPasswort123",
                 savedUser.getPasswordHash()
@@ -90,9 +126,64 @@ class RegistrationServiceTest {
         assertFalse(savedUser.isEmailVerified());
 
         assertEquals(savedUser.getId(), response.id());
-        assertEquals("Max Mustermann", response.name());
-        assertEquals("max@example.de", response.email());
+        assertEquals(
+                "Max Mustermann",
+                response.name()
+        );
+        assertEquals(
+                "max@example.de",
+                response.email()
+        );
         assertFalse(response.emailVerified());
+    }
+
+    @Test
+    void shouldCreateTokenBeforeSendingEmail() {
+        RegistrationRequest request = new RegistrationRequest(
+                "Max Mustermann",
+                "max@example.de",
+                "MeinSicheresPasswort123"
+        );
+
+        when(userRepository.existsByEmailIgnoreCase(
+                "max@example.de"
+        )).thenReturn(false);
+
+        when(passwordEncoder.encode(
+                "MeinSicheresPasswort123"
+        )).thenReturn("hashed-password");
+
+        when(userRepository.saveAndFlush(
+                any(UserEntity.class)
+        )).thenAnswer(
+                invocation -> invocation.getArgument(0)
+        );
+
+        when(emailVerificationService.createVerificationToken(
+                any(UserEntity.class)
+        )).thenReturn("plain-verification-token");
+
+        registrationService.register(request);
+
+        InOrder order = inOrder(
+                userRepository,
+                emailVerificationService,
+                verificationEmailSender
+        );
+
+        order.verify(userRepository)
+                .saveAndFlush(any(UserEntity.class));
+
+        order.verify(emailVerificationService)
+                .createVerificationToken(
+                        any(UserEntity.class)
+                );
+
+        order.verify(verificationEmailSender)
+                .sendVerificationEmail(
+                        any(UserEntity.class),
+                        any(String.class)
+                );
     }
 
     @Test
@@ -103,22 +194,31 @@ class RegistrationServiceTest {
                 "MeinSicheresPasswort123"
         );
 
-        when(userRepository.existsByEmailIgnoreCase("max@example.de"))
-                .thenReturn(true);
+        when(userRepository.existsByEmailIgnoreCase(
+                "max@example.de"
+        )).thenReturn(true);
 
         assertThrows(
-                de.warp.identity.exceptions.EmailAlreadyExistsException.class,
+                EmailAlreadyExistsException.class,
                 () -> registrationService.register(request)
         );
 
         verify(userRepository)
                 .existsByEmailIgnoreCase("max@example.de");
 
-        verify(passwordEncoder, never())
-                .encode(any());
+        verify(passwordEncoder, never()).encode(any());
 
         verify(userRepository, never())
                 .saveAndFlush(any(UserEntity.class));
+
+        verify(emailVerificationService, never())
+                .createVerificationToken(any(UserEntity.class));
+
+        verify(verificationEmailSender, never())
+                .sendVerificationEmail(
+                        any(UserEntity.class),
+                        any(String.class)
+                );
     }
 
     @Test
@@ -129,11 +229,13 @@ class RegistrationServiceTest {
                 "MeinSicheresPasswort123"
         );
 
-        when(userRepository.existsByEmailIgnoreCase("max@example.de"))
-                .thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(
+                "max@example.de"
+        )).thenReturn(false);
 
-        when(passwordEncoder.encode("MeinSicheresPasswort123"))
-                .thenReturn("hashed-password");
+        when(passwordEncoder.encode(
+                "MeinSicheresPasswort123"
+        )).thenReturn("hashed-password");
 
         SQLException sqlException = new SQLException(
                 "duplicate key value violates unique constraint",
@@ -153,8 +255,9 @@ class RegistrationServiceTest {
                         constraintViolationException
                 );
 
-        when(userRepository.saveAndFlush(any(UserEntity.class)))
-                .thenThrow(databaseException);
+        when(userRepository.saveAndFlush(
+                any(UserEntity.class)
+        )).thenThrow(databaseException);
 
         assertThrows(
                 EmailAlreadyExistsException.class,
@@ -169,5 +272,54 @@ class RegistrationServiceTest {
 
         verify(userRepository)
                 .saveAndFlush(any(UserEntity.class));
+
+        verify(emailVerificationService, never())
+                .createVerificationToken(any(UserEntity.class));
+
+        verify(verificationEmailSender, never())
+                .sendVerificationEmail(
+                        any(UserEntity.class),
+                        any(String.class)
+                );
+    }
+
+    @Test
+    void shouldPropagateUnexpectedDatabaseError() {
+        RegistrationRequest request = new RegistrationRequest(
+                "Max Mustermann",
+                "max@example.de",
+                "MeinSicheresPasswort123"
+        );
+
+        when(userRepository.existsByEmailIgnoreCase(
+                "max@example.de"
+        )).thenReturn(false);
+
+        when(passwordEncoder.encode(
+                "MeinSicheresPasswort123"
+        )).thenReturn("hashed-password");
+
+        DataIntegrityViolationException databaseException =
+                new DataIntegrityViolationException(
+                        "Unexpected database error"
+                );
+
+        when(userRepository.saveAndFlush(
+                any(UserEntity.class)
+        )).thenThrow(databaseException);
+
+        assertThrows(
+                DataIntegrityViolationException.class,
+                () -> registrationService.register(request)
+        );
+
+        verify(emailVerificationService, never())
+                .createVerificationToken(any(UserEntity.class));
+
+        verify(verificationEmailSender, never())
+                .sendVerificationEmail(
+                        any(UserEntity.class),
+                        any(String.class)
+                );
     }
 }
