@@ -8,9 +8,22 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestClientResponseException;
 
 @Component
 public class OpenRouteServiceClient {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(
+                    OpenRouteServiceClient.class
+            );
+
+    private static final MediaType GEOJSON_MEDIA_TYPE =
+            MediaType.parseMediaType(
+                    "application/geo+json"
+            );
 
     private static final Set<String> SUPPORTED_ROUTING_PROFILES =
             Set.of(
@@ -59,17 +72,42 @@ public class OpenRouteServiceClient {
                             )
                             .header("Authorization", apiKey)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .accept(MediaType.APPLICATION_JSON)
+                            .accept(
+                                    GEOJSON_MEDIA_TYPE,
+                                    MediaType.APPLICATION_JSON
+                            )
                             .body(request)
                             .retrieve()
                             .body(OpenRouteServiceResponse.class);
 
             return extractRoute(response);
-        } catch (RestClientException exception) {
+        } catch (RestClientResponseException exception) {
+            LOGGER.warn(
+                    "OpenRouteService antwortete mit HTTP-Status {}.",
+                    exception.getStatusCode().value()
+            );
+
             throw new RoutingServiceUnavailableException(
                     "Der externe Routing-Dienst ist nicht verfügbar.",
                     exception
             );
+        } catch (RestClientException exception) {
+            LOGGER.warn(
+                    "OpenRouteService-Aufruf ist technisch fehlgeschlagen: {}",
+                    exception.getClass().getSimpleName()
+            );
+
+            throw new RoutingServiceUnavailableException(
+                    "Der externe Routing-Dienst ist nicht verfügbar.",
+                    exception
+            );
+        } catch (RuntimeException exception) {
+            LOGGER.warn(
+                    "OpenRouteService-Antwort konnte nicht verarbeitet werden: {}",
+                    exception.getClass().getSimpleName()
+            );
+
+            throw exception;
         }
     }
 
