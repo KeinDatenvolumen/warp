@@ -13,6 +13,10 @@ import org.springframework.boot.graphql.test.autoconfigure.GraphQlTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.graphql.test.tester.GraphQlTester;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import de.warp.bff.application.exception
+        .RouteCalculationNotFoundException;
+import de.warp.bff.application.exception
+        .RoutingServiceUnavailableException;
 
 @GraphQlTest(SystemHealthGraphQlController.class)
 @Import({
@@ -154,6 +158,79 @@ class GraphQlExceptionIntegrationTests {
                     assertThat(error.getMessage())
                             .doesNotContain(
                                     "Interner Session-Token"
+                            );
+                });
+    }
+    @Test
+    void returnsRouteCalculationNotFoundCode() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(
+                        new RouteCalculationNotFoundException()
+                );
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors)
+                            .hasSize(1);
+
+                    var error = errors.getFirst();
+
+                    assertThat(error.getMessage())
+                            .isEqualTo(
+                                    "Die Routenberechnung wurde "
+                                            + "nicht gefunden."
+                            );
+
+                    assertThat(error.getExtensions())
+                            .containsEntry(
+                                    "code",
+                                    "ROUTE_CALCULATION_NOT_FOUND"
+                            );
+                });
+    }
+
+    @Test
+    void returnsRoutingServiceUnavailableCode() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(
+                        new RoutingServiceUnavailableException()
+                );
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors)
+                            .hasSize(1);
+
+                    var error = errors.getFirst();
+
+                    assertThat(error.getMessage())
+                            .isEqualTo(
+                                    "Die Routenberechnung ist momentan "
+                                            + "nicht verfügbar."
+                            );
+
+                    assertThat(error.getExtensions())
+                            .containsEntry(
+                                    "code",
+                                    "ROUTING_SERVICE_UNAVAILABLE"
                             );
                 });
     }
