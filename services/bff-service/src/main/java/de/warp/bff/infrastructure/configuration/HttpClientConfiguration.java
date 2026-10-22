@@ -5,8 +5,10 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.warp.bff.infrastructure.web.CorrelationIdClientHttpRequestInterceptor;
-import de.warp.bff.infrastructure.web.InternalServiceAuthenticationInterceptor;
+import de.warp.bff.infrastructure.web
+        .CorrelationIdClientHttpRequestInterceptor;
+import de.warp.bff.infrastructure.web
+        .InternalServiceAuthenticationInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,47 +34,57 @@ public class HttpClientConfiguration {
             InternalServiceAuthenticationInterceptor
                     serviceAuthenticationInterceptor
     ) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
-                .build();
-
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
-
-        requestFactory.setReadTimeout(readTimeout);
-
-        return RestClient.builder()
-                .requestFactory(requestFactory)
-                .requestInterceptor(
-                        correlationIdInterceptor
-                )
-                .requestInterceptor(
-                        serviceAuthenticationInterceptor
-                )
-                .build();
+        return createRestClient(
+                null,
+                connectTimeout,
+                readTimeout,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
     }
 
     @Bean
     RestClient routingGeocodingRestClient(
-            @Value("${warp.services.routing.url}") String baseUrl,
+            @Value("${warp.services.routing.url}")
+            String baseUrl,
             @Value("${warp.geocoding.connect-timeout}")
             Duration connectTimeout,
             @Value("${warp.geocoding.read-timeout}")
-            Duration readTimeout
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
     ) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
-                .build();
+        return createRestClient(
+                baseUrl,
+                connectTimeout,
+                readTimeout,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
+    }
 
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
-
-        requestFactory.setReadTimeout(readTimeout);
-
-        return RestClient.builder()
-                .baseUrl(baseUrl)
-                .requestFactory(requestFactory)
-                .build();
+    @Bean
+    RestClient routingServiceRestClient(
+            @Value("${warp.services.routing.url}")
+            String baseUrl,
+            @Value("${warp.routing.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.routing.read-timeout}")
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        return createRestClient(
+                baseUrl,
+                connectTimeout,
+                readTimeout,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
     }
 
     @Bean
@@ -86,8 +98,47 @@ public class HttpClientConfiguration {
     ) {
         return RestClient.builder()
                 .baseUrl(identityServiceUrl)
-                .requestInterceptor(correlationIdInterceptor)
-                .requestInterceptor(serviceAuthenticationInterceptor)
+                .requestInterceptor(
+                        correlationIdInterceptor
+                )
+                .requestInterceptor(
+                        serviceAuthenticationInterceptor
+                )
                 .build();
+    }
+
+    private RestClient createRestClient(
+            String baseUrl,
+            Duration connectTimeout,
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(connectTimeout)
+                .build();
+
+        JdkClientHttpRequestFactory requestFactory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        requestFactory.setReadTimeout(readTimeout);
+
+        RestClient.Builder builder =
+                RestClient.builder()
+                        .requestFactory(requestFactory)
+                        .requestInterceptor(
+                                correlationIdInterceptor
+                        )
+                        .requestInterceptor(
+                                serviceAuthenticationInterceptor
+                        );
+
+        if (baseUrl != null && !baseUrl.isBlank()) {
+            builder.baseUrl(baseUrl);
+        }
+
+        return builder.build();
     }
 }
