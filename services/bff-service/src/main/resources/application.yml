@@ -49,6 +49,9 @@ warp:
   geocoding:
     connect-timeout: 2s
     read-timeout: 5s
+  routing:
+    connect-timeout: 2s
+    read-timeout: 15s
 
 management:
   endpoints:

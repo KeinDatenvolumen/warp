@@ -19,6 +19,34 @@ public class HttpClientConfiguration {
             @Value("${warp.geocoding.maptiler.read-timeout}")
             Duration readTimeout
     ) {
+        return createRestClient(
+                baseUrl,
+                connectTimeout,
+                readTimeout
+        );
+    }
+
+    @Bean
+    RestClient openRouteServiceRestClient(
+            @Value("${warp.routing.openrouteservice.base-url}")
+            String baseUrl,
+            @Value("${warp.routing.openrouteservice.connect-timeout}")
+            Duration connectTimeout,
+            @Value("${warp.routing.openrouteservice.read-timeout}")
+            Duration readTimeout
+    ) {
+        return createRestClient(
+                baseUrl,
+                connectTimeout,
+                readTimeout
+        );
+    }
+
+    private RestClient createRestClient(
+            String baseUrl,
+            Duration connectTimeout,
+            Duration readTimeout
+    ) {
         JdkClientHttpRequestFactory requestFactory =
                 new JdkClientHttpRequestFactory();
 

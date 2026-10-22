@@ -19,6 +19,7 @@ services:
     environment:
       PORT: "8082"
       MAPTILER_GEOCODING_API_KEY: ${MAPTILER_GEOCODING_API_KEY}
+      OPENROUTESERVICE_API_KEY: ${OPENROUTESERVICE_API_KEY}
     ports:
       - "8082:8082"
     restart: unless-stopped

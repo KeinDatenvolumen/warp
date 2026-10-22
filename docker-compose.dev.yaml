@@ -47,6 +47,7 @@ services:
       SERVICE_NAME: routing-service
       PORT: "8082"
       MAPTILER_GEOCODING_API_KEY: ${MAPTILER_GEOCODING_API_KEY}
+      OPENROUTESERVICE_API_KEY: ${OPENROUTESERVICE_API_KEY}
       DB_URL: jdbc:postgresql://routing-db:5432/${ROUTING_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
       DB_USERNAME: ${ROUTING_DB_USER}
       DB_PASSWORD: ${ROUTING_DB_PASSWORD}

@@ -55,3 +55,10 @@ warp:
       api-key: ${MAPTILER_GEOCODING_API_KEY:}
       connect-timeout: 2s
       read-timeout: 5s
+
+  routing:
+    openrouteservice:
+      base-url: ${OPENROUTESERVICE_BASE_URL:https://api.heigit.org}
+      api-key: ${OPENROUTESERVICE_API_KEY:}
+      connect-timeout: 2s
+      read-timeout: 10s
