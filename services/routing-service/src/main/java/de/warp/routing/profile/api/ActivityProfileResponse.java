@@ -18,7 +18,7 @@ public record ActivityProfileResponse(
                 profile.code().name(),
                 profile.displayName(),
                 profile.averageSpeedKmh(),
-                profile.routingProfile().name(),
+                profile.routingProfile().externalCode(),
                 profile.weatherQueryIntervalKm(),
                 WayPreferencesResponse.from(profile)
         );
