@@ -2,6 +2,7 @@ package de.warp.identity.controller;
 
 import de.warp.identity.exceptions.InvalidEmailVerificationTokenException;
 import de.warp.identity.filter.CorrelationIdFilter;
+import de.warp.identity.filter.InternalServiceAuthenticationFilter;
 import de.warp.identity.service.EmailVerificationService;
 import de.warp.identity.service.EmailVerificationResendService;
 import org.junit.jupiter.api.Test;
@@ -20,11 +21,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(EmailVerificationController.class)
+@WebMvcTest(
+        controllers = EmailVerificationController.class,
+        properties = {
+                "warp.security.internal-service-token="
+                        + "test-internal-service-token"
+        }
+)
 class EmailVerificationControllerTest {
 
     private static final String CORRELATION_ID =
             "01J9ABCDEF1234567890";
+
+    private static final String INTERNAL_SERVICE_TOKEN =
+            "test-internal-service-token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,6 +60,11 @@ class EmailVerificationControllerTest {
                                 .header(
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
+                                )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
                                 )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
@@ -85,6 +100,11 @@ class EmailVerificationControllerTest {
                                 .header(
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
+                                )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
                                 )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
@@ -139,6 +159,11 @@ class EmailVerificationControllerTest {
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
                                 )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
+                                )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -170,6 +195,11 @@ class EmailVerificationControllerTest {
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
                                 )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
+                                )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -196,6 +226,11 @@ class EmailVerificationControllerTest {
                                 .header(
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
+                                )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
                                 )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(malformedRequestBody)
@@ -235,6 +270,11 @@ class EmailVerificationControllerTest {
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
                                 )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
+                                )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -267,6 +307,11 @@ class EmailVerificationControllerTest {
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
                                 )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
+                                )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -298,6 +343,11 @@ class EmailVerificationControllerTest {
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
                                 )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
+                                )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -324,6 +374,11 @@ class EmailVerificationControllerTest {
                                 .header(
                                         CorrelationIdFilter.HEADER_NAME,
                                         CORRELATION_ID
+                                )
+                                .header(
+                                        InternalServiceAuthenticationFilter
+                                                .HEADER_NAME,
+                                        INTERNAL_SERVICE_TOKEN
                                 )
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(malformedRequestBody)

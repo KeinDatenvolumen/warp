@@ -1,6 +1,7 @@
 package de.warp.bff.api.controller;
 
 import de.warp.bff.api.exception.InvalidEmailVerificationTokenException;
+import de.warp.bff.application.service.SessionService;
 import de.warp.bff.infrastructure.client.IdentityEmailVerificationClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ class EmailVerificationControllerTest {
 
     @MockitoBean
     private IdentityEmailVerificationClient identityClient;
+
+    @MockitoBean
+    private SessionService sessionService;
 
     @Test
     void shouldConfirmEmailAndReturnNoContent() throws Exception {
