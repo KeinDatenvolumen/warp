@@ -2,6 +2,7 @@ package de.warp.bff.graphql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -186,13 +187,50 @@ class RouteCalculationGraphQlControllerTest {
     }
 
     @Test
-    void returnsCompletedRouteCalculationWithGeometry()
-            throws Exception {
+    void returnsMutationErrorForUnverifiedEmail() {
+        RouteCalculationGraphQlController
+                .RouteCalculationGraphQlInput input =
+                createInput();
+
+        when(
+                routeCalculationService.startRouteCalculation(
+                        eq("usr_123"),
+                        any()
+                )
+        ).thenThrow(
+                new de.warp.bff.application.exception.EmailNotVerifiedException()
+        );
+
+        RouteCalculationGraphQlController
+                .RouteCalculationPayload response =
+                controller.startRouteCalculation(
+                        input,
+                        PRINCIPAL
+                );
+
+        assertThat(response.calculation())
+                .isNull();
+
+        assertThat(response.errors())
+                .hasSize(1);
+
+        assertThat(response.errors().getFirst().code())
+                .isEqualTo("EMAIL_NOT_VERIFIED");
+
+        assertThat(response.errors().getFirst().message())
+                .isEqualTo(
+                        "Die E-Mail-Adresse ist noch nicht verifiziert."
+                );
+    }
+
+    @Test
+    void returnsCompletedRouteCalculationWithGeometry() {
         RouteCalculationResult result =
                 createCompletedResult();
 
         when(
                 routeCalculationService.getRouteCalculation(
+                        "usr_123",
                         "calc_123"
                 )
         ).thenReturn(result);
@@ -246,6 +284,16 @@ class RouteCalculationGraphQlControllerTest {
                         List.of(9.7736, 49.4924)
                 );
 
+        assertThat(response.segments())
+                .isNotNull()
+                .hasSize(1);
+
+        assertThat(response.segments().getFirst().distanceMeters())
+                .isEqualTo(57600.0);
+
+        assertThat(response.segments().getFirst().durationSeconds())
+                .isEqualTo(4320.0);
+
         assertThat(response.error())
                 .isNull();
     }
@@ -291,6 +339,7 @@ class RouteCalculationGraphQlControllerTest {
 
         when(
                 routeCalculationService.getRouteCalculation(
+                        "usr_123",
                         "calc_123"
                 )
         ).thenReturn(result);
@@ -368,8 +417,7 @@ class RouteCalculationGraphQlControllerTest {
         );
     }
 
-    private RouteCalculationResult createCompletedResult()
-            throws Exception {
+    private RouteCalculationResult createCompletedResult() {
         var geometry =
                 JsonMapper.builder()
                         .build()
@@ -382,6 +430,20 @@ class RouteCalculationGraphQlControllerTest {
                                     [9.7736, 49.4924]
                                   ]
                                 }
+                                """
+                        );
+
+        var segments =
+                JsonMapper.builder()
+                        .build()
+                        .readTree(
+                                """
+                                [
+                                  {
+                                    "distance": 57600.0,
+                                    "duration": 4320.0
+                                  }
+                                ]
                                 """
                         );
 
@@ -408,6 +470,7 @@ class RouteCalculationGraphQlControllerTest {
                 57600.0,
                 4320.0,
                 geometry,
+                segments,
                 CREATED_AT,
                 null
         );

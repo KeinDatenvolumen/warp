@@ -84,12 +84,24 @@ public class RouteCalculationService {
 
     @Transactional(readOnly = true)
     public RouteCalculationEntity getCalculation(
-            String calculationId
+            String calculationId,
+            String requestedByUserId
     ) {
         if (calculationId == null
                 || calculationId.isBlank()) {
             throw new IllegalArgumentException(
                     "Die Berechnungs-ID darf nicht leer sein."
+            );
+        }
+
+        if (requestedByUserId != null && !requestedByUserId.isBlank()) {
+            return repository.findByIdAndRequestedByUserId(
+                    calculationId,
+                    requestedByUserId.trim()
+            ).orElseThrow(
+                    () -> new RouteCalculationNotFoundException(
+                            calculationId
+                    )
             );
         }
 
@@ -99,6 +111,13 @@ public class RouteCalculationService {
                                 calculationId
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public RouteCalculationEntity getCalculation(
+            String calculationId
+    ) {
+        return getCalculation(calculationId, null);
     }
 
     private String generateCalculationId() {

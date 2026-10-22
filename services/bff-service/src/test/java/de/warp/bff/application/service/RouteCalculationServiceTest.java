@@ -19,7 +19,10 @@ import de.warp.bff.infrastructure.routing.RoutingClient;
 import de.warp.bff.infrastructure.routing.dto
         .InternalRouteCalculationAcceptedResponse;
 import de.warp.bff.infrastructure.routing.dto
+        .InternalRouteCalculationResponse;
+import de.warp.bff.infrastructure.routing.dto
         .InternalStartRouteCalculationRequest;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class RouteCalculationServiceTest {
@@ -94,10 +97,68 @@ class RouteCalculationServiceTest {
         verify(routingClient)
                 .startRouteCalculation(
                         anyString(),
-                        argThat(request ->
-                                hasExpectedSnapshot(request)
+                        argThat(this::hasExpectedSnapshot
                         )
                 );
+    }
+
+    @Test
+    void returnsRouteCalculationForOwnerWithSegments() {
+        var segments = JsonMapper.builder().build().readTree("""
+                [
+                  {
+                    "distance": 57600.0,
+                    "duration": 4320.0
+                  }
+                ]
+                """);
+
+        InternalRouteCalculationResponse response =
+                new InternalRouteCalculationResponse(
+                        "calc_123",
+                        "COMPLETED",
+                        new InternalRouteCalculationResponse.RoutePoint(
+                                "Mosbach",
+                                49.3536,
+                                9.1511
+                        ),
+                        new InternalRouteCalculationResponse.RoutePoint(
+                                "Bad Mergentheim",
+                                49.4924,
+                                9.7736
+                        ),
+                        new InternalRouteCalculationResponse.ActivityProfileSnapshot(
+                                "BICYCLE",
+                                "cycling-regular"
+                        ),
+                        Instant.parse("2026-10-22T06:00:00Z"),
+                        Instant.parse("2026-10-22T07:12:00Z"),
+                        57600.0,
+                        4320.0,
+                        null,
+                        segments,
+                        Instant.parse("2026-10-22T05:59:00Z"),
+                        Instant.parse("2026-10-22T06:00:00Z"),
+                        null
+                );
+
+        when(routingClient.getRouteCalculation("usr_123", "calc_123"))
+                .thenReturn(response);
+
+        when(activityProfileService.getActivityProfile("BICYCLE"))
+                .thenReturn(bicycleProfile());
+
+        RouteCalculationResult result =
+                service.getRouteCalculation("usr_123", "calc_123");
+
+        assertThat(result.id()).isEqualTo("calc_123");
+        assertThat(result.status()).isEqualTo("COMPLETED");
+        assertThat(result.segments()).isNotNull();
+        assertThat(result.segments().isArray()).isTrue();
+        assertThat(result.segments().get(0).get("distance").asDouble())
+                .isEqualTo(57600.0);
+
+        verify(routingClient).getRouteCalculation("usr_123", "calc_123");
     }
 
     private boolean hasExpectedSnapshot(

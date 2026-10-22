@@ -171,6 +171,7 @@ type RouteCalculation {
     durationSeconds: Float
 
     geometry: RouteGeometry
+    segments: [RouteSegment!]
 
     createdAt: DateTime!
 
@@ -194,6 +195,14 @@ Längengrad vor Breitengrad.
 type RouteGeometry {
     type: String!
     coordinates: [[Float!]!]!
+}
+
+"""
+Abschnitt einer berechneten Route mit Distanz und Dauer.
+"""
+type RouteSegment {
+    distanceMeters: Float!
+    durationSeconds: Float!
 }
 
 """

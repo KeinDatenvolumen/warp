@@ -29,6 +29,9 @@ public class RoutingClient {
     private static final String IDEMPOTENCY_HEADER =
             "Idempotency-Key";
 
+    private static final String USER_ID_HEADER =
+            "X-User-Id";
+
     private final RestClient restClient;
     private final JsonMapper jsonMapper;
 
@@ -80,18 +83,25 @@ public class RoutingClient {
 
     public InternalRouteCalculationResponse
     getRouteCalculation(
+            String userId,
             String calculationId
     ) {
         try {
-            InternalRouteCalculationResponse response =
+            var request =
                     restClient.get()
                             .uri(
                                     "/internal/v1/"
                                             + "route-calculations/"
                                             + "{calculationId}",
                                     calculationId
-                            )
-                            .retrieve()
+                            );
+
+            if (userId != null && !userId.isBlank()) {
+                request.header(USER_ID_HEADER, userId.trim());
+            }
+
+            InternalRouteCalculationResponse response =
+                    request.retrieve()
                             .body(
                                     InternalRouteCalculationResponse
                                             .class
@@ -109,6 +119,13 @@ public class RoutingClient {
                     exception
             );
         }
+    }
+
+    public InternalRouteCalculationResponse
+    getRouteCalculation(
+            String calculationId
+    ) {
+        return getRouteCalculation(null, calculationId);
     }
 
     private RuntimeException translateError(

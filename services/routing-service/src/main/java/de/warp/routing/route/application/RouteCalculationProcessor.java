@@ -88,10 +88,13 @@ public class RouteCalculationProcessor {
 
         double distanceMeters = summary.distance();
         double durationSeconds = summary.duration();
+        java.util.List<OpenRouteServiceResponse.Segment> segments =
+                route.properties().segments();
 
         validateRouteResult(
                 distanceMeters,
-                durationSeconds
+                durationSeconds,
+                segments
         );
 
         long roundedDurationSeconds =
@@ -105,8 +108,8 @@ public class RouteCalculationProcessor {
                 route.geometry()
         );
 
-        String segments = objectMapper.writeValueAsString(
-                route.properties().segments()
+        String segmentsJson = objectMapper.writeValueAsString(
+                segments
         );
 
         calculation.complete(
@@ -114,7 +117,7 @@ public class RouteCalculationProcessor {
                 distanceMeters,
                 durationSeconds,
                 geometry,
-                segments,
+                segmentsJson,
                 clock.instant()
         );
 
@@ -137,7 +140,8 @@ public class RouteCalculationProcessor {
 
     private void validateRouteResult(
             double distanceMeters,
-            double durationSeconds
+            double durationSeconds,
+            java.util.List<OpenRouteServiceResponse.Segment> segments
     ) {
         if (!Double.isFinite(distanceMeters)
                 || distanceMeters < 0
@@ -146,6 +150,43 @@ public class RouteCalculationProcessor {
             throw new RoutingServiceUnavailableException(
                     "Der externe Routing-Dienst hat ungültige "
                             + "Routendaten geliefert."
+            );
+        }
+
+        if (segments == null || segments.isEmpty()) {
+            throw new RoutingServiceUnavailableException(
+                    "Der externe Routing-Dienst hat keine "
+                            + "Routensegmente geliefert."
+            );
+        }
+
+        double totalSegmentDistance = 0.0;
+        double totalSegmentDuration = 0.0;
+
+        for (OpenRouteServiceResponse.Segment segment : segments) {
+            if (segment == null
+                    || !Double.isFinite(segment.distance())
+                    || segment.distance() < 0
+                    || !Double.isFinite(segment.duration())
+                    || segment.duration() < 0) {
+                throw new RoutingServiceUnavailableException(
+                        "Der externe Routing-Dienst hat ungültige "
+                                + "Segmentdaten geliefert."
+                );
+            }
+
+            totalSegmentDistance += segment.distance();
+            totalSegmentDuration += segment.duration();
+        }
+
+        double distanceDiff = Math.abs(totalSegmentDistance - distanceMeters);
+        double durationDiff = Math.abs(totalSegmentDuration - durationSeconds);
+
+        if (distanceDiff > Math.max(5.0, distanceMeters * 0.01)
+                || durationDiff > Math.max(5.0, durationSeconds * 0.01)) {
+            throw new RoutingServiceUnavailableException(
+                    "Die Summe der Segmentwerte weicht unplausibel "
+                            + "von den Gesamtwerten der Route ab."
             );
         }
     }

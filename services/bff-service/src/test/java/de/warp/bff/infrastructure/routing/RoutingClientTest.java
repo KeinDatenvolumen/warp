@@ -233,8 +233,7 @@ class RoutingClientTest {
 
         assertThat(
                 response.geometry()
-                        .get("type")
-                        .asText()
+                        .get("type").asString()
         ).isEqualTo("LineString");
 
         assertThat(response.segments())
@@ -243,6 +242,64 @@ class RoutingClientTest {
         assertThat(response.segments().isArray())
                 .isTrue();
 
+        mockServer.verify();
+    }
+
+    @Test
+    void passesUserIdHeaderWhenFetchingRouteCalculation() {
+        mockServer.expect(
+                        requestTo(
+                                "http://routing-service:8082"
+                                        + "/internal/v1/"
+                                        + "route-calculations/"
+                                        + "calc_123"
+                        )
+                )
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-User-Id", "usr_123"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                {
+                                  "id": "calc_123",
+                                  "status": "PROCESSING",
+                                  "start": {
+                                    "label": "Mosbach",
+                                    "latitude": 49.3536,
+                                    "longitude": 9.1511
+                                  },
+                                  "destination": {
+                                    "label": "Bad Mergentheim",
+                                    "latitude": 49.4924,
+                                    "longitude": 9.7736
+                                  },
+                                  "activityProfile": {
+                                    "code": "BICYCLE",
+                                    "routingProfile": "cycling-regular"
+                                  },
+                                  "departureTime": "2026-10-22T06:00:00Z",
+                                  "arrivalTime": null,
+                                  "distanceMeters": null,
+                                  "durationSeconds": null,
+                                  "geometry": null,
+                                  "segments": null,
+                                  "createdAt": "2026-10-21T18:00:00Z",
+                                  "updatedAt": "2026-10-21T18:00:03Z",
+                                  "error": null
+                                }
+                                """,
+                                MediaType.APPLICATION_JSON
+                        )
+                );
+
+        InternalRouteCalculationResponse response =
+                routingClient.getRouteCalculation(
+                        "usr_123",
+                        "calc_123"
+                );
+
+        assertThat(response.id()).isEqualTo("calc_123");
+        assertThat(response.status()).isEqualTo("PROCESSING");
         mockServer.verify();
     }
 

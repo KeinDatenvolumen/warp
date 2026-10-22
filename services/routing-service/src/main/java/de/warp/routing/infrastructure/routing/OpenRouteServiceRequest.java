@@ -21,7 +21,7 @@ public record OpenRouteServiceRequest(
                                 destinationLatitude
                         )
                 ),
-                false
+                true
         );
     }
 }

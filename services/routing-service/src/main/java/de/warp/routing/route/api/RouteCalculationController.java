@@ -22,6 +22,9 @@ public class RouteCalculationController {
     private static final String IDEMPOTENCY_HEADER =
             "Idempotency-Key";
 
+    private static final String USER_ID_HEADER =
+            "X-User-Id";
+
     private final RouteCalculationService routeCalculationService;
     private final ObjectMapper objectMapper;
 
@@ -60,16 +63,31 @@ public class RouteCalculationController {
 
     @GetMapping("/{calculationId}")
     public RouteCalculationResponse getRouteCalculation(
-            @PathVariable String calculationId
+            @PathVariable String calculationId,
+            @RequestHeader(
+                    value = USER_ID_HEADER,
+                    required = false
+            ) String requestedByUserId
     ) {
         RouteCalculationEntity calculation =
-                routeCalculationService.getCalculation(
-                        calculationId
-                );
+                requestedByUserId != null && !requestedByUserId.isBlank()
+                        ? routeCalculationService.getCalculation(
+                                calculationId,
+                                requestedByUserId.trim()
+                        )
+                        : routeCalculationService.getCalculation(
+                                calculationId
+                        );
 
         return RouteCalculationResponse.from(
                 calculation,
                 objectMapper
         );
+    }
+
+    public RouteCalculationResponse getRouteCalculation(
+            String calculationId
+    ) {
+        return getRouteCalculation(calculationId, null);
     }
 }

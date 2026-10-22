@@ -77,6 +77,7 @@ public class RouteCalculationService {
     }
 
     public RouteCalculationResult getRouteCalculation(
+            String userId,
             String calculationId
     ) {
         if (calculationId == null
@@ -88,6 +89,7 @@ public class RouteCalculationService {
 
         InternalRouteCalculationResponse response =
                 routingClient.getRouteCalculation(
+                        userId,
                         calculationId
                 );
 
@@ -100,6 +102,12 @@ public class RouteCalculationService {
                 response,
                 activityProfile
         );
+    }
+
+    public RouteCalculationResult getRouteCalculation(
+            String calculationId
+    ) {
+        return getRouteCalculation(null, calculationId);
     }
 
     private RouteCalculationResult mapResult(
@@ -138,6 +146,7 @@ public class RouteCalculationService {
                 response.distanceMeters(),
                 response.durationSeconds(),
                 response.geometry(),
+                response.segments(),
                 response.createdAt(),
                 error
         );

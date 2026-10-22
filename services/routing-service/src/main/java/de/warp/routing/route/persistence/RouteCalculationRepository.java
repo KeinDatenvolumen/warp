@@ -12,6 +12,11 @@ public interface RouteCalculationRepository
             String idempotencyKey
     );
 
+    Optional<RouteCalculationEntity> findByIdAndRequestedByUserId(
+            String id,
+            String requestedByUserId
+    );
+
     List<RouteCalculationEntity> findByRequestedByUserIdOrderByCreatedAtDesc(
             String requestedByUserId
     );

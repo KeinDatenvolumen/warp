@@ -67,7 +67,7 @@ public class OpenRouteServiceClient {
             OpenRouteServiceResponse response =
                     restClient.post()
                             .uri(
-                                    "/v2/directions/{profile}/geojson",
+                                    "/openrouteservice/v2/directions/{profile}/geojson",
                                     routingProfile
                             )
                             .header("Authorization", apiKey)
@@ -86,6 +86,13 @@ public class OpenRouteServiceClient {
                     "OpenRouteService antwortete mit HTTP-Status {}.",
                     exception.getStatusCode().value()
             );
+
+            if (isRouteNotFound(exception)) {
+                throw new RouteNotFoundException(
+                        "Für die angegebenen Koordinaten konnte keine Route gefunden werden.",
+                        exception
+                );
+            }
 
             throw new RoutingServiceUnavailableException(
                     "Der externe Routing-Dienst ist nicht verfügbar.",
@@ -109,6 +116,30 @@ public class OpenRouteServiceClient {
 
             throw exception;
         }
+    }
+
+    private boolean isRouteNotFound(
+            RestClientResponseException exception
+    ) {
+        int status = exception.getStatusCode().value();
+        if (status == 404) {
+            return true;
+        }
+
+        if (status == 400) {
+            String body = exception.getResponseBodyAsString();
+            if (!body.isBlank()) {
+                String lower = body.toLowerCase();
+                return lower.contains("could not find")
+                        || lower.contains("cannot find")
+                        || lower.contains("not found")
+                        || body.contains("2004")
+                        || body.contains("2010")
+                        || body.contains("2099");
+            }
+        }
+
+        return false;
     }
 
     private void validateApiKey() {
@@ -148,7 +179,9 @@ public class OpenRouteServiceClient {
                 || route.geometry().coordinates() == null
                 || route.geometry().coordinates().isEmpty()
                 || route.properties() == null
-                || route.properties().summary() == null) {
+                || route.properties().summary() == null
+                || route.properties().segments() == null
+                || route.properties().segments().isEmpty()) {
             throw new RoutingServiceUnavailableException(
                     "Der externe Routing-Dienst hat eine "
                             + "unvollständige Antwort geliefert."

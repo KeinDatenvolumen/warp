@@ -58,7 +58,7 @@ warp:
 
   routing:
     openrouteservice:
-      base-url: ${OPENROUTESERVICE_BASE_URL:https://api.openrouteservice.org}
+      base-url: ${OPENROUTESERVICE_BASE_URL:https://api.heigit.org}
       api-key: ${OPENROUTESERVICE_API_KEY:}
       connect-timeout: 2s
       read-timeout: 10s

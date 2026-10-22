@@ -58,6 +58,17 @@ public class RouteCalculationGraphQlController {
                     ),
                     List.of()
             );
+        } catch (de.warp.bff.application.exception.EmailNotVerifiedException exception) {
+            return new RouteCalculationPayload(
+                    null,
+                    List.of(
+                            new RouteCalculationMutationError(
+                                    null,
+                                    "EMAIL_NOT_VERIFIED",
+                                    "Die E-Mail-Adresse ist noch nicht verifiziert."
+                            )
+                    )
+            );
         } catch (InvalidRouteRequestException exception) {
             return new RouteCalculationPayload(
                     null,
@@ -83,7 +94,10 @@ public class RouteCalculationGraphQlController {
         }
 
         RouteCalculationResult calculation =
-                routeCalculationService.getRouteCalculation(id);
+                routeCalculationService.getRouteCalculation(
+                        principal.userId(),
+                        id
+                );
 
         return RouteCalculationPayloadResult.from(
                 calculation
@@ -188,6 +202,7 @@ public class RouteCalculationGraphQlController {
             Double distanceMeters,
             Double durationSeconds,
             RouteGeometryPayload geometry,
+            List<RouteSegmentPayload> segments,
             OffsetDateTime createdAt,
             RouteCalculationErrorPayload error
     ) {
@@ -219,6 +234,9 @@ public class RouteCalculationGraphQlController {
                     calculation.durationSeconds(),
                     RouteGeometryPayload.from(
                             calculation.geometry()
+                    ),
+                    RouteSegmentPayload.from(
+                            calculation.segments()
                     ),
                     toOffsetDateTime(
                             calculation.createdAt()
@@ -323,9 +341,46 @@ public class RouteCalculationGraphQlController {
             return new RouteGeometryPayload(
                     typeNode == null
                             ? "LineString"
-                            : typeNode.asText(),
+                            : typeNode.asString(),
                     List.copyOf(coordinates)
             );
+        }
+    }
+
+    public record RouteSegmentPayload(
+            double distanceMeters,
+            double durationSeconds
+    ) {
+
+        private static List<RouteSegmentPayload> from(
+                JsonNode segments
+        ) {
+            if (segments == null || !segments.isArray()) {
+                return null;
+            }
+
+            List<RouteSegmentPayload> list =
+                    new java.util.ArrayList<>();
+
+            for (JsonNode segment : segments) {
+                if (segment == null || !segment.isObject()) {
+                    continue;
+                }
+
+                JsonNode distanceNode = segment.get("distance");
+                JsonNode durationNode = segment.get("duration");
+
+                if (distanceNode != null && durationNode != null) {
+                    list.add(
+                            new RouteSegmentPayload(
+                                    distanceNode.asDouble(),
+                                    durationNode.asDouble()
+                            )
+                    );
+                }
+            }
+
+            return List.copyOf(list);
         }
     }
 

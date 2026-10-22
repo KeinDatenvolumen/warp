@@ -15,9 +15,41 @@ public record RouteCalculationResult(
         Double distanceMeters,
         Double durationSeconds,
         JsonNode geometry,
+        JsonNode segments,
         Instant createdAt,
         RouteCalculationError error
 ) {
+
+    public RouteCalculationResult(
+            String id,
+            String status,
+            RoutePoint start,
+            RoutePoint destination,
+            ActivityProfileSnapshot activityProfile,
+            Instant departureTime,
+            Instant arrivalTime,
+            Double distanceMeters,
+            Double durationSeconds,
+            JsonNode geometry,
+            Instant createdAt,
+            RouteCalculationError error
+    ) {
+        this(
+                id,
+                status,
+                start,
+                destination,
+                activityProfile,
+                departureTime,
+                arrivalTime,
+                distanceMeters,
+                durationSeconds,
+                geometry,
+                null,
+                createdAt,
+                error
+        );
+    }
 
     public record RoutePoint(
             String label,

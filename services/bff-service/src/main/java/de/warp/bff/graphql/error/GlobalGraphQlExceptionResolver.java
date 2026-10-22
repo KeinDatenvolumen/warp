@@ -4,9 +4,9 @@ import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
 import de.warp.bff.graphql.SessionInvalidException;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
@@ -21,7 +21,7 @@ import de.warp.bff.application.exception
         .RoutingServiceUnavailableException;
 
 @Component
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order()
 public class GlobalGraphQlExceptionResolver
         extends DataFetcherExceptionResolverAdapter {
 
@@ -39,69 +39,79 @@ public class GlobalGraphQlExceptionResolver
 
     @Override
     protected GraphQLError resolveToSingleError(
-            Throwable exception,
-            DataFetchingEnvironment environment
+            @NonNull Throwable exception,
+            @NonNull DataFetchingEnvironment environment
     ) {
-        if (exception instanceof SessionInvalidException) {
-            return createError(
-                    environment,
-                    ErrorType.UNAUTHORIZED,
-                    GraphQlErrorCode.SESSION_INVALID,
-                    SESSION_INVALID_MESSAGE
-            );
-        }
-        if (exception instanceof InvalidRouteRequestException) {
-            return createError(
-                    environment,
-                    ErrorType.BAD_REQUEST,
-                    GraphQlErrorCode.INVALID_ROUTE_REQUEST,
-                    "Die Routenanfrage ist ungültig."
-            );
-        }
+        switch (exception) {
+            case SessionInvalidException sessionInvalidException -> {
+                return createError(
+                        environment,
+                        ErrorType.UNAUTHORIZED,
+                        GraphQlErrorCode.SESSION_INVALID,
+                        SESSION_INVALID_MESSAGE
+                );
+            }
+            case InvalidRouteRequestException invalidRouteRequestException -> {
+                return createError(
+                        environment,
+                        ErrorType.BAD_REQUEST,
+                        GraphQlErrorCode.INVALID_ROUTE_REQUEST,
+                        "Die Routenanfrage ist ungültig."
+                );
+            }
+            case de.warp.bff.application.exception.EmailNotVerifiedException emailNotVerifiedException -> {
+                return createError(
+                        environment,
+                        ErrorType.FORBIDDEN,
+                        GraphQlErrorCode.EMAIL_NOT_VERIFIED,
+                        "Die E-Mail-Adresse ist noch nicht verifiziert."
+                );
+            }
+            case RouteCalculationNotFoundException routeCalculationNotFoundException -> {
+                return createError(
+                        environment,
+                        ErrorType.NOT_FOUND,
+                        GraphQlErrorCode.ROUTE_CALCULATION_NOT_FOUND,
+                        "Die Routenberechnung wurde nicht gefunden."
+                );
+            }
+            case RoutingServiceUnavailableException routingServiceUnavailableException -> {
+                LOGGER.warn(
+                        "Der Routing-Dienst ist nicht verfügbar.",
+                        exception
+                );
 
-        if (exception instanceof RouteCalculationNotFoundException) {
-            return createError(
-                    environment,
-                    ErrorType.NOT_FOUND,
-                    GraphQlErrorCode.ROUTE_CALCULATION_NOT_FOUND,
-                    "Die Routenberechnung wurde nicht gefunden."
-            );
-        }
+                return createError(
+                        environment,
+                        ErrorType.INTERNAL_ERROR,
+                        GraphQlErrorCode.ROUTING_SERVICE_UNAVAILABLE,
+                        "Die Routenberechnung ist momentan "
+                                + "nicht verfügbar."
+                );
+            }
+            case IllegalArgumentException illegalArgumentException -> {
+                return createError(
+                        environment,
+                        ErrorType.BAD_REQUEST,
+                        GraphQlErrorCode.BAD_REQUEST,
+                        BAD_REQUEST_MESSAGE
+                );
+            }
+            case GeocodingServiceUnavailableException geocodingServiceUnavailableException -> {
+                LOGGER.warn(
+                        "Der Geocoding-Dienst ist nicht verfügbar.",
+                        exception
+                );
 
-        if (exception instanceof RoutingServiceUnavailableException) {
-            LOGGER.warn(
-                    "Der Routing-Dienst ist nicht verfügbar.",
-                    exception
-            );
-
-            return createError(
-                    environment,
-                    ErrorType.INTERNAL_ERROR,
-                    GraphQlErrorCode.ROUTING_SERVICE_UNAVAILABLE,
-                    "Die Routenberechnung ist momentan "
-                            + "nicht verfügbar."
-            );
-        }
-        if (exception instanceof IllegalArgumentException) {
-            return createError(
-                    environment,
-                    ErrorType.BAD_REQUEST,
-                    GraphQlErrorCode.BAD_REQUEST,
-                    BAD_REQUEST_MESSAGE
-            );
-        }
-        if (exception instanceof GeocodingServiceUnavailableException) {
-            LOGGER.warn(
-                    "Der Geocoding-Dienst ist nicht verfügbar.",
-                    exception
-            );
-
-            return createError(
-                    environment,
-                    ErrorType.INTERNAL_ERROR,
-                    GraphQlErrorCode.GEOCODING_SERVICE_UNAVAILABLE,
-                    "Die Ortssuche ist momentan nicht verfügbar."
-            );
+                return createError(
+                        environment,
+                        ErrorType.INTERNAL_ERROR,
+                        GraphQlErrorCode.GEOCODING_SERVICE_UNAVAILABLE,
+                        "Die Ortssuche ist momentan nicht verfügbar."
+                );
+            }
+            default -> {
+            }
         }
 
         LOGGER.error(

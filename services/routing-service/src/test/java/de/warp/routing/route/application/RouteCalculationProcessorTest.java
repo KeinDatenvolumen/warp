@@ -190,6 +190,117 @@ class RouteCalculationProcessorTest {
                 .saveAndFlush(calculation);
     }
 
+    @Test
+    void storesUnavailableFailureWhenSegmentsMismatchSummary() {
+        OpenRouteServiceResponse.Geometry geometry =
+                new OpenRouteServiceResponse.Geometry(
+                        "LineString",
+                        List.of(
+                                List.of(9.1511, 49.3536),
+                                List.of(9.7736, 49.4924)
+                        )
+                );
+
+        OpenRouteServiceResponse.Summary summary =
+                new OpenRouteServiceResponse.Summary(
+                        57600,
+                        4320
+                );
+
+        // Segment distance 1000 != summary 57600
+        OpenRouteServiceResponse.Segment segment =
+                new OpenRouteServiceResponse.Segment(
+                        1000,
+                        4320
+                );
+
+        OpenRouteServiceResponse.Feature route =
+                new OpenRouteServiceResponse.Feature(
+                        "Feature",
+                        geometry,
+                        new OpenRouteServiceResponse.Properties(
+                                summary,
+                                List.of(segment)
+                        )
+                );
+
+        when(
+                openRouteServiceClient.calculateRoute(
+                        "cycling-regular",
+                        49.3536,
+                        9.1511,
+                        49.4924,
+                        9.7736
+                )
+        ).thenReturn(route);
+
+        processor.process("calc_123");
+
+        assertThat(calculation.getStatus())
+                .isEqualTo(RouteCalculationStatus.FAILED);
+
+        assertThat(calculation.getErrorCode())
+                .isEqualTo("ROUTING_SERVICE_UNAVAILABLE");
+
+        verify(repository, times(2))
+                .saveAndFlush(calculation);
+    }
+
+    @Test
+    void storesUnavailableFailureWhenSegmentHasNegativeValues() {
+        OpenRouteServiceResponse.Geometry geometry =
+                new OpenRouteServiceResponse.Geometry(
+                        "LineString",
+                        List.of(
+                                List.of(9.1511, 49.3536),
+                                List.of(9.7736, 49.4924)
+                        )
+                );
+
+        OpenRouteServiceResponse.Summary summary =
+                new OpenRouteServiceResponse.Summary(
+                        57600,
+                        4320
+                );
+
+        OpenRouteServiceResponse.Segment segment =
+                new OpenRouteServiceResponse.Segment(
+                        -10,
+                        4320
+                );
+
+        OpenRouteServiceResponse.Feature route =
+                new OpenRouteServiceResponse.Feature(
+                        "Feature",
+                        geometry,
+                        new OpenRouteServiceResponse.Properties(
+                                summary,
+                                List.of(segment)
+                        )
+                );
+
+        when(
+                openRouteServiceClient.calculateRoute(
+                        "cycling-regular",
+                        49.3536,
+                        9.1511,
+                        49.4924,
+                        9.7736
+                )
+        ).thenReturn(route);
+
+        processor.process("calc_123");
+
+        assertThat(calculation.getStatus())
+                .isEqualTo(RouteCalculationStatus.FAILED);
+
+        assertThat(calculation.getErrorCode())
+                .isEqualTo("ROUTING_SERVICE_UNAVAILABLE");
+
+        verify(repository, times(2))
+                .saveAndFlush(calculation);
+    }
+
     private OpenRouteServiceResponse.Feature createRoute() {
         OpenRouteServiceResponse.Geometry geometry =
                 new OpenRouteServiceResponse.Geometry(

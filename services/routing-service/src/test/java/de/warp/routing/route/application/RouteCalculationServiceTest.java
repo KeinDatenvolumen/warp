@@ -136,8 +136,7 @@ class RouteCalculationServiceTest {
     void returnsExistingRouteCalculation() {
         RouteCalculationEntity calculation =
                 createCalculation(
-                        "calc_123",
-                        "idempotency-key-123"
+                        "calc_123"
                 );
 
         when(repository.findById("calc_123"))
@@ -147,6 +146,32 @@ class RouteCalculationServiceTest {
                 service.getCalculation("calc_123");
 
         assertThat(result).isSameAs(calculation);
+    }
+
+    @Test
+    void returnsExistingRouteCalculationForOwner() {
+        RouteCalculationEntity calculation =
+                createCalculation(
+                        "calc_123"
+                );
+
+        when(repository.findByIdAndRequestedByUserId("calc_123", "usr_123"))
+                .thenReturn(Optional.of(calculation));
+
+        RouteCalculationEntity result =
+                service.getCalculation("calc_123", "usr_123");
+
+        assertThat(result).isSameAs(calculation);
+    }
+
+    @Test
+    void rejectsCalculationWhenRequestedByDifferentUser() {
+        when(repository.findByIdAndRequestedByUserId("calc_123", "usr_other"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> service.getCalculation("calc_123", "usr_other")
+        ).isInstanceOf(RouteCalculationNotFoundException.class);
     }
 
     @Test
@@ -169,8 +194,7 @@ class RouteCalculationServiceTest {
     void returnsExistingCalculationForSameIdempotencyKey() {
         RouteCalculationEntity existingCalculation =
                 createCalculation(
-                        "calc_existing",
-                        "idempotency-key-123"
+                        "calc_existing"
                 );
 
         when(
@@ -262,13 +286,12 @@ class RouteCalculationServiceTest {
     }
 
     private RouteCalculationEntity createCalculation(
-            String id,
-            String idempotencyKey
+            String id
     ) {
         return new RouteCalculationEntity(
                 id,
                 "usr_123",
-                idempotencyKey,
+                "idempotency-key-123",
                 "Mosbach",
                 49.3536,
                 9.1511,

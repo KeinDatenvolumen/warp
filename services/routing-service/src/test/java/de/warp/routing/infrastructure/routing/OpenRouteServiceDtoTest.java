@@ -27,11 +27,11 @@ class OpenRouteServiceDtoTest {
                 List.of(9.7736, 49.4924)
         );
 
-        assertThat(request.instructions()).isFalse();
+        assertThat(request.instructions()).isTrue();
     }
 
     @Test
-    void readsRequiredRouteDataFromResponse() throws Exception {
+    void readsRequiredRouteDataFromResponse() {
         String responseBody = """
                 {
                   "type": "FeatureCollection",
@@ -102,7 +102,7 @@ class OpenRouteServiceDtoTest {
     }
 
     @Test
-    void ignoresUnknownProviderFields() throws Exception {
+    void ignoresUnknownProviderFields() {
         String responseBody = """
                 {
                   "type": "FeatureCollection",
