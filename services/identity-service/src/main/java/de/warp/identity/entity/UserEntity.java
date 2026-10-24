@@ -84,4 +84,14 @@ import java.time.Instant;
             this.emailVerified = true;
         }
 
+        public void changePasswordHash(String passwordHash) {
+            if (passwordHash == null || passwordHash.isBlank()) {
+                throw new IllegalArgumentException(
+                        "passwordHash darf nicht leer sein"
+                );
+            }
+
+            this.passwordHash = passwordHash;
+        }
+
     }

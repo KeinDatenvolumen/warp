@@ -1,5 +1,6 @@
 package de.warp.identity.dto;
 
+import de.warp.identity.security.PasswordRequirements;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ public record RegistrationRequest(
 
         @NotNull(message = "Das Passwort muss angegeben werden.")
         @Size(
-                min = 12,
+                min = PasswordRequirements.MIN_LENGTH,
                 message = "Das Passwort muss mindestens zwölf Zeichen lang sein."
         )
         String password

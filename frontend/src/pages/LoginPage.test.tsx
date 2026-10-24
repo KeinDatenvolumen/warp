@@ -132,6 +132,22 @@ describe('LoginPage', () => {
         })
     })
 
+    it(
+        'verlinkt auf die Passwort-Rücksetzung',
+        async () => {
+            await renderAnonymousLoginPage()
+
+            expect(
+                screen.getByRole('link', {
+                    name: 'Passwort vergessen?'
+                })
+            ).toHaveAttribute(
+                'href',
+                '/forgot-password'
+            )
+        }
+    )
+
     describe('clientseitige Validierung', () => {
         it('meldet leere Pflichtfelder, ohne die API aufzurufen', async () => {
             await renderAnonymousLoginPage()
