@@ -15,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Clock;
@@ -237,5 +240,27 @@ class SavedRouteServiceTest {
         assertThatThrownBy(
                 () -> service.update("usr_other", "route_1", new UpdateSavedRouteRequest("Neu", null))
         ).isInstanceOf(SavedRouteNotFoundException.class);
+    }
+
+    @Test
+    void shouldListFavoritesFirstThenNewestFirst() {
+        when(repository.findByUserId(any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.list("usr_1", null, 0, 20);
+
+        ArgumentCaptor<Pageable> captor =
+                ArgumentCaptor.forClass(Pageable.class);
+        verify(repository).findByUserId(
+                org.mockito.ArgumentMatchers.eq("usr_1"),
+                captor.capture()
+        );
+
+        Sort sort = captor.getValue().getSort();
+
+        assertThat(sort.stream().map(order -> order.getProperty()))
+                .containsExactly("favorite", "createdAt", "id");
+        assertThat(sort.stream().map(order -> order.getDirection()))
+                .containsOnly(Sort.Direction.DESC);
     }
 }

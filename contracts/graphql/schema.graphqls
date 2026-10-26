@@ -39,6 +39,9 @@ type Query {
 
     """
     Liefert die gespeicherten Routen des angemeldeten Benutzers.
+    Favoriten stehen zuerst, danach folgen die neuesten Routen.
+    Mit filter.favorite kann die Liste auf Favoriten oder
+    Nicht-Favoriten eingeschränkt werden.
     Fehlt die Sitzung, wird SESSION_INVALID zurückgegeben.
     """
     savedRoutes(filter: SavedRouteFilter, page: PageInput): SavedRoutePage!
