@@ -6,6 +6,7 @@ public record InternalSessionResponse(
         String id,
         String userId,
         Instant createdAt,
-        Instant expiresAt
+        Instant expiresAt,
+        boolean emailVerified
 ) {
 }

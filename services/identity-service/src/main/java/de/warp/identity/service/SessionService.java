@@ -119,7 +119,8 @@ public class SessionService {
                 session.getId(),
                 session.getUser().getId(),
                 session.getCreatedAt(),
-                session.getExpiresAt()
+                session.getExpiresAt(),
+                session.getUser().isEmailVerified()
         );
     }
     @Transactional

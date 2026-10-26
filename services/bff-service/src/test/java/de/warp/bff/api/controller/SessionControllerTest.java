@@ -123,7 +123,8 @@ class SessionControllerTest {
                         new ValidatedSession(
                                 "user-123",
                                 Instant.parse("2026-10-17T08:00:00Z"),
-                                Instant.parse("2026-10-17T20:00:00Z")
+                                Instant.parse("2026-10-17T20:00:00Z"),
+                                true
                         )
                 );
         mockMvc.perform(delete("/api/v1/sessions/current")

@@ -30,7 +30,8 @@ class SessionGraphQlControllerTest {
                 new AuthenticatedSessionPrincipal(
                         "user-123",
                         createdAt,
-                        expiresAt
+                        expiresAt,
+                        true
                 );
 
         SessionGraphQlController.CurrentSessionPayload response =

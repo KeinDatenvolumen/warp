@@ -399,7 +399,8 @@ class InternalSessionControllerTest {
                 "ses_123",
                 "usr_123",
                 Instant.parse("2026-10-15T12:00:00Z"),
-                Instant.parse("2026-10-16T00:00:00Z")
+                Instant.parse("2026-10-16T00:00:00Z"),
+                true
         );
 
         when(sessionService.validateSession(

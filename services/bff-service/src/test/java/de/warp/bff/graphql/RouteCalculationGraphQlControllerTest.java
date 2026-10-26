@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +42,8 @@ class RouteCalculationGraphQlControllerTest {
             new AuthenticatedSessionPrincipal(
                     "usr_123",
                     Instant.parse("2026-10-22T15:00:00Z"),
-                    Instant.parse("2026-10-23T03:00:00Z")
+                    Instant.parse("2026-10-23T03:00:00Z"),
+                    true
             );
 
     @Mock
@@ -187,25 +189,24 @@ class RouteCalculationGraphQlControllerTest {
     }
 
     @Test
-    void returnsMutationErrorForUnverifiedEmail() {
+    void rejectsRouteCalculationForUnverifiedEmail() {
         RouteCalculationGraphQlController
                 .RouteCalculationGraphQlInput input =
                 createInput();
 
-        when(
-                routeCalculationService.startRouteCalculation(
-                        eq("usr_123"),
-                        any()
-                )
-        ).thenThrow(
-                new de.warp.bff.application.exception.EmailNotVerifiedException()
-        );
+        AuthenticatedSessionPrincipal unverifiedPrincipal =
+                new AuthenticatedSessionPrincipal(
+                        "usr_123",
+                        Instant.parse("2026-10-22T15:00:00Z"),
+                        Instant.parse("2026-10-23T03:00:00Z"),
+                        false
+                );
 
         RouteCalculationGraphQlController
                 .RouteCalculationPayload response =
                 controller.startRouteCalculation(
                         input,
-                        PRINCIPAL
+                        unverifiedPrincipal
                 );
 
         assertThat(response.calculation())
@@ -221,6 +222,14 @@ class RouteCalculationGraphQlControllerTest {
                 .isEqualTo(
                         "Die E-Mail-Adresse ist noch nicht verifiziert."
                 );
+
+        verify(
+                routeCalculationService,
+                never()
+        ).startRouteCalculation(
+                any(),
+                any()
+        );
     }
 
     @Test

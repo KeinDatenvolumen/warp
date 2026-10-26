@@ -21,6 +21,7 @@ import de.warp.bff.application.service
 import de.warp.bff.application.service
         .StartedRouteCalculation;
 import de.warp.bff.security.AuthenticatedSessionPrincipal;
+import de.warp.bff.application.exception.EmailNotVerifiedException;
 import tools.jackson.databind.JsonNode;
 
 @Controller
@@ -46,6 +47,10 @@ public class RouteCalculationGraphQlController {
         }
 
         try {
+            if (!principal.emailVerified()) {
+                throw new EmailNotVerifiedException();
+            }
+
             StartedRouteCalculation calculation =
                     routeCalculationService.startRouteCalculation(
                             principal.userId(),
@@ -58,7 +63,7 @@ public class RouteCalculationGraphQlController {
                     ),
                     List.of()
             );
-        } catch (de.warp.bff.application.exception.EmailNotVerifiedException exception) {
+        } catch (EmailNotVerifiedException exception) {
             return new RouteCalculationPayload(
                     null,
                     List.of(
