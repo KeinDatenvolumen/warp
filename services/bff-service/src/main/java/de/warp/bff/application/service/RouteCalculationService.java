@@ -1,7 +1,10 @@
 package de.warp.bff.application.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.warp.bff.api.dto.ActivityProfileResponse;
@@ -12,20 +15,42 @@ import de.warp.bff.infrastructure.routing.dto
         .InternalRouteCalculationResponse;
 import de.warp.bff.infrastructure.routing.dto
         .InternalStartRouteCalculationRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos
+        .ActivityProfileSnapshotRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos
+        .EvaluateRouteWeatherRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos
+        .RouteSnapshotRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos
+        .WeatherEvaluationResponse;
+import de.warp.bff.infrastructure.weather.WeatherClient;
+import tools.jackson.databind.JsonNode;
 
 @Service
 public class RouteCalculationService {
 
     private final ActivityProfileService activityProfileService;
     private final RoutingClient routingClient;
+    private final WeatherClient weatherClient;
 
     public RouteCalculationService(
             ActivityProfileService activityProfileService,
             RoutingClient routingClient
     ) {
+        this(activityProfileService, routingClient, null);
+    }
+
+    @Autowired
+    public RouteCalculationService(
+            ActivityProfileService activityProfileService,
+            RoutingClient routingClient,
+            @Autowired(required = false)
+            WeatherClient weatherClient
+    ) {
         this.activityProfileService =
                 activityProfileService;
         this.routingClient = routingClient;
+        this.weatherClient = weatherClient;
     }
 
     public StartedRouteCalculation startRouteCalculation(
@@ -98,9 +123,17 @@ public class RouteCalculationService {
                         response.activityProfile().code()
                 );
 
+        RouteCalculationResult.WeatherEvaluationSnapshot weatherEvaluation =
+                evaluateWeatherIfCompleted(
+                        userId,
+                        response,
+                        activityProfile
+                );
+
         return mapResult(
                 response,
-                activityProfile
+                activityProfile,
+                weatherEvaluation
         );
     }
 
@@ -110,9 +143,171 @@ public class RouteCalculationService {
         return getRouteCalculation(null, calculationId);
     }
 
-    private RouteCalculationResult mapResult(
+    private RouteCalculationResult.WeatherEvaluationSnapshot
+    evaluateWeatherIfCompleted(
+            String userId,
             InternalRouteCalculationResponse response,
             ActivityProfileResponse activityProfile
+    ) {
+        if (weatherClient == null
+                || !"COMPLETED".equals(response.status())
+                || response.geometry() == null) {
+            return null;
+        }
+
+        List<List<Double>> coordinates = extractCoordinates(
+                response.geometry()
+        );
+        if (coordinates.size() < 2) {
+            return null;
+        }
+
+        int intervalKm = activityProfile.weatherQueryIntervalKm() != null
+                && activityProfile.weatherQueryIntervalKm() > 0
+                ? activityProfile.weatherQueryIntervalKm()
+                : defaultIntervalKm(activityProfile.code());
+
+        double speedKmh = activityProfile.averageSpeedKmh() > 0.0
+                ? activityProfile.averageSpeedKmh()
+                : defaultSpeedKmh(activityProfile.code());
+
+        int durationSeconds = response.durationSeconds() != null
+                ? (int) Math.round(response.durationSeconds())
+                : 0;
+
+        int distanceMeters = response.distanceMeters() != null
+                ? (int) Math.round(response.distanceMeters())
+                : 0;
+
+        try {
+            EvaluateRouteWeatherRequest weatherRequest =
+                    new EvaluateRouteWeatherRequest(
+                            userId,
+                            new RouteSnapshotRequest(
+                                    response.id(),
+                                    response.departureTime(),
+                                    durationSeconds,
+                                    distanceMeters,
+                                    coordinates,
+                                    new ActivityProfileSnapshotRequest(
+                                            activityProfile.code(),
+                                            speedKmh,
+                                            intervalKm
+                                    )
+                            )
+                    );
+
+            WeatherEvaluationResponse evaluationResponse =
+                    weatherClient.evaluateRouteWeather(
+                            weatherRequest
+                    );
+
+            return mapWeatherEvaluation(evaluationResponse);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private RouteCalculationResult.WeatherEvaluationSnapshot
+    mapWeatherEvaluation(
+            WeatherEvaluationResponse response
+    ) {
+        if (response == null) {
+            return null;
+        }
+
+        List<RouteCalculationResult.WeatherSegmentSnapshot> segments =
+                response.segments() == null
+                        ? List.of()
+                        : response.segments().stream()
+                        .map(seg -> new RouteCalculationResult
+                                .WeatherSegmentSnapshot(
+                                seg.segmentIndex(),
+                                seg.distanceFromStartMeters(),
+                                seg.expectedArrivalTime(),
+                                seg.score(),
+                                seg.color(),
+                                seg.weather() == null
+                                        ? null
+                                        : new RouteCalculationResult
+                                        .WeatherConditionSnapshot(
+                                        seg.weather().windSpeedKmh(),
+                                        seg.weather().windDirectionDegrees(),
+                                        seg.weather().precipitationProbabilityPercent(),
+                                        seg.weather().precipitationMm(),
+                                        seg.weather().thunderstormProbabilityPercent(),
+                                        seg.weather().temperatureCelsius(),
+                                        seg.weather().weatherCode()
+                                ),
+                                seg.geometry() == null
+                                        ? List.of()
+                                        : seg.geometry().coordinates()
+                        ))
+                        .toList();
+
+        return new RouteCalculationResult.WeatherEvaluationSnapshot(
+                response.evaluationId(),
+                response.routeCalculationId(),
+                response.status(),
+                response.departureTime(),
+                response.overallScore(),
+                response.scoreVersion(),
+                response.thunderstormCapApplied(),
+                response.weatherDataGeneratedAt(),
+                response.weatherDataExpiresAt(),
+                response.createdAt(),
+                segments
+        );
+    }
+
+    private List<List<Double>> extractCoordinates(
+            JsonNode geometry
+    ) {
+        if (geometry == null || geometry.isNull()) {
+            return List.of();
+        }
+        JsonNode coordsNode = geometry.get("coordinates");
+        if (coordsNode == null || !coordsNode.isArray()) {
+            return List.of();
+        }
+        List<List<Double>> coords = new ArrayList<>();
+        for (JsonNode point : coordsNode) {
+            if (point.isArray() && point.size() >= 2) {
+                coords.add(List.of(
+                        point.get(0).asDouble(),
+                        point.get(1).asDouble()
+                ));
+            }
+        }
+        return List.copyOf(coords);
+    }
+
+    private int defaultIntervalKm(String code) {
+        if (code == null) {
+            return 5;
+        }
+        return switch (code.toUpperCase()) {
+            case "HIKING" -> 2;
+            case "MOTORCYCLE" -> 15;
+            default -> 5;
+        };
+    }
+
+    private double defaultSpeedKmh(String code) {
+        if (code == null) {
+            return 18.0;
+        }
+        return switch (code.toUpperCase()) {
+            case "HIKING" -> 5.0;
+            case "MOTORCYCLE" -> 60.0;
+            default -> 18.0;
+        };
+    }
+
+    private RouteCalculationResult mapResult(
+            InternalRouteCalculationResponse response,
+            ActivityProfileResponse activityProfile,
+            RouteCalculationResult.WeatherEvaluationSnapshot weatherEvaluation
     ) {
         RouteCalculationResult.RouteCalculationError error =
                 response.error() == null
@@ -147,6 +342,7 @@ public class RouteCalculationService {
                 response.durationSeconds(),
                 response.geometry(),
                 response.segments(),
+                weatherEvaluation,
                 response.createdAt(),
                 error
         );

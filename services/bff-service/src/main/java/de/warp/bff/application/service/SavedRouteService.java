@@ -6,6 +6,8 @@ import de.warp.bff.infrastructure.client.dto.StorageApiDtos.CreateSavedRouteRequ
 import de.warp.bff.infrastructure.client.dto.StorageApiDtos.SavedRoute;
 import de.warp.bff.infrastructure.client.dto.StorageApiDtos.SavedRoutePage;
 import de.warp.bff.infrastructure.client.dto.StorageApiDtos.UpdateSavedRouteRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos.WeatherEvaluationResponse;
+import de.warp.bff.infrastructure.weather.WeatherClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -25,18 +27,28 @@ public class SavedRouteService {
 
     private final StorageClient storageClient;
     private final RouteCalculationService routeCalculationService;
+    private final WeatherClient weatherClient;
 
     public SavedRouteService(StorageClient storageClient) {
-        this(storageClient, null);
+        this(storageClient, null, null);
+    }
+
+    public SavedRouteService(
+            StorageClient storageClient,
+            RouteCalculationService routeCalculationService
+    ) {
+        this(storageClient, routeCalculationService, null);
     }
 
     @Autowired
     public SavedRouteService(
             StorageClient storageClient,
-            @Autowired(required = false) RouteCalculationService routeCalculationService
+            @Autowired(required = false) RouteCalculationService routeCalculationService,
+            @Autowired(required = false) WeatherClient weatherClient
     ) {
         this.storageClient = storageClient;
         this.routeCalculationService = routeCalculationService;
+        this.weatherClient = weatherClient;
     }
 
     public SavedRoute saveRoute(
@@ -56,7 +68,7 @@ public class SavedRouteService {
         StorageApiDtos.RouteSnapshot routeSnapshot =
                 resolveRouteSnapshot(userId, routeCalculationId);
         StorageApiDtos.WeatherSnapshot weatherSnapshot =
-                resolveWeatherSnapshot(weatherEvaluationId, routeSnapshot);
+                resolveWeatherSnapshot(weatherEvaluationId, routeCalculationId, routeSnapshot);
 
         String idempotencyKey = "save_" + UUID.nameUUIDFromBytes(
                 (userId + ":" + routeCalculationId + ":" + weatherEvaluationId)
@@ -194,11 +206,64 @@ public class SavedRouteService {
 
     private StorageApiDtos.WeatherSnapshot resolveWeatherSnapshot(
             String weatherEvaluationId,
+            String routeCalculationId,
             StorageApiDtos.RouteSnapshot routeSnapshot
     ) {
         String effectiveWeatherId = weatherEvaluationId != null && !weatherEvaluationId.isBlank()
                 ? (weatherEvaluationId.length() > 40 ? weatherEvaluationId.substring(0, 40) : weatherEvaluationId)
                 : "weather_dummy";
+
+        if (weatherClient != null) {
+            try {
+                WeatherEvaluationResponse evaluation = null;
+                if (weatherEvaluationId != null && weatherEvaluationId.startsWith("wev_")) {
+                    evaluation = weatherClient.getEvaluationById(effectiveWeatherId);
+                } else if (routeCalculationId != null && !routeCalculationId.isBlank()) {
+                    evaluation = weatherClient.getEvaluationByRoute(routeCalculationId);
+                }
+
+                if (evaluation != null && evaluation.segments() != null && !evaluation.segments().isEmpty()) {
+                    List<StorageApiDtos.WeatherSegment> segments = evaluation.segments().stream()
+                            .map(seg -> new StorageApiDtos.WeatherSegment(
+                                    seg.segmentIndex(),
+                                    seg.expectedArrivalTime().atOffset(ZoneOffset.UTC),
+                                    seg.score(),
+                                    seg.color(),
+                                    seg.weather() == null
+                                            ? null
+                                            : new StorageApiDtos.SegmentWeather(
+                                            seg.weather().windSpeedKmh(),
+                                            seg.weather().windDirectionDegrees(),
+                                            seg.weather().precipitationProbabilityPercent(),
+                                            seg.weather().precipitationMm(),
+                                            seg.weather().thunderstormProbabilityPercent()
+                                    ),
+                                    seg.geometry() == null
+                                            ? (routeSnapshot != null ? routeSnapshot.geometry() : null)
+                                            : new StorageApiDtos.GeoJsonLineString(
+                                            seg.geometry().type(),
+                                            seg.geometry().coordinates()
+                                    )
+                            ))
+                            .toList();
+
+                    String resolvedEvalId = evaluation.evaluationId() != null
+                            && evaluation.evaluationId().length() <= 40
+                            ? evaluation.evaluationId()
+                            : effectiveWeatherId;
+
+                    return new StorageApiDtos.WeatherSnapshot(
+                            resolvedEvalId,
+                            evaluation.overallScore(),
+                            evaluation.scoreVersion() != null ? evaluation.scoreVersion() : "1.0",
+                            evaluation.thunderstormCapApplied(),
+                            segments
+                    );
+                }
+            } catch (Exception ignored) {
+                // Fallback auf Standard-Snapshot
+            }
+        }
 
         OffsetDateTime departure = routeSnapshot != null && routeSnapshot.departureTime() != null
                 ? routeSnapshot.departureTime()

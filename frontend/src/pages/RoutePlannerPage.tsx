@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useMemo,
     useRef,
     useState,
     type ChangeEvent,
@@ -12,11 +13,13 @@ import { Link } from 'react-router'
 
 import { useAuth } from '../features/auth/useAuth'
 import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
+import { toLatLngPositions } from '../features/saved-routes/routeGeometry'
 import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
 import type { ActivityProfileCode } from '../types/activityProfile'
 import type { Place } from '../types/searchPlaces'
 import type { RouteCalculation } from '../types/routeCalculation'
+import type { RouteMapSegment } from '../types/routeMap'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import {
     ROUTE_CALCULATION_QUERY,
@@ -195,6 +198,23 @@ export default function RoutePlannerPage() {
         routeCalculation?.status === 'COMPLETED'
             ? routeCalculation
             : null
+
+    const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
+        if (!completedRouteCalculation?.weatherSegments) {
+            return []
+        }
+
+        return [...completedRouteCalculation.weatherSegments]
+            .sort((a, b) => a.segmentIndex - b.segmentIndex)
+            .flatMap((segment) => {
+                const positions = segment.geometry
+                    ? toLatLngPositions(segment.geometry.coordinates)
+                    : []
+                return positions.length >= 2
+                    ? [{ positions, color: segment.color }]
+                    : []
+            })
+    }, [completedRouteCalculation])
 
     useEffect(() => {
         if (selectedProfile) {
@@ -773,7 +793,30 @@ export default function RoutePlannerPage() {
                                     : 'Nicht verfügbar'}
                             </dd>
                         </div>
+
+                        {typeof completedRouteCalculation.weatherScore === 'number' && (
+                            <div className={styles.statCard}>
+                                <dt className={styles.statLabel}>Wetterscore</dt>
+                                <dd className={styles.statValue}>
+                                    {completedRouteCalculation.weatherScore} / 100
+                                </dd>
+                            </div>
+                        )}
                     </dl>
+
+                    {completedRouteCalculation.thunderstormCapApplied && (
+                        <div
+                            className={`${styles.statusBanner} ${styles.statusBannerError}`}
+                            role="status"
+                            style={{ marginTop: '0.75rem' }}
+                        >
+                            <span>⚡</span>
+                            <span>
+                                Erhöhtes Gewitterrisiko auf der Route erkannt – der
+                                Gesamtwetterscore wurde auf maximal 50 begrenzt.
+                            </span>
+                        </div>
+                    )}
                 </section>
             )}
 
@@ -781,6 +824,7 @@ export default function RoutePlannerPage() {
                 <RouteMap
                     startPlace={selectedStart}
                     destinationPlace={selectedDestination}
+                    routeSegments={coloredMapSegments}
                     geometry={completedRouteCalculation?.geometry ?? null}
                 />
             </div>
@@ -797,7 +841,12 @@ export default function RoutePlannerPage() {
                     {isAuthenticated ? (
                         <SaveRouteForm
                             routeCalculationId={completedRouteCalculation.id}
-                            weatherEvaluationId={`w_${completedRouteCalculation.id}`.slice(0, 40)}
+                            weatherEvaluationId={
+                                (
+                                    completedRouteCalculation.weatherEvaluationId ??
+                                    `w_${completedRouteCalculation.id}`
+                                ).slice(0, 40)
+                            }
                         />
                     ) : (
                         <p className={styles.hint}>

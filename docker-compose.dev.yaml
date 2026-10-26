@@ -70,6 +70,11 @@ services:
       DB_URL: jdbc:postgresql://weather-db:5432/${WEATHER_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
       DB_USERNAME: ${WEATHER_DB_USER}
       DB_PASSWORD: ${WEATHER_DB_PASSWORD}
+      OPEN_METEO_BASE_URL: "https://api.open-meteo.com"
+      OPEN_METEO_CONNECT_TIMEOUT: "2s"
+      OPEN_METEO_READ_TIMEOUT: "8s"
+      OPEN_METEO_MAX_LOCATIONS: "50"
+      OPEN_METEO_FORECAST_HOURS: "168"
     depends_on:
       weather-db:
         condition: service_healthy

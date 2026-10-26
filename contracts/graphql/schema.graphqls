@@ -200,9 +200,33 @@ type RouteCalculation {
     geometry: RouteGeometry
     segments: [RouteSegment!]
 
+    weatherEvaluationId: ID
+    weatherScore: Int
+    weatherScoreVersion: String
+    thunderstormCapApplied: Boolean
+    weatherSegments: [SavedRouteWeatherSegment!]
+    weatherEvaluation: WeatherEvaluation
+
     createdAt: DateTime!
 
     error: RouteCalculationError
+}
+
+"""
+Vollständige Wetterbewertung einer berechneten Route.
+"""
+type WeatherEvaluation {
+    evaluationId: ID!
+    routeCalculationId: ID!
+    status: RouteCalculationStatus!
+    departureTime: DateTime!
+    overallScore: Int!
+    scoreVersion: String!
+    thunderstormCapApplied: Boolean!
+    weatherDataGeneratedAt: DateTime!
+    weatherDataExpiresAt: DateTime!
+    createdAt: DateTime!
+    segments: [SavedRouteWeatherSegment!]!
 }
 
 """
@@ -292,10 +316,13 @@ type SegmentWeather {
     precipitationProbabilityPercent: Float
     precipitationMm: Float
     thunderstormProbabilityPercent: Float
+    temperatureCelsius: Float
+    weatherCode: Int
 }
 
 type SavedRouteWeatherSegment {
     segmentIndex: Int!
+    distanceFromStartMeters: Int
     expectedArrivalTime: DateTime!
     score: Int!
     color: String!

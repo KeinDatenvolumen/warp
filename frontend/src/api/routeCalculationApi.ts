@@ -60,6 +60,30 @@ export const ROUTE_CALCULATION_QUERY: TypedDocumentNode<
                 type
                 coordinates
             }
+            weatherEvaluationId
+            weatherScore
+            weatherScoreVersion
+            thunderstormCapApplied
+            weatherSegments {
+                segmentIndex
+                distanceFromStartMeters
+                expectedArrivalTime
+                score
+                color
+                weather {
+                    windSpeedKmh
+                    windDirectionDegrees
+                    precipitationProbabilityPercent
+                    precipitationMm
+                    thunderstormProbabilityPercent
+                    temperatureCelsius
+                    weatherCode
+                }
+                geometry {
+                    type
+                    coordinates
+                }
+            }
             createdAt
             error {
                 code

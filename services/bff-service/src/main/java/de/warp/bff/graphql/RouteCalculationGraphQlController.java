@@ -203,6 +203,12 @@ public class RouteCalculationGraphQlController {
             Double durationSeconds,
             RouteGeometryPayload geometry,
             List<RouteSegmentPayload> segments,
+            String weatherEvaluationId,
+            Integer weatherScore,
+            String weatherScoreVersion,
+            Boolean thunderstormCapApplied,
+            List<WeatherSegmentPayload> weatherSegments,
+            WeatherEvaluationPayload weatherEvaluation,
             OffsetDateTime createdAt,
             RouteCalculationErrorPayload error
     ) {
@@ -210,6 +216,11 @@ public class RouteCalculationGraphQlController {
         private static RouteCalculationPayloadResult from(
                 RouteCalculationResult calculation
         ) {
+            WeatherEvaluationPayload weatherEvalPayload =
+                    WeatherEvaluationPayload.from(
+                            calculation.weatherEvaluation()
+                    );
+
             return new RouteCalculationPayloadResult(
                     calculation.id(),
                     RouteCalculationStatus.valueOf(
@@ -238,6 +249,22 @@ public class RouteCalculationGraphQlController {
                     RouteSegmentPayload.from(
                             calculation.segments()
                     ),
+                    weatherEvalPayload == null
+                            ? null
+                            : weatherEvalPayload.evaluationId(),
+                    weatherEvalPayload == null
+                            ? null
+                            : weatherEvalPayload.overallScore(),
+                    weatherEvalPayload == null
+                            ? null
+                            : weatherEvalPayload.scoreVersion(),
+                    weatherEvalPayload == null
+                            ? null
+                            : weatherEvalPayload.thunderstormCapApplied(),
+                    weatherEvalPayload == null
+                            ? null
+                            : weatherEvalPayload.segments(),
+                    weatherEvalPayload,
                     toOffsetDateTime(
                             calculation.createdAt()
                     ),
@@ -253,6 +280,131 @@ public class RouteCalculationGraphQlController {
             return instant == null
                     ? null
                     : instant.atOffset(ZoneOffset.UTC);
+        }
+    }
+
+    public record WeatherEvaluationPayload(
+            String evaluationId,
+            String routeCalculationId,
+            RouteCalculationStatus status,
+            OffsetDateTime departureTime,
+            int overallScore,
+            String scoreVersion,
+            boolean thunderstormCapApplied,
+            OffsetDateTime weatherDataGeneratedAt,
+            OffsetDateTime weatherDataExpiresAt,
+            OffsetDateTime createdAt,
+            List<WeatherSegmentPayload> segments
+    ) {
+
+        private static WeatherEvaluationPayload from(
+                RouteCalculationResult.WeatherEvaluationSnapshot snapshot
+        ) {
+            if (snapshot == null) {
+                return null;
+            }
+
+            List<WeatherSegmentPayload> segments =
+                    snapshot.segments() == null
+                            ? List.of()
+                            : snapshot.segments().stream()
+                            .map(WeatherSegmentPayload::from)
+                            .toList();
+
+            RouteCalculationStatus status;
+            try {
+                status = snapshot.status() == null
+                        ? RouteCalculationStatus.COMPLETED
+                        : RouteCalculationStatus.valueOf(snapshot.status());
+            } catch (IllegalArgumentException e) {
+                status = RouteCalculationStatus.COMPLETED;
+            }
+
+            return new WeatherEvaluationPayload(
+                    snapshot.evaluationId(),
+                    snapshot.routeCalculationId(),
+                    status,
+                    RouteCalculationPayloadResult.toOffsetDateTime(
+                            snapshot.departureTime()
+                    ),
+                    snapshot.overallScore(),
+                    snapshot.scoreVersion(),
+                    snapshot.thunderstormCapApplied(),
+                    RouteCalculationPayloadResult.toOffsetDateTime(
+                            snapshot.weatherDataGeneratedAt()
+                    ),
+                    RouteCalculationPayloadResult.toOffsetDateTime(
+                            snapshot.weatherDataExpiresAt()
+                    ),
+                    RouteCalculationPayloadResult.toOffsetDateTime(
+                            snapshot.createdAt()
+                    ),
+                    segments
+            );
+        }
+    }
+
+    public record WeatherSegmentPayload(
+            int segmentIndex,
+            Integer distanceFromStartMeters,
+            OffsetDateTime expectedArrivalTime,
+            int score,
+            String color,
+            SegmentWeatherPayload weather,
+            RouteGeometryPayload geometry
+    ) {
+
+        private static WeatherSegmentPayload from(
+                RouteCalculationResult.WeatherSegmentSnapshot segment
+        ) {
+            RouteGeometryPayload geometry =
+                    segment.geometryCoordinates() == null
+                            || segment.geometryCoordinates().isEmpty()
+                            ? null
+                            : new RouteGeometryPayload(
+                            "LineString",
+                            segment.geometryCoordinates()
+                    );
+
+            return new WeatherSegmentPayload(
+                    segment.segmentIndex(),
+                    segment.distanceFromStartMeters(),
+                    RouteCalculationPayloadResult.toOffsetDateTime(
+                            segment.expectedArrivalTime()
+                    ),
+                    segment.score(),
+                    segment.color(),
+                    SegmentWeatherPayload.from(segment.weather()),
+                    geometry
+            );
+        }
+    }
+
+    public record SegmentWeatherPayload(
+            Double windSpeedKmh,
+            Double windDirectionDegrees,
+            Double precipitationProbabilityPercent,
+            Double precipitationMm,
+            Double thunderstormProbabilityPercent,
+            Double temperatureCelsius,
+            Integer weatherCode
+    ) {
+
+        private static SegmentWeatherPayload from(
+                RouteCalculationResult.WeatherConditionSnapshot weather
+        ) {
+            if (weather == null) {
+                return null;
+            }
+            return new SegmentWeatherPayload(
+                    weather.windSpeedKmh(),
+                    weather.windDirectionDegrees(),
+                    weather.precipitationProbabilityPercent(),
+                    weather.precipitationMm(),
+                    weather.thunderstormProbabilityPercent(),
+                    weather.temperatureCelsius(),
+                    weather.weatherCode()
+            );
         }
     }
 

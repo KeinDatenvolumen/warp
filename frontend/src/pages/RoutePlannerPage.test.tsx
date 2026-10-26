@@ -105,6 +105,60 @@ describe('RoutePlannerPage', () => {
                         [9.77, 49.49],
                     ],
                 },
+                weatherEvaluationId: 'weval_123456',
+                weatherScore: 48,
+                weatherScoreVersion: 'v1.0',
+                thunderstormCapApplied: true,
+                weatherSegments: [
+                    {
+                        segmentIndex: 0,
+                        distanceFromStartMeters: 0,
+                        expectedArrivalTime: '2026-10-27T11:15:00Z',
+                        waypoint: { latitude: 49.38, longitude: 9.31 },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [9.15, 49.35],
+                                [9.46, 49.42],
+                            ],
+                        },
+                        segmentScore: 82,
+                        color: '#22c55e',
+                        weather: {
+                            temperatureCelsius: 18.5,
+                            windSpeedKmh: 12.0,
+                            windDirectionDegrees: 210,
+                            precipitationProbabilityPercent: 10,
+                            precipitationMm: 0.0,
+                            thunderstormProbabilityPercent: 5,
+                            weatherCode: 1,
+                        },
+                    },
+                    {
+                        segmentIndex: 1,
+                        distanceFromStartMeters: 30000,
+                        expectedArrivalTime: '2026-10-27T12:30:00Z',
+                        waypoint: { latitude: 49.45, longitude: 9.61 },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [9.46, 49.42],
+                                [9.77, 49.49],
+                            ],
+                        },
+                        segmentScore: 35,
+                        color: '#ef4444',
+                        weather: {
+                            temperatureCelsius: 16.0,
+                            windSpeedKmh: 28.0,
+                            windDirectionDegrees: 90,
+                            precipitationProbabilityPercent: 75,
+                            precipitationMm: 3.5,
+                            thunderstormProbabilityPercent: 45,
+                            weatherCode: 95,
+                        },
+                    },
+                ],
                 createdAt: '2026-10-26T12:00:00Z',
                 error: null,
             },
@@ -253,17 +307,25 @@ describe('RoutePlannerPage', () => {
             },
         })
 
-        // 6. Routenergebnis-Sektion mit Distanz, Fahrtdauer, Ankunftszeit
+        // 6. Routenergebnis-Sektion mit Distanz, Fahrtdauer, Ankunftszeit und Wetterscore
         expect(
             await screen.findByRole('heading', { name: 'Routenergebnis' }),
         ).toBeInTheDocument()
         expect(screen.getByText(/61,4 km/i)).toBeInTheDocument()
         expect(screen.getByText(/2 Std\. 30 Min\./i)).toBeInTheDocument()
+        expect(screen.getByText('48 / 100')).toBeInTheDocument()
+        expect(
+            screen.getByText(/Erhöhtes Gewitterrisiko auf der Route erkannt/i),
+        ).toBeInTheDocument()
 
-        // 7. Karte zeigt Geometrie
+        // 7. Karte zeigt Geometrie und Wettersegmente
         expect(screen.getByTestId('route-map')).toHaveAttribute(
             'data-has-geometry',
             'true',
+        )
+        expect(screen.getByTestId('route-map')).toHaveAttribute(
+            'data-segments',
+            '2',
         )
 
         // 8. Formular "Route speichern" erscheint mit Routenname
