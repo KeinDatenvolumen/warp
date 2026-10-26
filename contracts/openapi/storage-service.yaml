@@ -1,0 +1,591 @@
+openapi: 3.1.0
+info:
+  title: Storage Service Internal API
+  version: 1.0.0
+  description: >
+    Interner REST-Vertrag für den Storage Service. Verwaltet Aktivitätsprofile
+    und benutzergebundene gespeicherte Routen inklusive Snapshots und Wetterscores.
+servers:
+  - url: http://storage-service:8084
+    description: Interner Docker-/Cluster-Dienst
+
+paths:
+  /internal/v1/activity-profiles:
+    get:
+      summary: Alle zentral konfigurierten Aktivitätsprofile abrufen
+      operationId: listActivityProfiles
+      parameters:
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '200':
+          description: Liste aller Aktivitätsprofile
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /internal/v1/activity-profiles/{code}:
+    get:
+      summary: Einzelnes Aktivitätsprofil anhand des Codes abrufen
+      operationId: getActivityProfile
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [BICYCLE, MOTORCYCLE, HIKING]
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '200':
+          description: Gefundenes Aktivitätsprofil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Aktivitätsprofil nicht gefunden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /internal/v1/users/{userId}/saved-routes:
+    post:
+      summary: Berechnete Route als Snapshot benutzergebunden speichern
+      operationId: createSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9._:-]{1,100}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedRouteRequest'
+      responses:
+        '201':
+          description: Route erfolgreich neu gespeichert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '200':
+          description: Idempotente Wiederholung liefert bestehende Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      summary: Gespeicherte Routen des Benutzers paginiert auflisten
+      operationId: listSavedRoutes
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+        - name: favorite
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Paginierte Liste der Routen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRoutePageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /internal/v1/users/{userId}/saved-routes/{routeId}:
+    get:
+      summary: Eigene gespeicherte Route im Detail abrufen
+      operationId: getSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '200':
+          description: Detailansicht der Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Route nicht gefunden oder gehört anderem Benutzer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Namen und/oder Favoritenstatus einer Route aktualisieren
+      operationId: updateSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSavedRouteRequest'
+      responses:
+        '200':
+          description: Aktualisierte Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Eigene gespeicherte Route endgültig löschen
+      operationId: deleteSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '204':
+          description: Route erfolgreich gelöscht
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    RouteIdPath:
+      name: routeId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    UserIdHeader:
+      name: X-User-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    CorrelationIdHeader:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+    ServiceTokenHeader:
+      name: X-WaRP-Service-Token
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Ungültige Syntax
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    Unauthorized:
+      description: Fehlender oder ungültiger Service-Token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    Forbidden:
+      description: Benutzerkontext passt nicht zur Anfrage
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    NotFound:
+      description: Gespeicherte Route wurde nicht gefunden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    UnprocessableContent:
+      description: Fachliche Validierungsfehler
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InternalServerError:
+      description: Unerwarteter interner Serverfehler
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+
+  schemas:
+    ActivityProfileResponse:
+      type: object
+      required: [code, displayName, routingProfile]
+      properties:
+        code:
+          type: string
+          enum: [BICYCLE, MOTORCYCLE, HIKING]
+        displayName:
+          type: string
+        routingProfile:
+          type: string
+
+    PlaceDto:
+      type: object
+      required: [label, latitude, longitude]
+      properties:
+        label:
+          type: string
+          maxLength: 255
+        latitude:
+          type: number
+          minimum: -90.0
+          maximum: 90.0
+        longitude:
+          type: number
+          minimum: -180.0
+          maximum: 180.0
+
+    GeoJsonLineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          enum: [LineString]
+        coordinates:
+          type: array
+          items:
+            type: array
+            minItems: 2
+            maxItems: 3
+            items:
+              type: number
+
+    SegmentWeatherDto:
+      type: object
+      properties:
+        windSpeedKmh:
+          type: number
+          minimum: 0.0
+        windDirectionDegrees:
+          type: number
+          minimum: 0.0
+          maximum: 360.0
+        precipitationProbabilityPercent:
+          type: number
+          minimum: 0.0
+          maximum: 100.0
+        precipitationMm:
+          type: number
+          minimum: 0.0
+        thunderstormProbabilityPercent:
+          type: number
+          minimum: 0.0
+          maximum: 100.0
+
+    WeatherSegmentDto:
+      type: object
+      required: [segmentIndex, expectedArrivalTime, score, color]
+      properties:
+        segmentIndex:
+          type: integer
+          minimum: 0
+        expectedArrivalTime:
+          type: string
+          format: date-time
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        weather:
+          $ref: '#/components/schemas/SegmentWeatherDto'
+        geometry:
+          $ref: '#/components/schemas/GeoJsonLineString'
+
+    RouteSnapshotDto:
+      type: object
+      required:
+        - start
+        - destination
+        - activityProfileCode
+        - departureTime
+        - arrivalTime
+        - distanceMeters
+        - durationSeconds
+        - geometry
+      properties:
+        routeCalculationId:
+          type: string
+          maxLength: 40
+        start:
+          $ref: '#/components/schemas/PlaceDto'
+        destination:
+          $ref: '#/components/schemas/PlaceDto'
+        activityProfileCode:
+          type: string
+          enum: [BICYCLE, MOTORCYCLE, HIKING]
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        distanceMeters:
+          type: integer
+          minimum: 0
+        durationSeconds:
+          type: integer
+          minimum: 0
+        geometry:
+          $ref: '#/components/schemas/GeoJsonLineString'
+
+    WeatherSnapshotDto:
+      type: object
+      required: [overallScore, scoreVersion, thunderstormCapApplied, segments]
+      properties:
+        weatherEvaluationId:
+          type: string
+          maxLength: 40
+        overallScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        scoreVersion:
+          type: string
+          maxLength: 20
+        thunderstormCapApplied:
+          type: boolean
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherSegmentDto'
+
+    CreateSavedRouteRequest:
+      type: object
+      required: [name, routeSnapshot, weatherSnapshot]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        favorite:
+          type: boolean
+          default: false
+        routeSnapshot:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        weatherSnapshot:
+          $ref: '#/components/schemas/WeatherSnapshotDto'
+
+    UpdateSavedRouteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        favorite:
+          type: boolean
+
+    SavedRouteSummaryResponse:
+      type: object
+      required:
+        - id
+        - name
+        - start
+        - destination
+        - activityProfileCode
+        - weatherScore
+        - favorite
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        start:
+          $ref: '#/components/schemas/PlaceDto'
+        destination:
+          $ref: '#/components/schemas/PlaceDto'
+        activityProfileCode:
+          type: string
+        weatherScore:
+          type: integer
+        favorite:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SavedRouteResponse:
+      type: object
+      required:
+        - id
+        - name
+        - favorite
+        - routeSnapshot
+        - weatherSnapshot
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        favorite:
+          type: boolean
+        routeSnapshot:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        weatherSnapshot:
+          $ref: '#/components/schemas/WeatherSnapshotDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SavedRoutePageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedRouteSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    FieldErrorResponse:
+      type: object
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    ApiErrorResponse:
+      type: object
+      required: [type, title, status, code, detail, instance, correlationId]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        instance:
+          type: string
+        correlationId:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldErrorResponse'

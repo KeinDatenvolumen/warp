@@ -8,6 +8,7 @@ import {tap} from 'rxjs'
 import {notifySessionInvalid} from '../features/auth/sessionEvents'
 import {BFF_BASE_URL} from './bffBaseUrl'
 import {containsSessionInvalidCode} from './graphqlErrors'
+import {csrfLink} from './csrfLink'
 
 const httpLink = new HttpLink({
     uri: `${BFF_BASE_URL}/graphql`,
@@ -29,7 +30,7 @@ export const sessionInvalidLink = new ApolloLink(
 )
 
 export const apolloClient = new ApolloClient({
-    link: ApolloLink.from([sessionInvalidLink, httpLink]),
+    link: ApolloLink.from([sessionInvalidLink, csrfLink, httpLink]),
     cache: new InMemoryCache()
 })
 

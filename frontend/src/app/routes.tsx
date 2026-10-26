@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage'
 import ProfilePage from '../pages/ProfilePage'
 import RoutePlannerPage from '../pages/RoutePlannerPage'
 import SavedRoutesPage from '../pages/SavedRoutesPage'
+import SavedRouteDetailPage from '../pages/SavedRouteDetailPage'
 import {SystemStatusPage} from "../pages/SystemStatusPage";
 import {NotFoundPage} from "../pages/NotFoundPage";
 import ProtectedRoute from '../components/routing/ProtectedRoute'
@@ -38,6 +39,14 @@ export default function AppRoutes() {
                 />
                 <Route path="/system-status" element={<SystemStatusPage />} />
                 <Route path="*" element={<NotFoundPage />} />
+                <Route
+                    path="/saved-routes/:routeId"
+                    element={
+                        <ProtectedRoute>
+                            <SavedRouteDetailPage />
+                        </ProtectedRoute>
+                    }
+                />
             </Route>
         </Routes>
     )
