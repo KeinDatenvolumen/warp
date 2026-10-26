@@ -5,20 +5,18 @@ import {
     useState,
     type ChangeEvent,
 } from 'react'
-import {
-    useLazyQuery,
-    useMutation,
-} from '@apollo/client/react'
-import {Link} from 'react-router'
+import { useLazyQuery, useMutation } from '@apollo/client/react'
+import { Link } from 'react-router'
 
-import {SEARCH_PLACES_QUERY} from '../api/searchPlacesQuery'
+import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import {
     ROUTE_CALCULATION_QUERY,
     START_ROUTE_CALCULATION_MUTATION,
 } from '../api/routeCalculationApi'
+import MeteogramDock from '../components/MeteogramDock/MeteogramDock'
 import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
-import {useAuth} from '../features/auth/useAuth'
+import { useAuth } from '../features/auth/useAuth'
 import {
     createInitialDepartureTime,
     createMaximumDepartureTime,
@@ -28,33 +26,28 @@ import {
     toDepartureTimeIso,
 } from '../features/route-planner/departureTime'
 import {
+    canExportRouteAsGpx,
+    downloadRouteAsGpx,
+} from '../features/route-planner/gpxExport'
+import {
     formatArrivalTime,
     formatDistance,
     formatDuration,
 } from '../features/route-planner/routeResultFormatting'
 import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
-import {
-    toLatLngPositions,
-} from '../features/saved-routes/routeGeometry'
-import type {
-    ActivityProfileCode,
-} from '../types/activityProfile'
-import type {Place} from '../types/searchPlaces'
+import { toLatLngPositions } from '../features/saved-routes/routeGeometry'
+import type { ActivityProfileCode } from '../types/activityProfile'
 import type {
     RouteCalculation,
 } from '../types/routeCalculation'
-import type {RouteMapSegment} from '../types/routeMap'
-import {isLatestRequest} from '../utils/latestRequest'
-import {
-    canExportRouteAsGpx,
-    downloadRouteAsGpx,
-} from '../features/route-planner/gpxExport'
+import type { RouteMapSegment } from '../types/routeMap'
+import type { Place } from '../types/searchPlaces'
+import { isLatestRequest } from '../utils/latestRequest'
 
 import styles from './RoutePlannerPage.module.css'
 
 const SELECTED_PROFILE_STORAGE_KEY =
     'warp-selected-activity-profile'
-
 const MINIMUM_SEARCH_LENGTH = 3
 const MAXIMUM_SEARCH_LENGTH = 200
 const SEARCH_RESULT_LIMIT = 5
@@ -82,67 +75,36 @@ function readSelectedProfile(): ActivityProfileCode | null {
 }
 
 export default function RoutePlannerPage() {
-    const {isAuthenticated} = useAuth()
+    const { isAuthenticated } = useAuth()
 
     const [selectedProfile, setSelectedProfile] =
-        useState<ActivityProfileCode | null>(
-            readSelectedProfile,
-        )
-
+        useState<ActivityProfileCode | null>(readSelectedProfile)
     const [startInput, setStartInput] = useState('')
-    const [destinationInput, setDestinationInput] =
-        useState('')
-
+    const [destinationInput, setDestinationInput] = useState('')
     const [departureTime, setDepartureTime] = useState(
         createInitialDepartureTime,
     )
-
-    const [
-        minimumDepartureTime,
-        setMinimumDepartureTime,
-    ] = useState(createMinimumDepartureTime)
-
-    const [
-        maximumDepartureTime,
-        setMaximumDepartureTime,
-    ] = useState(createMaximumDepartureTime)
-
-    const [
-        currentCalculationId,
-        setCurrentCalculationId,
-    ] = useState<string | null>(null)
-
-    const [
-        routeCalculation,
-        setRouteCalculation,
-    ] = useState<RouteCalculation | null>(null)
-
-    const [
-        routeCalculationError,
-        setRouteCalculationError,
-    ] = useState<string | null>(null)
-
+    const [minimumDepartureTime, setMinimumDepartureTime] =
+        useState(createMinimumDepartureTime)
+    const [maximumDepartureTime, setMaximumDepartureTime] =
+        useState(createMaximumDepartureTime)
+    const [currentCalculationId, setCurrentCalculationId] =
+        useState<string | null>(null)
+    const [routeCalculation, setRouteCalculation] =
+        useState<RouteCalculation | null>(null)
+    const [routeCalculationError, setRouteCalculationError] =
+        useState<string | null>(null)
+    const [hoveredSegmentIndex, setHoveredSegmentIndex] =
+        useState<number | null>(null)
     const [selectedStart, setSelectedStart] =
         useState<Place | null>(null)
-
-    const [
-        selectedDestination,
-        setSelectedDestination,
-    ] = useState<Place | null>(null)
-
-    const [startResults, setStartResults] =
+    const [selectedDestination, setSelectedDestination] =
+        useState<Place | null>(null)
+    const [startResults, setStartResults] = useState<Place[]>([])
+    const [destinationResults, setDestinationResults] =
         useState<Place[]>([])
-
-    const [
-        destinationResults,
-        setDestinationResults,
-    ] = useState<Place[]>([])
-
-    const [
-        lastCompletedStartQuery,
-        setLastCompletedStartQuery,
-    ] = useState<string | null>(null)
-
+    const [lastCompletedStartQuery, setLastCompletedStartQuery] =
+        useState<string | null>(null)
     const [
         lastCompletedDestinationQuery,
         setLastCompletedDestinationQuery,
@@ -161,26 +123,18 @@ export default function RoutePlannerPage() {
                 },
                 destination: {
                     label: selectedDestination.displayName,
-                    latitude:
-                    selectedDestination.latitude,
-                    longitude:
-                    selectedDestination.longitude,
+                    latitude: selectedDestination.latitude,
+                    longitude: selectedDestination.longitude,
                 },
             }
             : null
 
     const departureTimeInFuture =
         isDepartureTimeInFuture(departureTime)
-
     const departureTimeWithinForecast =
-        isDepartureTimeWithinForecastPeriod(
-            departureTime,
-        )
-
+        isDepartureTimeWithinForecastPeriod(departureTime)
     const departureTimeIsValid =
-        departureTimeInFuture &&
-        departureTimeWithinForecast
-
+        departureTimeInFuture && departureTimeWithinForecast
     const canCalculateRoute =
         selectedProfile !== null &&
         routeCoordinates !== null &&
@@ -188,30 +142,19 @@ export default function RoutePlannerPage() {
 
     const [
         searchStartPlaces,
-        {
-            loading: startLoading,
-            error: startError,
-        },
+        { loading: startLoading, error: startError },
     ] = useLazyQuery(SEARCH_PLACES_QUERY)
-
     const [
         searchDestinationPlaces,
-        {
-            loading: destinationLoading,
-            error: destinationError,
-        },
+        { loading: destinationLoading, error: destinationError },
     ] = useLazyQuery(SEARCH_PLACES_QUERY)
-
     const [
         startRouteCalculation,
         {
             loading: startRouteCalculationLoading,
             error: startRouteCalculationGraphQlError,
         },
-    ] = useMutation(
-        START_ROUTE_CALCULATION_MUTATION,
-    )
-
+    ] = useMutation(START_ROUTE_CALCULATION_MUTATION)
     const [
         loadRouteCalculation,
         {
@@ -226,7 +169,6 @@ export default function RoutePlannerPage() {
 
     const stopPollingRef = useRef(stopPolling)
     stopPollingRef.current = stopPolling
-
     const isPollingRef = useRef(false)
 
     function stopPollingSafely(): void {
@@ -239,10 +181,7 @@ export default function RoutePlannerPage() {
         try {
             stopPollingRef.current?.()
         } catch {
-            /*
-             * Apollo Client kann einen Fehler auslösen, wenn
-             * stopPolling vor der Query-Ausführung aufgerufen wird.
-             */
+            /* Apollo can throw if polling has not started yet. */
         }
     }
 
@@ -250,48 +189,34 @@ export default function RoutePlannerPage() {
         startRouteCalculationLoading ||
         routeCalculation?.status === 'PENDING' ||
         routeCalculation?.status === 'PROCESSING'
-
     const completedRouteCalculation =
         routeCalculation?.status === 'COMPLETED'
             ? routeCalculation
             : null
-
     const routeCanBeExportedAsGpx =
         completedRouteCalculation !== null &&
-        canExportRouteAsGpx(
-            completedRouteCalculation.geometry,
-        )
+        canExportRouteAsGpx(completedRouteCalculation.geometry)
 
     const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
         if (!completedRouteCalculation?.weatherSegments) {
             return []
         }
 
-            return [
-                ...completedRouteCalculation.weatherSegments,
-            ]
-                .sort(
-                    (firstSegment, secondSegment) =>
-                        firstSegment.segmentIndex -
-                        secondSegment.segmentIndex,
-                )
-                .flatMap((segment) => {
-                    const positions = segment.geometry
-                        ? toLatLngPositions(
-                            segment.geometry.coordinates,
-                        )
-                        : []
+        return [...completedRouteCalculation.weatherSegments]
+            .sort(
+                (first, second) =>
+                    first.segmentIndex - second.segmentIndex,
+            )
+            .flatMap((segment) => {
+                const positions = segment.geometry
+                    ? toLatLngPositions(segment.geometry.coordinates)
+                    : []
 
-                    return positions.length >= 2
-                        ? [
-                            {
-                                positions,
-                                color: segment.color,
-                            },
-                        ]
-                        : []
-                })
-        }, [completedRouteCalculation])
+                return positions.length >= 2
+                    ? [{ positions, color: segment.color }]
+                    : []
+            })
+    }, [completedRouteCalculation])
 
     useEffect(() => {
         if (selectedProfile) {
@@ -299,7 +224,6 @@ export default function RoutePlannerPage() {
                 SELECTED_PROFILE_STORAGE_KEY,
                 selectedProfile,
             )
-
             return
         }
 
@@ -311,22 +235,13 @@ export default function RoutePlannerPage() {
     useEffect(() => {
         const trimmedInput = startInput.trim()
         const requestId = ++startRequestId.current
-
-        setLastCompletedStartQuery((currentValue) =>
-            currentValue === null ? currentValue : null,
-        )
+        setLastCompletedStartQuery(null)
 
         if (
-            trimmedInput.length <
-            MINIMUM_SEARCH_LENGTH ||
+            trimmedInput.length < MINIMUM_SEARCH_LENGTH ||
             selectedStart
         ) {
-            setStartResults((currentResults) =>
-                currentResults.length === 0
-                    ? currentResults
-                    : [],
-            )
-
+            setStartResults([])
             return
         }
 
@@ -347,51 +262,25 @@ export default function RoutePlannerPage() {
                 }
 
                 setStartResults(
-                    (result.data?.searchPlaces ??
-                        []) as Place[],
+                    (result.data?.searchPlaces ?? []) as Place[],
                 )
-
-                setLastCompletedStartQuery(
-                    trimmedInput,
-                )
+                setLastCompletedStartQuery(trimmedInput)
             })
         }, SEARCH_DEBOUNCE_MS)
 
-        return () => {
-            window.clearTimeout(timeoutId)
-        }
-    }, [
-        startInput,
-        selectedStart,
-        searchStartPlaces,
-    ])
+        return () => window.clearTimeout(timeoutId)
+    }, [startInput, selectedStart, searchStartPlaces])
 
     useEffect(() => {
-        const trimmedInput =
-            destinationInput.trim()
-
-        const requestId =
-            ++destinationRequestId.current
-
-        setLastCompletedDestinationQuery(
-            (currentValue) =>
-                currentValue === null
-                    ? currentValue
-                    : null,
-        )
+        const trimmedInput = destinationInput.trim()
+        const requestId = ++destinationRequestId.current
+        setLastCompletedDestinationQuery(null)
 
         if (
-            trimmedInput.length <
-            MINIMUM_SEARCH_LENGTH ||
+            trimmedInput.length < MINIMUM_SEARCH_LENGTH ||
             selectedDestination
         ) {
-            setDestinationResults(
-                (currentResults) =>
-                    currentResults.length === 0
-                        ? currentResults
-                        : [],
-            )
-
+            setDestinationResults([])
             return
         }
 
@@ -412,19 +301,13 @@ export default function RoutePlannerPage() {
                 }
 
                 setDestinationResults(
-                    (result.data?.searchPlaces ??
-                        []) as Place[],
+                    (result.data?.searchPlaces ?? []) as Place[],
                 )
-
-                setLastCompletedDestinationQuery(
-                    trimmedInput,
-                )
+                setLastCompletedDestinationQuery(trimmedInput)
             })
         }, SEARCH_DEBOUNCE_MS)
 
-        return () => {
-            window.clearTimeout(timeoutId)
-        }
+        return () => window.clearTimeout(timeoutId)
     }, [
         destinationInput,
         selectedDestination,
@@ -432,8 +315,7 @@ export default function RoutePlannerPage() {
     ])
 
     useEffect(() => {
-        const calculation =
-            routeCalculationData?.routeCalculation
+        const calculation = routeCalculationData?.routeCalculation
 
         if (
             !calculation ||
@@ -450,40 +332,18 @@ export default function RoutePlannerPage() {
         ) {
             stopPollingSafely()
         }
-    }, [
-        currentCalculationId,
-        routeCalculationData,
-    ])
+    }, [currentCalculationId, routeCalculationData])
 
     useEffect(() => {
-        return () => {
-            stopPollingSafely()
-        }
+        return () => stopPollingSafely()
     }, [])
 
     useEffect(() => {
         stopPollingSafely()
-
-        setCurrentCalculationId(
-            (currentValue) =>
-                currentValue === null
-                    ? currentValue
-                    : null,
-        )
-
-        setRouteCalculation(
-            (currentValue) =>
-                currentValue === null
-                    ? currentValue
-                    : null,
-        )
-
-        setRouteCalculationError(
-            (currentValue) =>
-                currentValue === null
-                    ? currentValue
-                    : null,
-        )
+        setCurrentCalculationId(null)
+        setRouteCalculation(null)
+        setRouteCalculationError(null)
+        setHoveredSegmentIndex(null)
     }, [
         selectedStart,
         selectedDestination,
@@ -509,18 +369,14 @@ export default function RoutePlannerPage() {
         setLastCompletedDestinationQuery(null)
     }
 
-    function handleStartSelection(
-        place: Place,
-    ): void {
+    function handleStartSelection(place: Place): void {
         setSelectedStart(place)
         setStartInput(place.displayName)
         setStartResults([])
         setLastCompletedStartQuery(null)
     }
 
-    function handleDestinationSelection(
-        place: Place,
-    ): void {
+    function handleDestinationSelection(place: Place): void {
         setSelectedDestination(place)
         setDestinationInput(place.displayName)
         setDestinationResults([])
@@ -531,17 +387,11 @@ export default function RoutePlannerPage() {
         event: ChangeEvent<HTMLInputElement>,
     ): void {
         setDepartureTime(event.target.value)
-
-        setMinimumDepartureTime(
-            createMinimumDepartureTime(),
-        )
-
-        setMaximumDepartureTime(
-            createMaximumDepartureTime(),
-        )
+        setMinimumDepartureTime(createMinimumDepartureTime())
+        setMaximumDepartureTime(createMaximumDepartureTime())
     }
 
-    function handleGpxExport() {
+    function handleGpxExport(): void {
         if (
             !completedRouteCalculation?.geometry ||
             !routeCanBeExportedAsGpx
@@ -550,62 +400,53 @@ export default function RoutePlannerPage() {
         }
 
         downloadRouteAsGpx({
-            startLabel:
-                completedRouteCalculation.start.label,
+            startLabel: completedRouteCalculation.start.label,
             destinationLabel:
-                completedRouteCalculation.destination.label,
-            geometry:
-                completedRouteCalculation.geometry,
+            completedRouteCalculation.destination.label,
+            geometry: completedRouteCalculation.geometry,
         })
     }
 
-    async function handleRouteCalculation() {
-        if (!canCalculateRoute || !routeCoordinates || !selectedProfile) {
+    async function handleRouteCalculation(): Promise<void> {
+        if (
+            !canCalculateRoute ||
+            !routeCoordinates ||
+            !selectedProfile
+        ) {
             return
         }
 
         stopPollingSafely()
-
         setRouteCalculationError(null)
         setRouteCalculation(null)
+        setHoveredSegmentIndex(null)
 
         try {
-            const result =
-                await startRouteCalculation({
-                    variables: {
-                        input: {
-                            activityProfile:
-                            selectedProfile,
-                            departureTime:
-                                toDepartureTimeIso(
-                                    departureTime,
-                                ),
-                            ...routeCoordinates,
-                        },
+            const result = await startRouteCalculation({
+                variables: {
+                    input: {
+                        activityProfile: selectedProfile,
+                        departureTime:
+                            toDepartureTimeIso(departureTime),
+                        ...routeCoordinates,
                     },
-                })
-
-            const payload =
-                result.data?.startRouteCalculation
+                },
+            })
+            const payload = result.data?.startRouteCalculation
 
             if (!payload) {
                 setRouteCalculationError(
                     'Die Routenberechnung konnte nicht gestartet werden.',
                 )
-
                 return
             }
 
             if (payload.errors.length > 0) {
                 setRouteCalculationError(
                     payload.errors
-                        .map(
-                            (error) =>
-                                error.message,
-                        )
+                        .map((error) => error.message)
                         .join(' '),
                 )
-
                 return
             }
 
@@ -613,35 +454,26 @@ export default function RoutePlannerPage() {
                 setRouteCalculationError(
                     'Die Routenberechnung konnte nicht gestartet werden.',
                 )
-
                 return
             }
 
-            const calculationId =
-                payload.calculation.id
-
+            const calculationId = payload.calculation.id
             setCurrentCalculationId(calculationId)
-
             setRouteCalculation({
                 id: calculationId,
                 status: payload.calculation.status,
             } as RouteCalculation)
 
             await loadRouteCalculation({
-                variables: {
-                    id: calculationId,
-                },
+                variables: { id: calculationId },
             })
 
             if (
-                payload.calculation.status !==
-                'COMPLETED' &&
-                payload.calculation.status !==
-                'FAILED'
+                payload.calculation.status !== 'COMPLETED' &&
+                payload.calculation.status !== 'FAILED'
             ) {
                 try {
                     isPollingRef.current = true
-
                     startPolling(
                         ROUTE_CALCULATION_POLL_INTERVAL_MS,
                     )
@@ -656,21 +488,18 @@ export default function RoutePlannerPage() {
         }
     }
 
+    const statusClass = (
+        variant: string,
+    ): string => [styles.statusBanner, variant].join(' ')
+
     return (
-        <div className={styles.page}>
+        <main className={styles.page}>
             <section className={styles.card}>
-                <p className={styles.eyebrow}>
-                    Routenplanung
-                </p>
-
-                <h1 className={styles.title}>
-                    Routenplaner
-                </h1>
-
+                <p className={styles.eyebrow}>Routenplanung</p>
+                <h1 className={styles.title}>Routenplaner</h1>
                 <p className={styles.description}>
-                    Wähle ein Aktivitätsprofil,
-                    Start- und Zielort sowie eine
-                    Abfahrtszeit für deine
+                    Wähle ein Aktivitätsprofil, Start- und Zielort
+                    sowie eine Abfahrtszeit für deine
                     wetteroptimierte Route.
                 </p>
             </section>
@@ -686,7 +515,7 @@ export default function RoutePlannerPage() {
             >
                 <h2
                     id="route-input-heading"
-                    style={{margin: '0 0 1rem'}}
+                    style={{ margin: '0 0 1rem' }}
                 >
                     Route konfigurieren
                 </h2>
@@ -699,21 +528,16 @@ export default function RoutePlannerPage() {
                         >
                             Startpunkt
                         </label>
-
                         <input
                             id="start-input"
                             name="start"
                             type="text"
                             className={styles.input}
                             value={startInput}
-                            onChange={
-                                handleStartInputChange
-                            }
+                            onChange={handleStartInputChange}
                             placeholder="Ort oder Adresse eingeben"
                             autoComplete="street-address"
-                            maxLength={
-                                MAXIMUM_SEARCH_LENGTH
-                            }
+                            maxLength={MAXIMUM_SEARCH_LENGTH}
                             aria-autocomplete="list"
                             aria-controls="start-search-results"
                             aria-expanded={
@@ -723,28 +547,20 @@ export default function RoutePlannerPage() {
                                 startResults.length > 0
                             }
                         />
-
                         {startLoading && (
-                            <p
-                                className={styles.hint}
-                                role="status"
-                            >
+                            <p className={styles.hint} role="status">
                                 Startpunkt wird gesucht …
                             </p>
                         )}
-
                         {startError && (
                             <p
-                                className={
-                                    styles.fieldError
-                                }
+                                className={styles.fieldError}
                                 role="alert"
                             >
-                                Der Startpunkt konnte nicht
-                                gesucht werden.
+                                Der Startpunkt konnte nicht gesucht
+                                werden.
                             </p>
                         )}
-
                         {!startLoading &&
                             !startError &&
                             !selectedStart &&
@@ -752,74 +568,53 @@ export default function RoutePlannerPage() {
                             startInput.trim() &&
                             startResults.length === 0 && (
                                 <p
-                                    className={
-                                        styles.hint
-                                    }
+                                    className={styles.hint}
                                     role="status"
                                 >
-                                    Kein passender
-                                    Startpunkt gefunden.
+                                    Kein passender Startpunkt gefunden.
                                 </p>
                             )}
-
                         {!startLoading &&
                             !startError &&
                             !selectedStart &&
                             startResults.length > 0 && (
                                 <ul
                                     id="start-search-results"
-                                    className={
-                                        styles.searchResults
-                                    }
+                                    className={styles.searchResults}
                                     aria-label="Suchergebnisse für den Startpunkt"
                                 >
-                                    {startResults.map(
-                                        (place) => (
-                                            <li
-                                                key={
-                                                    place.placeId
-                                                }
+                                    {startResults.map((place) => (
+                                        <li
+                                            key={place.placeId}
+                                            className={
+                                                styles.searchResultItem
+                                            }
+                                        >
+                                            <button
+                                                type="button"
                                                 className={
-                                                    styles.searchResultItem
+                                                    styles.searchResultButton
+                                                }
+                                                onClick={() =>
+                                                    handleStartSelection(
+                                                        place,
+                                                    )
                                                 }
                                             >
-                                                <button
-                                                    type="button"
-                                                    className={
-                                                        styles.searchResultButton
-                                                    }
-                                                    onClick={() => {
-                                                        handleStartSelection(
-                                                            place,
-                                                        )
-                                                    }}
-                                                >
-                                                    {
-                                                        place.displayName
-                                                    }
-                                                </button>
-                                            </li>
-                                        ),
-                                    )}
+                                                {place.displayName}
+                                            </button>
+                                        </li>
+                                    ))}
                                 </ul>
                             )}
-
                         {selectedStart && (
                             <p
-                                className={
-                                    styles.selectedStatus
-                                }
+                                className={styles.selectedStatus}
                                 role="status"
                             >
-                                <span aria-hidden="true">
-                                    ✓
-                                </span>{' '}
-                                <strong>
-                                    Ausgewählt:
-                                </strong>{' '}
-                                {
-                                    selectedStart.displayName
-                                }
+                                <span aria-hidden="true">✓</span>{' '}
+                                <strong>Ausgewählt:</strong>{' '}
+                                {selectedStart.displayName}
                             </p>
                         )}
                     </div>
@@ -831,130 +626,93 @@ export default function RoutePlannerPage() {
                         >
                             Zielpunkt
                         </label>
-
                         <input
                             id="destination-input"
                             name="destination"
                             type="text"
                             className={styles.input}
                             value={destinationInput}
-                            onChange={
-                                handleDestinationInputChange
-                            }
+                            onChange={handleDestinationInputChange}
                             placeholder="Ort oder Adresse eingeben"
                             autoComplete="street-address"
-                            maxLength={
-                                MAXIMUM_SEARCH_LENGTH
-                            }
+                            maxLength={MAXIMUM_SEARCH_LENGTH}
                             aria-autocomplete="list"
                             aria-controls="destination-search-results"
                             aria-expanded={
                                 !destinationLoading &&
                                 !destinationError &&
                                 !selectedDestination &&
-                                destinationResults.length >
-                                0
+                                destinationResults.length > 0
                             }
                         />
-
                         {destinationLoading && (
-                            <p
-                                className={styles.hint}
-                                role="status"
-                            >
+                            <p className={styles.hint} role="status">
                                 Zielpunkt wird gesucht …
                             </p>
                         )}
-
                         {destinationError && (
                             <p
-                                className={
-                                    styles.fieldError
-                                }
+                                className={styles.fieldError}
                                 role="alert"
                             >
-                                Der Zielpunkt konnte nicht
-                                gesucht werden.
+                                Der Zielpunkt konnte nicht gesucht
+                                werden.
                             </p>
                         )}
-
                         {!destinationLoading &&
                             !destinationError &&
                             !selectedDestination &&
                             lastCompletedDestinationQuery ===
                             destinationInput.trim() &&
-                            destinationResults.length ===
-                            0 && (
+                            destinationResults.length === 0 && (
                                 <p
-                                    className={
-                                        styles.hint
-                                    }
+                                    className={styles.hint}
                                     role="status"
                                 >
-                                    Kein passender Zielpunkt
-                                    gefunden.
+                                    Kein passender Zielpunkt gefunden.
                                 </p>
                             )}
-
                         {!destinationLoading &&
                             !destinationError &&
                             !selectedDestination &&
-                            destinationResults.length >
-                            0 && (
+                            destinationResults.length > 0 && (
                                 <ul
                                     id="destination-search-results"
-                                    className={
-                                        styles.searchResults
-                                    }
+                                    className={styles.searchResults}
                                     aria-label="Suchergebnisse für den Zielpunkt"
                                 >
-                                    {destinationResults.map(
-                                        (place) => (
-                                            <li
-                                                key={
-                                                    place.placeId
-                                                }
+                                    {destinationResults.map((place) => (
+                                        <li
+                                            key={place.placeId}
+                                            className={
+                                                styles.searchResultItem
+                                            }
+                                        >
+                                            <button
+                                                type="button"
                                                 className={
-                                                    styles.searchResultItem
+                                                    styles.searchResultButton
+                                                }
+                                                onClick={() =>
+                                                    handleDestinationSelection(
+                                                        place,
+                                                    )
                                                 }
                                             >
-                                                <button
-                                                    type="button"
-                                                    className={
-                                                        styles.searchResultButton
-                                                    }
-                                                    onClick={() => {
-                                                        handleDestinationSelection(
-                                                            place,
-                                                        )
-                                                    }}
-                                                >
-                                                    {
-                                                        place.displayName
-                                                    }
-                                                </button>
-                                            </li>
-                                        ),
-                                    )}
+                                                {place.displayName}
+                                            </button>
+                                        </li>
+                                    ))}
                                 </ul>
                             )}
-
                         {selectedDestination && (
                             <p
-                                className={
-                                    styles.selectedStatus
-                                }
+                                className={styles.selectedStatus}
                                 role="status"
                             >
-                                <span aria-hidden="true">
-                                    ✓
-                                </span>{' '}
-                                <strong>
-                                    Ausgewählt:
-                                </strong>{' '}
-                                {
-                                    selectedDestination.displayName
-                                }
+                                <span aria-hidden="true">✓</span>{' '}
+                                <strong>Ausgewählt:</strong>{' '}
+                                {selectedDestination.displayName}
                             </p>
                         )}
                     </div>
@@ -966,7 +724,6 @@ export default function RoutePlannerPage() {
                         >
                             Abfahrtszeit
                         </label>
-
                         <input
                             id="departure-time"
                             name="departureTime"
@@ -976,69 +733,50 @@ export default function RoutePlannerPage() {
                             min={minimumDepartureTime}
                             max={maximumDepartureTime}
                             step={15 * 60}
-                            onChange={
-                                handleDepartureTimeChange
-                            }
+                            onChange={handleDepartureTimeChange}
                             required
-                            aria-invalid={
-                                !departureTimeIsValid
-                            }
+                            aria-invalid={!departureTimeIsValid}
                             aria-describedby="departure-time-hint"
                         />
-
                         <p
                             id="departure-time-hint"
                             className={styles.hint}
                         >
-                            Wähle eine zukünftige
-                            Abfahrtszeit im
-                            Vorhersagebereich. Möglich sind
-                            bis zu sieben Tage im Voraus in
+                            Wähle eine zukünftige Abfahrtszeit im
+                            Vorhersagebereich. Möglich sind bis zu
+                            sieben Tage im Voraus in
                             15-Minuten-Schritten.
                         </p>
-
                         {!departureTimeInFuture && (
                             <p
-                                className={
-                                    styles.fieldError
-                                }
+                                className={styles.fieldError}
                                 role="alert"
                             >
-                                Die Abfahrtszeit muss in
-                                der Zukunft liegen.
+                                Die Abfahrtszeit muss in der Zukunft
+                                liegen.
                             </p>
                         )}
-
                         {departureTimeInFuture &&
                             !departureTimeWithinForecast && (
                                 <p
-                                    className={
-                                        styles.fieldError
-                                    }
+                                    className={styles.fieldError}
                                     role="alert"
                                 >
-                                    Die Abfahrtszeit darf
-                                    maximal sieben Tage in
-                                    der Zukunft liegen.
+                                    Die Abfahrtszeit darf maximal sieben
+                                    Tage in der Zukunft liegen.
                                 </p>
                             )}
                     </div>
 
                     <button
                         type="button"
-                        className={
-                            styles.calculateButton
-                        }
+                        className={styles.calculateButton}
                         disabled={
                             !canCalculateRoute ||
                             routeCalculationIsRunning
                         }
-                        aria-busy={
-                            routeCalculationIsRunning
-                        }
-                        onClick={() => {
-                            void handleRouteCalculation()
-                        }}
+                        aria-busy={routeCalculationIsRunning}
+                        onClick={() => void handleRouteCalculation()}
                     >
                         {routeCalculationIsRunning
                             ? 'Route wird berechnet …'
@@ -1048,164 +786,114 @@ export default function RoutePlannerPage() {
 
                 {startRouteCalculationLoading && (
                     <div
-                        className={[
-                            styles.statusBanner,
+                        className={statusClass(
                             styles.statusBannerInfo,
-                        ].join(' ')}
+                        )}
                         role="status"
                         aria-live="polite"
                     >
-                        <span aria-hidden="true">
-                            ⏳
-                        </span>
-
+                        <span aria-hidden="true">⏳</span>
                         <span>
-                            Die Routenberechnung wird
-                            gestartet.
+                            Die Routenberechnung wird gestartet.
                         </span>
                     </div>
                 )}
-
                 {!startRouteCalculationLoading &&
-                    routeCalculation?.status ===
-                    'PENDING' && (
+                    routeCalculation?.status === 'PENDING' && (
                         <div
-                            className={[
-                                styles.statusBanner,
+                            className={statusClass(
                                 styles.statusBannerInfo,
-                            ].join(' ')}
+                            )}
                             role="status"
                             aria-live="polite"
                         >
-                            <span aria-hidden="true">
-                                🕒
-                            </span>
-
+                            <span aria-hidden="true">🕒</span>
                             <span>
-                                Die Routenberechnung wartet
-                                auf die Verarbeitung.
+                                Die Routenberechnung wartet auf die
+                                Verarbeitung.
                             </span>
                         </div>
                     )}
-
                 {!startRouteCalculationLoading &&
-                    routeCalculation?.status ===
-                    'PROCESSING' && (
+                    routeCalculation?.status === 'PROCESSING' && (
                         <div
-                            className={[
-                                styles.statusBanner,
+                            className={statusClass(
                                 styles.statusBannerInfo,
-                            ].join(' ')}
+                            )}
                             role="status"
                             aria-live="polite"
                         >
-                            <span aria-hidden="true">
-                                ⚙️
-                            </span>
-
+                            <span aria-hidden="true">⚙️</span>
                             <span>
-                                Die Route wird aktuell
-                                verarbeitet.
+                                Die Route wird aktuell verarbeitet.
                             </span>
                         </div>
                     )}
-
-                {routeCalculation?.status ===
-                    'COMPLETED' && (
-                        <div
-                            className={[
-                                styles.statusBanner,
-                                styles.statusBannerSuccess,
-                            ].join(' ')}
-                            role="status"
-                        >
-                        <span aria-hidden="true">
-                            ✅
+                {routeCalculation?.status === 'COMPLETED' && (
+                    <div
+                        className={statusClass(
+                            styles.statusBannerSuccess,
+                        )}
+                        role="status"
+                    >
+                        <span aria-hidden="true">✅</span>
+                        <span>
+                            Die Routenberechnung wurde erfolgreich
+                            abgeschlossen.
                         </span>
-
-                            <span>
-                            Die Routenberechnung wurde
-                            erfolgreich abgeschlossen.
-                        </span>
-                        </div>
-                    )}
-
-                {routeCalculation?.status ===
-                    'FAILED' && (
-                        <div
-                            className={[
-                                styles.statusBanner,
-                                styles.statusBannerError,
-                            ].join(' ')}
-                            role="alert"
-                        >
-                        <span aria-hidden="true">
-                            ⚠️
-                        </span>
-
-                            <span>
-                            {routeCalculation.error
-                                    ?.message ??
+                    </div>
+                )}
+                {routeCalculation?.status === 'FAILED' && (
+                    <div
+                        className={statusClass(
+                            styles.statusBannerError,
+                        )}
+                        role="alert"
+                    >
+                        <span aria-hidden="true">⚠️</span>
+                        <span>
+                            {routeCalculation.error?.message ??
                                 'Für diese Anfrage konnte keine Route berechnet werden.'}
                         </span>
-                        </div>
-                    )}
-
+                    </div>
+                )}
                 {routeCalculationError && (
                     <div
-                        className={[
-                            styles.statusBanner,
+                        className={statusClass(
                             styles.statusBannerError,
-                        ].join(' ')}
+                        )}
                         role="alert"
                     >
-                        <span aria-hidden="true">
-                            ⚠️
-                        </span>
-
-                        <span>
-                            {routeCalculationError}
-                        </span>
+                        <span aria-hidden="true">⚠️</span>
+                        <span>{routeCalculationError}</span>
                     </div>
                 )}
-
                 {startRouteCalculationGraphQlError && (
                     <div
-                        className={[
-                            styles.statusBanner,
+                        className={statusClass(
                             styles.statusBannerError,
-                        ].join(' ')}
+                        )}
                         role="alert"
                     >
-                        <span aria-hidden="true">
-                            ⚠️
-                        </span>
-
+                        <span aria-hidden="true">⚠️</span>
                         <span>
-                            Die Routenberechnung konnte
-                            wegen eines
-                            Kommunikationsfehlers nicht
-                            gestartet werden.
+                            Die Routenberechnung konnte wegen eines
+                            Kommunikationsfehlers nicht gestartet
+                            werden.
                         </span>
                     </div>
                 )}
-
                 {routeCalculationQueryError && (
                     <div
-                        className={[
-                            styles.statusBanner,
+                        className={statusClass(
                             styles.statusBannerError,
-                        ].join(' ')}
+                        )}
                         role="alert"
                     >
-                        <span aria-hidden="true">
-                            ⚠️
-                        </span>
-
+                        <span aria-hidden="true">⚠️</span>
                         <span>
-                            Der aktuelle Stand der
-                            Routenberechnung konnte nicht
-                            abgerufen werden.
+                            Der aktuelle Stand der Routenberechnung
+                            konnte nicht abgerufen werden.
                         </span>
                     </div>
                 )}
@@ -1217,8 +905,9 @@ export default function RoutePlannerPage() {
                     aria-labelledby="route-result-heading"
                 >
                     <div className={styles.resultsHeader}>
-                        <h2 id="route-result-heading">Routenergebnis</h2>
-
+                        <h2 id="route-result-heading">
+                            Routenergebnis
+                        </h2>
                         <button
                             type="button"
                             className={styles.exportButton}
@@ -1231,19 +920,10 @@ export default function RoutePlannerPage() {
 
                     <dl className={styles.statsGrid}>
                         <div className={styles.statCard}>
-                            <dt
-                                className={
-                                    styles.statLabel
-                                }
-                            >
+                            <dt className={styles.statLabel}>
                                 Distanz
                             </dt>
-
-                            <dd
-                                className={
-                                    styles.statValue
-                                }
-                            >
+                            <dd className={styles.statValue}>
                                 {completedRouteCalculation.distanceMeters !==
                                 null
                                     ? formatDistance(
@@ -1252,21 +932,11 @@ export default function RoutePlannerPage() {
                                     : 'Nicht verfügbar'}
                             </dd>
                         </div>
-
                         <div className={styles.statCard}>
-                            <dt
-                                className={
-                                    styles.statLabel
-                                }
-                            >
+                            <dt className={styles.statLabel}>
                                 Fahrtdauer
                             </dt>
-
-                            <dd
-                                className={
-                                    styles.statValue
-                                }
-                            >
+                            <dd className={styles.statValue}>
                                 {completedRouteCalculation.durationSeconds !==
                                 null
                                     ? formatDuration(
@@ -1275,21 +945,11 @@ export default function RoutePlannerPage() {
                                     : 'Nicht verfügbar'}
                             </dd>
                         </div>
-
                         <div className={styles.statCard}>
-                            <dt
-                                className={
-                                    styles.statLabel
-                                }
-                            >
+                            <dt className={styles.statLabel}>
                                 Ankunftszeit
                             </dt>
-
-                            <dd
-                                className={
-                                    styles.statValue
-                                }
-                            >
+                            <dd className={styles.statValue}>
                                 {completedRouteCalculation.arrivalTime
                                     ? formatArrivalTime(
                                         completedRouteCalculation.arrivalTime,
@@ -1297,27 +957,13 @@ export default function RoutePlannerPage() {
                                     : 'Nicht verfügbar'}
                             </dd>
                         </div>
-
                         {typeof completedRouteCalculation.weatherScore ===
                             'number' && (
-                                <div
-                                    className={
-                                        styles.statCard
-                                    }
-                                >
-                                    <dt
-                                        className={
-                                            styles.statLabel
-                                        }
-                                    >
+                                <div className={styles.statCard}>
+                                    <dt className={styles.statLabel}>
                                         Wetterscore
                                     </dt>
-
-                                    <dd
-                                        className={
-                                            styles.statValue
-                                        }
-                                    >
+                                    <dd className={styles.statValue}>
                                         {
                                             completedRouteCalculation.weatherScore
                                         }{' '}
@@ -1329,23 +975,16 @@ export default function RoutePlannerPage() {
 
                     {completedRouteCalculation.thunderstormCapApplied && (
                         <div
-                            className={[
-                                styles.statusBanner,
+                            className={statusClass(
                                 styles.statusBannerError,
-                            ].join(' ')}
+                            )}
                             role="status"
-                            style={{
-                                marginTop: '0.75rem',
-                            }}
+                            style={{ marginTop: '0.75rem' }}
                         >
-                            <span aria-hidden="true">
-                                ⚡
-                            </span>
-
+                            <span aria-hidden="true">⚡</span>
                             <span>
-                                Erhöhtes Gewitterrisiko
-                                auf der Route erkannt. Der
-                                Gesamtwetterscore wurde
+                                Erhöhtes Gewitterrisiko auf der Route
+                                erkannt. Der Gesamtwetterscore wurde
                                 auf maximal 50 begrenzt.
                             </span>
                         </div>
@@ -1359,17 +998,38 @@ export default function RoutePlannerPage() {
             >
                 <RouteMap
                     startPlace={selectedStart}
-                    destinationPlace={
-                        selectedDestination
-                    }
-                    routeSegments={
-                        coloredMapSegments
-                    }
+                    destinationPlace={selectedDestination}
+                    routeSegments={coloredMapSegments}
                     geometry={
-                        completedRouteCalculation
-                            ?.geometry ?? null
+                        completedRouteCalculation?.geometry ?? null
                     }
+                    weatherSegments={
+                        completedRouteCalculation?.weatherSegments ??
+                        undefined
+                    }
+                    hoveredSegmentIndex={hoveredSegmentIndex}
+                    onHoverSegment={setHoveredSegmentIndex}
                 />
+
+                {completedRouteCalculation?.weatherSegments &&
+                    completedRouteCalculation.weatherSegments.length >
+                    0 && (
+                        <MeteogramDock
+                            segments={
+                                completedRouteCalculation.weatherSegments
+                            }
+                            totalDistanceMeters={
+                                completedRouteCalculation.distanceMeters
+                            }
+                            hoveredSegmentIndex={
+                                hoveredSegmentIndex
+                            }
+                            onHoverSegment={
+                                setHoveredSegmentIndex
+                            }
+                            activityProfileCode={selectedProfile}
+                        />
+                    )}
             </section>
 
             {completedRouteCalculation && (
@@ -1379,7 +1039,7 @@ export default function RoutePlannerPage() {
                 >
                     <h2
                         id="save-route-heading"
-                        style={{margin: '0 0 1rem'}}
+                        style={{ margin: '0 0 1rem' }}
                     >
                         Route speichern
                     </h2>
@@ -1411,6 +1071,6 @@ export default function RoutePlannerPage() {
                     )}
                 </section>
             )}
-        </div>
+        </main>
     )
 }

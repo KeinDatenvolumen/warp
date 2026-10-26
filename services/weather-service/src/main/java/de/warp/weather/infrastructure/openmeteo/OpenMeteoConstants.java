@@ -34,6 +34,7 @@ final class OpenMeteoConstants {
             "uv_index",
             "uv_index_clear_sky",
             "shortwave_radiation",
+            "shortwave_radiation_instant",
             "direct_radiation",
             "diffuse_radiation",
             "sunshine_duration",
@@ -47,12 +48,32 @@ final class OpenMeteoConstants {
             "vapour_pressure_deficit",
             "evapotranspiration",
             "soil_temperature_0cm",
+            "soil_temperature_0_to_7cm",
 
             "weather_code"
     );
 
+    static final List<String> MINUTELY_15_VARIABLES = List.of(
+            "temperature_2m",
+            "apparent_temperature",
+            "relative_humidity_2m",
+            "dew_point_2m",
+            "shortwave_radiation_instant",
+            "precipitation",
+            "snowfall",
+            "wind_speed_10m",
+            "wind_direction_10m",
+            "wind_gusts_10m",
+            "weather_code",
+            "visibility",
+            "cape"
+    );
+
     static final String HOURLY_PARAMETER =
             String.join(",", HOURLY_VARIABLES);
+
+    static final String MINUTELY_15_PARAMETER =
+            String.join(",", MINUTELY_15_VARIABLES);
 
     private OpenMeteoConstants() {
     }

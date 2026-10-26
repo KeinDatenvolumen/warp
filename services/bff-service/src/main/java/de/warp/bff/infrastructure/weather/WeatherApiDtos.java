@@ -53,20 +53,84 @@ public final class WeatherApiDtos {
             Instant expectedArrivalTime,
             int score,
             String color,
+            String limitingFactor,
+            String reasonLabel,
             WeatherConditionResponse weather,
             GeoJsonLineStringResponse geometry
     ) {
+        public WeatherSegmentResponse(
+                int segmentIndex,
+                int distanceFromStartMeters,
+                Instant expectedArrivalTime,
+                int score,
+                String color,
+                WeatherConditionResponse weather,
+                GeoJsonLineStringResponse geometry
+        ) {
+            this(
+                    segmentIndex,
+                    distanceFromStartMeters,
+                    expectedArrivalTime,
+                    score,
+                    color,
+                    null,
+                    null,
+                    weather,
+                    geometry
+            );
+        }
     }
 
     public record WeatherConditionResponse(
             Double windSpeedKmh,
             Double windDirectionDegrees,
+            Double windGustsKmh,
             Double precipitationProbabilityPercent,
             Double precipitationMm,
+            Double wetRoadIndex,
+            Double snowfallCm,
             Double thunderstormProbabilityPercent,
             Double temperatureCelsius,
+            Double apparentTemperatureCelsius,
+            Double relativeHumidityPercent,
+            Double dewPointCelsius,
+            Double shortwaveRadiationWm2,
+            Double soilTemperatureCelsius,
+            Double visibilityMeters,
+            Double capeJkg,
+            Double uvIndex,
             Integer weatherCode
     ) {
+        public WeatherConditionResponse(
+                Double windSpeedKmh,
+                Double windDirectionDegrees,
+                Double precipitationProbabilityPercent,
+                Double precipitationMm,
+                Double thunderstormProbabilityPercent,
+                Double temperatureCelsius,
+                Integer weatherCode
+        ) {
+            this(
+                    windSpeedKmh,
+                    windDirectionDegrees,
+                    null,
+                    precipitationProbabilityPercent,
+                    precipitationMm,
+                    null,
+                    null,
+                    thunderstormProbabilityPercent,
+                    temperatureCelsius,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    weatherCode
+            );
+        }
     }
 
     public record GeoJsonLineStringResponse(

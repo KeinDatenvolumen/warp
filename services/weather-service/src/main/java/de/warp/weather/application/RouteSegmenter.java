@@ -74,6 +74,11 @@ public class RouteSegmenter {
                     ? effectiveTotalDistanceMeters
                     : Math.min(effectiveTotalDistanceMeters, (index + 1) * intervalMeters);
 
+            double segmentLengthMeters = Math.max(0.0, routeEndMeters - routeStartMeters);
+            double segmentDurationSeconds = effectiveTotalDistanceMeters > 0.0
+                    ? (segmentLengthMeters / effectiveTotalDistanceMeters) * totalDurationSeconds
+                    : (totalDurationSeconds / segmentCount);
+
             double startDist = routeStartMeters * scaleToPolyline;
             double endDist = (index == segmentCount - 1)
                     ? polylineDistanceMeters
@@ -118,7 +123,9 @@ public class RouteSegmenter {
                     waypointLonLat.get(1),
                     waypointLonLat.get(0),
                     bearingDegrees,
-                    segmentGeometry
+                    segmentGeometry,
+                    segmentLengthMeters,
+                    segmentDurationSeconds
             ));
         }
 
@@ -252,7 +259,37 @@ public class RouteSegmenter {
             double waypointLatitude,
             double waypointLongitude,
             double movementBearingDegrees,
-            List<List<Double>> geometryCoordinates
+            List<List<Double>> geometryCoordinates,
+            double segmentLengthMeters,
+            double segmentDurationSeconds
     ) {
+        public PlannedRouteSegment(
+                int segmentIndex,
+                int distanceFromStartMeters,
+                Instant expectedArrivalTime,
+                double waypointLatitude,
+                double waypointLongitude,
+                double movementBearingDegrees,
+                List<List<Double>> geometryCoordinates
+        ) {
+            this(
+                    segmentIndex,
+                    distanceFromStartMeters,
+                    expectedArrivalTime,
+                    waypointLatitude,
+                    waypointLongitude,
+                    movementBearingDegrees,
+                    geometryCoordinates,
+                    0.0,
+                    0.0
+            );
+        }
+
+        public double segmentSpeedKmh(double fallbackSpeedKmh) {
+            if (segmentLengthMeters > 0.0 && segmentDurationSeconds > 0.0) {
+                return (segmentLengthMeters / segmentDurationSeconds) * 3.6;
+            }
+            return fallbackSpeedKmh;
+        }
     }
 }

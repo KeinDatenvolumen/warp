@@ -20,6 +20,31 @@ public record OpenMeteoForecastResponse(
         @JsonProperty("timezone_abbreviation")
         String timezoneAbbreviation,
 
-        OpenMeteoHourlyResponse hourly
+        OpenMeteoHourlyResponse hourly,
+
+        @JsonProperty("minutely_15")
+        OpenMeteoHourlyResponse minutely15
 ) {
+    public OpenMeteoForecastResponse(
+            Double latitude,
+            Double longitude,
+            Double elevation,
+            Double generationTimeMilliseconds,
+            Integer utcOffsetSeconds,
+            String timezone,
+            String timezoneAbbreviation,
+            OpenMeteoHourlyResponse hourly
+    ) {
+        this(
+                latitude,
+                longitude,
+                elevation,
+                generationTimeMilliseconds,
+                utcOffsetSeconds,
+                timezone,
+                timezoneAbbreviation,
+                hourly,
+                null
+        );
+    }
 }

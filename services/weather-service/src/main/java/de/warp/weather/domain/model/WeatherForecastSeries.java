@@ -8,7 +8,8 @@ public record WeatherForecastSeries(
         double resolvedLatitude,
         double resolvedLongitude,
         double elevationMeters,
-        List<WeatherForecastTimeStep> hourly
+        List<WeatherForecastTimeStep> hourly,
+        List<WeatherForecastTimeStep> minutely15
 ) {
 
     public WeatherForecastSeries {
@@ -16,5 +17,16 @@ public record WeatherForecastSeries(
         hourly = List.copyOf(
                 Objects.requireNonNull(hourly, "hourly must not be null")
         );
+        minutely15 = minutely15 == null ? List.of() : List.copyOf(minutely15);
+    }
+
+    public WeatherForecastSeries(
+            WeatherModel model,
+            double resolvedLatitude,
+            double resolvedLongitude,
+            double elevationMeters,
+            List<WeatherForecastTimeStep> hourly
+    ) {
+        this(model, resolvedLatitude, resolvedLongitude, elevationMeters, hourly, List.of());
     }
 }

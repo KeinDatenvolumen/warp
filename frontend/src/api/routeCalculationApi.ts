@@ -70,14 +70,21 @@ export const ROUTE_CALCULATION_QUERY: TypedDocumentNode<
                 expectedArrivalTime
                 score
                 color
+                limitingFactor
+                reasonLabel
                 weather {
                     windSpeedKmh
                     windDirectionDegrees
+                    windGustsKmh
                     precipitationProbabilityPercent
                     precipitationMm
+                    wetRoadIndex
                     thunderstormProbabilityPercent
                     temperatureCelsius
+                    apparentTemperatureCelsius
                     weatherCode
+                    limitingFactor
+                    reasonLabel
                 }
                 geometry {
                     type

@@ -127,6 +127,8 @@ public record RouteCalculationResult(
             Instant expectedArrivalTime,
             int score,
             String color,
+            String limitingFactor,
+            String reasonLabel,
             WeatherConditionSnapshot weather,
             List<List<Double>> geometryCoordinates
     ) {
@@ -135,10 +137,13 @@ public record RouteCalculationResult(
     public record WeatherConditionSnapshot(
             Double windSpeedKmh,
             Double windDirectionDegrees,
+            Double windGustsKmh,
             Double precipitationProbabilityPercent,
             Double precipitationMm,
+            Double wetRoadIndex,
             Double thunderstormProbabilityPercent,
             Double temperatureCelsius,
+            Double apparentTemperatureCelsius,
             Integer weatherCode
     ) {
     }

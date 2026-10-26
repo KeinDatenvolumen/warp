@@ -32,7 +32,7 @@ warp:
     cache:
       ttl: ${WEATHER_CACHE_TTL:60m}
     scoring:
-      score-version: ${WEATHER_SCORE_VERSION:1.0}
+      score-version: ${WEATHER_SCORE_VERSION:2.0}
       wind-weight: ${WEATHER_WIND_WEIGHT:0.30}
       precipitation-weight: ${WEATHER_PRECIPITATION_WEIGHT:0.45}
       thunderstorm-weight: ${WEATHER_THUNDERSTORM_WEIGHT:0.25}

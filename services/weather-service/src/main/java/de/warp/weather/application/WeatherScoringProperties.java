@@ -14,7 +14,7 @@ public record WeatherScoringProperties(
 
     public WeatherScoringProperties {
         if (scoreVersion == null || scoreVersion.isBlank()) {
-            scoreVersion = "1.0";
+            scoreVersion = "2.0";
         }
         if (windWeight <= 0.0 && precipitationWeight <= 0.0 && thunderstormWeight <= 0.0) {
             windWeight = 0.30;
@@ -31,7 +31,7 @@ public record WeatherScoringProperties(
 
     public static WeatherScoringProperties defaults() {
         return new WeatherScoringProperties(
-                "1.0",
+                "2.0",
                 0.30,
                 0.45,
                 0.25,

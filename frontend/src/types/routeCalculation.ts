@@ -41,11 +41,16 @@ export interface RouteGeometry {
 export interface SegmentWeather {
     windSpeedKmh: number | null
     windDirectionDegrees: number | null
+    windGustsKmh?: number | null
     precipitationProbabilityPercent: number | null
     precipitationMm: number | null
+    wetRoadIndex?: number | null
     thunderstormProbabilityPercent: number | null
     temperatureCelsius?: number | null
+    apparentTemperatureCelsius?: number | null
     weatherCode?: number | null
+    limitingFactor?: string | null
+    reasonLabel?: string | null
 }
 
 export interface RouteWeatherSegment {
@@ -54,6 +59,8 @@ export interface RouteWeatherSegment {
     expectedArrivalTime: string
     score: number
     color: string
+    limitingFactor?: string | null
+    reasonLabel?: string | null
     weather?: SegmentWeather | null
     geometry?: RouteGeometry | null
 }

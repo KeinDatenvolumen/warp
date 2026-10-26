@@ -1,0 +1,288 @@
+.dockContainer {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+    font-family: inherit;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    user-select: none;
+}
+
+.dockCollapsed {
+    max-height: 44px;
+}
+
+.dockExpanded {
+    max-height: 280px;
+}
+
+.dockHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8125rem;
+    gap: 12px;
+}
+
+.dockTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+}
+
+.badgeLive {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    background: rgba(14, 165, 233, 0.2);
+    border: 1px solid rgba(14, 165, 233, 0.4);
+    color: #38bdf8;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.pulseDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
+    animation: pulse 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.hoverInfoBadge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.775rem;
+    color: #cbd5e1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scorePill {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #0f172a;
+}
+
+.reasonHighlight {
+    color: #fca5a5;
+    font-weight: 600;
+}
+
+.toggleButton {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s;
+}
+
+.toggleButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.dockBody {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    gap: 6px;
+}
+
+/* SVG Chart */
+.chartWrapper {
+    position: relative;
+    width: 100%;
+    height: 90px;
+}
+
+.svgChart {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+.thresholdLine {
+    stroke: rgba(242, 100, 25, 0.65);
+    stroke-dasharray: 4 3;
+    stroke-width: 1.2;
+}
+
+.thresholdLabel {
+    fill: #f26419;
+    font-size: 9px;
+    font-weight: 700;
+    text-anchor: end;
+}
+
+/* Lane 2: Rain & Road */
+.laneRainRoad {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.725rem;
+    color: #94a3b8;
+    height: 22px;
+}
+
+.laneLabel {
+    width: 72px;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.laneSegmentsRow {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+    height: 100%;
+}
+
+.rainSegmentCol {
+    flex: 1;
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.rainSegmentCol:hover,
+.rainSegmentColActive {
+    background: rgba(255, 255, 255, 0.1);
+    outline: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.rainBarFill {
+    position: absolute;
+    bottom: 3px;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, #0284c7, #38bdf8);
+    border-radius: 2px 2px 0 0;
+}
+
+.roadWetnessStrip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #334155;
+}
+
+.roadWetnessActive {
+    background: #f59e0b;
+    box-shadow: 0 0 4px #f59e0b;
+}
+
+/* Lane 3: Wind */
+.laneWind {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.725rem;
+    color: #94a3b8;
+    height: 24px;
+}
+
+.windCol {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+    padding: 2px 0;
+    cursor: pointer;
+}
+
+.windCol:hover,
+.windColActive {
+    background: rgba(255, 255, 255, 0.1);
+    outline: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.windArrow {
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.windSpeedText {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+/* Legend / Footer */
+.dockFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 4px;
+    font-size: 0.675rem;
+    color: #64748b;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legendList {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legendDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
