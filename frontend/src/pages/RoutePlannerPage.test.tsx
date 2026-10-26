@@ -57,7 +57,25 @@ describe('RoutePlannerPage', () => {
             vi.fn().mockResolvedValue({data: {searchPlaces: []}}),
             {loading: false, error: undefined}
         ])
-        useMutationMock.mockReturnValue([vi.fn(), {loading: false}])
+        const startCalculationMock = vi.fn().mockResolvedValue({
+            data: {
+                startRouteCalculation: {
+                    calculation: {
+                        id: 'calc_test_123',
+                        status: 'COMPLETED',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [9.15, 49.35],
+                                [9.77, 49.49],
+                            ],
+                        },
+                    },
+                    errors: [],
+                },
+            },
+        })
+        useMutationMock.mockReturnValue([startCalculationMock, {loading: false}])
         useAuthMock.mockReturnValue({isAuthenticated: true})
         window.localStorage.clear()
     })

@@ -4,13 +4,19 @@ import {
     useState,
     type ChangeEvent,
 } from 'react'
-import { useLazyQuery } from '@apollo/client/react'
+import { useLazyQuery, useMutation } from '@apollo/client/react'
 
 import {Link} from 'react-router'
 import {useAuth} from '../features/auth/useAuth'
 import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
+import {toLatLngPositions} from '../features/saved-routes/routeGeometry'
 import type {CalculatedRouteReference} from '../types/savedRoute'
+import type {LatLng} from '../types/routeMap'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
+import {
+    START_ROUTE_CALCULATION_MUTATION,
+    GET_ROUTE_CALCULATION_QUERY,
+} from '../api/routeCalculationApi'
 import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
 import type { ActivityProfileCode } from '../types/activityProfile'
@@ -54,6 +60,12 @@ export default function RoutePlannerPage() {
     const {isAuthenticated} = useAuth()
     const [currentCalculation, setCurrentCalculation] =
         useState<CalculatedRouteReference | null>(null)
+    const [routeGeometryPositions, setRouteGeometryPositions] =
+        useState<LatLng[] | null>(null)
+
+    const [startRouteCalculation, { loading: calculatingRoute }] =
+        useMutation(START_ROUTE_CALCULATION_MUTATION)
+    const [getRouteCalculation] = useLazyQuery(GET_ROUTE_CALCULATION_QUERY)
 
     const [startInput, setStartInput] = useState('')
     const [destinationInput, setDestinationInput] = useState('')
@@ -220,6 +232,7 @@ export default function RoutePlannerPage() {
 
     useEffect(() => {
         setCurrentCalculation(null)
+        setRouteGeometryPositions(null)
     }, [selectedStart, selectedDestination, selectedProfile])
 
     function handleStartInputChange(
@@ -254,17 +267,67 @@ export default function RoutePlannerPage() {
         setLastCompletedDestinationQuery(null)
     }
 
-    function handleRouteCalculation() {
-        if (!selectedProfile || !routeCoordinates) {
+    async function handleRouteCalculation() {
+        if (!selectedProfile || !selectedStart || !selectedDestination) {
             return
         }
 
-        const routeRequest = {
-            activityProfile: selectedProfile,
-            ...routeCoordinates,
+        if (isAuthenticated) {
+            try {
+                const result = await startRouteCalculation({
+                    variables: {
+                        input: {
+                            start: {
+                                label: selectedStart.displayName,
+                                latitude: selectedStart.latitude,
+                                longitude: selectedStart.longitude,
+                            },
+                            destination: {
+                                label: selectedDestination.displayName,
+                                latitude: selectedDestination.latitude,
+                                longitude: selectedDestination.longitude,
+                            },
+                            departureTime: new Date().toISOString(),
+                            activityProfile: selectedProfile,
+                        },
+                    },
+                })
+
+                const calculation =
+                    result?.data?.startRouteCalculation?.calculation
+                if (calculation?.id) {
+                    const calcId = calculation.id
+                    setCurrentCalculation({
+                        routeCalculationId: calcId,
+                        weatherEvaluationId: 'weather_' + Date.now(),
+                    })
+
+                    if (calculation.geometry?.coordinates) {
+                        setRouteGeometryPositions(
+                            toLatLngPositions(calculation.geometry.coordinates),
+                        )
+                    } else {
+                        window.setTimeout(() => {
+                            void getRouteCalculation({
+                                variables: { id: calcId },
+                            }).then((queryResult) => {
+                                const geom =
+                                    queryResult.data?.routeCalculation?.geometry
+                                if (geom?.coordinates) {
+                                    setRouteGeometryPositions(
+                                        toLatLngPositions(geom.coordinates),
+                                    )
+                                }
+                            })
+                        }, 800)
+                    }
+                    return
+                }
+            } catch (err) {
+                console.warn('Backend route calculation failed, fallback used', err)
+            }
         }
 
-        console.info('Route calculation requested', routeRequest)
         setCurrentCalculation({
             routeCalculationId: 'calc_' + Date.now(),
             weatherEvaluationId: 'weather_' + Date.now(),
@@ -473,10 +536,10 @@ export default function RoutePlannerPage() {
 
                 <button
                     type="button"
-                    disabled={!canCalculateRoute}
-                    onClick={handleRouteCalculation}
+                    disabled={!canCalculateRoute || calculatingRoute}
+                    onClick={() => void handleRouteCalculation()}
                 >
-                    Route berechnen
+                    {calculatingRoute ? 'Route wird berechnet …' : 'Route berechnen'}
                 </button>
             </section>
 
@@ -488,10 +551,20 @@ export default function RoutePlannerPage() {
                         currentCalculation && selectedStart && selectedDestination
                             ? [
                                   {
-                                      positions: [
-                                          [selectedStart.latitude, selectedStart.longitude],
-                                          [selectedDestination.latitude, selectedDestination.longitude],
-                                      ],
+                                      positions:
+                                          routeGeometryPositions &&
+                                          routeGeometryPositions.length >= 2
+                                              ? routeGeometryPositions
+                                              : [
+                                                    [
+                                                        selectedStart.latitude,
+                                                        selectedStart.longitude,
+                                                    ],
+                                                    [
+                                                        selectedDestination.latitude,
+                                                        selectedDestination.longitude,
+                                                    ],
+                                                ],
                                       color: '#4263eb',
                                   },
                               ]
