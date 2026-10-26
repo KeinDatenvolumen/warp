@@ -1,0 +1,77 @@
+openapi: 3.1.0
+info:
+  title: WaRP BFF – Kontoänderungen
+  version: 1.0.0
+  description: >
+    Öffentlicher REST-Vertrag für Änderungen am eigenen Benutzerkonto.
+    Alle Endpunkte benötigen das Session-Cookie und den CSRF-Token.
+    Der Name ist nicht änderbar. Lesen der Kontodaten erfolgt über die
+    GraphQL-Query currentUser.
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /api/v1/users/me/password-changes:
+    post:
+      summary: Eigenes Passwort ändern
+      operationId: changeOwnPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Passwort wurde geändert
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD (aktuelles Passwort falsch)
+        '422':
+          description: PASSWORD_REQUIREMENTS_NOT_MET oder INVALID_ACCOUNT_CHANGE_REQUEST
+        '503':
+          description: DOWNSTREAM_SERVICE_UNAVAILABLE
+
+  /api/v1/users/me/email-changes:
+    post:
+      summary: Eigene E-Mail-Adresse ändern
+      operationId: changeOwnEmail
+      description: >
+        Setzt emailVerified auf false und versendet eine Bestätigungs-E-Mail
+        an die neue Adresse. Bis zur Bestätigung sind Routenberechnung und
+        Speichern gesperrt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse wurde geändert
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD
+        '409':
+          description: EMAIL_ALREADY_EXISTS
+        '422':
+          description: INVALID_ACCOUNT_CHANGE_REQUEST (INVALID_EMAIL, EMAIL_UNCHANGED)
+        '503':
+          description: DOWNSTREAM_SERVICE_UNAVAILABLE
+
+components:
+  schemas:
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 12 }
+    ChangeEmailRequest:
+      type: object
+      required: [newEmail, password]
+      properties:
+        newEmail: { type: string }
+        password: { type: string }

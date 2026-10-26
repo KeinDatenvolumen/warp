@@ -21,6 +21,13 @@ type Query {
     wird der Fehler SESSION_INVALID zurückgegeben.
     """
     currentSession: CurrentSession!
+
+    """
+    Liefert die Kontodaten des angemeldeten Benutzers.
+    Fehlt die Sitzung, wird SESSION_INVALID zurückgegeben.
+    """
+    currentUser: User
+
     """
     Liefert alle zentral konfigurierten Aktivitätsprofile.
     Die Profilparameter sind für Endbenutzer nicht veränderbar.
@@ -422,4 +429,15 @@ type SaveRoutePayload {
 type DeleteSavedRoutePayload {
     deletedRouteId: ID
     errors: [UserError!]!
+}
+
+"""
+Kontodaten des angemeldeten Benutzers. Der Name ist nicht änderbar.
+"""
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    emailVerified: Boolean!
+    createdAt: DateTime!
 }
