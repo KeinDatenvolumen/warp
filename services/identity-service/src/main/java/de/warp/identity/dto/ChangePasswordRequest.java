@@ -1,0 +1,7 @@
+package de.warp.identity.dto;
+
+public record ChangePasswordRequest(
+        String currentPassword,
+        String newPassword
+) {
+}
