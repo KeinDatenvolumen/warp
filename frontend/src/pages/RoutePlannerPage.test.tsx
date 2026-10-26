@@ -55,8 +55,17 @@ describe('RoutePlannerPage', () => {
     let startPollingMock: ReturnType<typeof vi.fn>
 
     beforeEach(() => {
-        stopPollingMock = vi.fn()
-        startPollingMock = vi.fn()
+        let queryExecuted = false
+        stopPollingMock = vi.fn().mockImplementation(() => {
+            if (!queryExecuted) {
+                throw new Error("useLazyQuery: 'stopPolling' cannot be called before executing the query.")
+            }
+        })
+        startPollingMock = vi.fn().mockImplementation(() => {
+            if (!queryExecuted) {
+                throw new Error("useLazyQuery: 'startPolling' cannot be called before executing the query.")
+            }
+        })
 
         useQueryMock.mockReturnValue({
             data: { activityProfiles: profiles },
@@ -149,7 +158,10 @@ describe('RoutePlannerPage', () => {
             stopPolling: stopPollingMock,
         }
 
-        const loadCalculationMock = vi.fn().mockResolvedValue({ data: calculationData })
+        const loadCalculationMock = vi.fn().mockImplementation(() => {
+            queryExecuted = true
+            return Promise.resolve({ data: calculationData })
+        })
 
         useLazyQueryMock.mockImplementation((query) => {
             if (query === ROUTE_CALCULATION_QUERY) {
@@ -164,6 +176,8 @@ describe('RoutePlannerPage', () => {
 
     it('deaktiviert die Routenberechnung wenn Start oder Ziel fehlen', () => {
         renderPage()
+
+        expect(stopPollingMock).not.toHaveBeenCalled()
 
         const calculateButton = screen.getByRole('button', {
             name: 'Route berechnen',

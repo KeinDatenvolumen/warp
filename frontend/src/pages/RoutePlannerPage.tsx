@@ -172,6 +172,19 @@ export default function RoutePlannerPage() {
 
     const stopPollingRef = useRef(stopPolling)
     stopPollingRef.current = stopPolling
+    const isPollingRef = useRef(false)
+
+    function stopPollingSafely() {
+        if (!isPollingRef.current) {
+            return
+        }
+        isPollingRef.current = false
+        try {
+            stopPollingRef.current?.()
+        } catch {
+            // Apollo Client wirft einen Fehler, wenn stopPolling vor Ausführung der Query aufgerufen wird
+        }
+    }
 
     const routeCalculationIsRunning =
         startRouteCalculationLoading ||
@@ -300,7 +313,7 @@ export default function RoutePlannerPage() {
             calculation.status === 'COMPLETED' ||
             calculation.status === 'FAILED'
         ) {
-            stopPollingRef.current?.()
+            stopPollingSafely()
         }
     }, [
         currentCalculationId,
@@ -309,13 +322,13 @@ export default function RoutePlannerPage() {
 
     useEffect(() => {
         return () => {
-            stopPollingRef.current?.()
+            stopPollingSafely()
         }
     }, [])
 
     // Wenn Eingaben geändert werden, vorherige Berechnung und Geometrie zurücksetzen
     useEffect(() => {
-        stopPollingRef.current?.()
+        stopPollingSafely()
         setCurrentCalculationId((prev) => (prev === null ? prev : null))
         setRouteCalculation((prev) => (prev === null ? prev : null))
         setRouteCalculationError((prev) => (prev === null ? prev : null))
@@ -365,7 +378,7 @@ export default function RoutePlannerPage() {
             return
         }
 
-        stopPollingRef.current?.()
+        stopPollingSafely()
         setRouteCalculationError(null)
         setRouteCalculation(null)
 
@@ -420,7 +433,12 @@ export default function RoutePlannerPage() {
             })
 
             if (payload.calculation.status !== 'COMPLETED' && payload.calculation.status !== 'FAILED') {
-                startPolling(ROUTE_CALCULATION_POLL_INTERVAL_MS)
+                try {
+                    isPollingRef.current = true
+                    startPolling(ROUTE_CALCULATION_POLL_INTERVAL_MS)
+                } catch {
+                    isPollingRef.current = false
+                }
             }
         } catch {
             setRouteCalculationError(
