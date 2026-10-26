@@ -214,6 +214,12 @@ export default function LoginPage() {
                         )}
                     </div>
 
+                    <div className={styles.forgotPasswordLink}>
+                        <Link to="/forgot-password">
+                            Passwort vergessen?
+                        </Link>
+                    </div>
+
                     <button
                         type="submit"
                         className={styles.button}

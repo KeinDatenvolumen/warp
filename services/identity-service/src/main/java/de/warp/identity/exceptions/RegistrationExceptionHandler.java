@@ -142,6 +142,36 @@ public class RegistrationExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidPasswordResetToken(
+            InvalidPasswordResetTokenException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.BAD_REQUEST,
+                "invalid-reset-token",
+                "INVALID_RESET_TOKEN",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(PasswordRequirementsNotMetException.class)
+    public ResponseEntity<ApiErrorResponse> handlePasswordRequirementsNotMet(
+            PasswordRequirementsNotMetException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "password-requirements-not-met",
+                "PASSWORD_REQUIREMENTS_NOT_MET",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,

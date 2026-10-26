@@ -111,6 +111,26 @@
     cursor: wait;
 }
 
+.forgotPasswordLink {
+    margin-top: var(--spacing-medium);
+    text-align: right;
+}
+
+.forgotPasswordLink a {
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.forgotPasswordLink a:hover {
+    color: var(--color-primary-dark);
+}
+
+.forgotPasswordLink a:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 0.2rem;
+}
+
 .registrationPrompt {
     margin: var(--spacing-large) 0 0;
     color: var(--color-text-muted);

@@ -6,21 +6,53 @@ import ProfilePage from '../pages/ProfilePage'
 import RoutePlannerPage from '../pages/RoutePlannerPage'
 import SavedRoutesPage from '../pages/SavedRoutesPage'
 import SavedRouteDetailPage from '../pages/SavedRouteDetailPage'
-import {SystemStatusPage} from "../pages/SystemStatusPage";
-import {NotFoundPage} from "../pages/NotFoundPage";
+import {SystemStatusPage} from '../pages/SystemStatusPage'
+import {NotFoundPage} from '../pages/NotFoundPage'
 import ProtectedRoute from '../components/routing/ProtectedRoute'
 import RegistrationPage from '../pages/RegistrationPage'
 import EmailVerificationPage from '../pages/EmailVerificationPage'
+import ForgotPasswordPage from '../pages/ForgotPasswordPage'
+import ResetPasswordPage from '../pages/ResetPasswordPage'
 
 export default function AppRoutes() {
     return (
         <Routes>
             <Route element={<AppLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegistrationPage />} />
-                <Route path="/verify-email" element={<EmailVerificationPage />} />
-                <Route path="/route-planner" element={<RoutePlannerPage />} />
+                <Route
+                    path="/"
+                    element={<HomePage />}
+                />
+
+                <Route
+                    path="/login"
+                    element={<LoginPage />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<RegistrationPage />}
+                />
+
+                <Route
+                    path="/verify-email"
+                    element={<EmailVerificationPage />}
+                />
+
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
+
+                <Route
+                    path="/reset-password"
+                    element={<ResetPasswordPage />}
+                />
+
+                <Route
+                    path="/route-planner"
+                    element={<RoutePlannerPage />}
+                />
+
                 <Route
                     path="/profile"
                     element={
@@ -29,6 +61,7 @@ export default function AppRoutes() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
                     path="/saved-routes"
                     element={
@@ -37,8 +70,7 @@ export default function AppRoutes() {
                         </ProtectedRoute>
                     }
                 />
-                <Route path="/system-status" element={<SystemStatusPage />} />
-                <Route path="*" element={<NotFoundPage />} />
+
                 <Route
                     path="/saved-routes/:routeId"
                     element={
@@ -46,6 +78,16 @@ export default function AppRoutes() {
                             <SavedRouteDetailPage />
                         </ProtectedRoute>
                     }
+                />
+
+                <Route
+                    path="/system-status"
+                    element={<SystemStatusPage />}
+                />
+
+                <Route
+                    path="*"
+                    element={<NotFoundPage />}
                 />
             </Route>
         </Routes>
