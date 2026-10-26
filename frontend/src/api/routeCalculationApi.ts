@@ -1,17 +1,25 @@
-import { gql } from '@apollo/client'
+import {
+    gql,
+    type TypedDocumentNode,
+} from '@apollo/client'
+import type {
+    RouteCalculationQueryData,
+    RouteCalculationQueryVariables,
+    StartRouteCalculationMutationData,
+    StartRouteCalculationMutationVariables,
+} from '../types/routeCalculation'
 
-export const START_ROUTE_CALCULATION_MUTATION = gql`
-    mutation StartRouteCalculation($input: RouteCalculationInput!) {
+export const START_ROUTE_CALCULATION_MUTATION: TypedDocumentNode<
+    StartRouteCalculationMutationData,
+    StartRouteCalculationMutationVariables
+> = gql`
+    mutation StartRouteCalculation(
+        $input: RouteCalculationInput!
+    ) {
         startRouteCalculation(input: $input) {
             calculation {
                 id
                 status
-                distanceMeters
-                durationSeconds
-                geometry {
-                    type
-                    coordinates
-                }
             }
             errors {
                 field
@@ -22,16 +30,40 @@ export const START_ROUTE_CALCULATION_MUTATION = gql`
     }
 `
 
-export const GET_ROUTE_CALCULATION_QUERY = gql`
-    query GetRouteCalculation($id: ID!) {
+export const ROUTE_CALCULATION_QUERY: TypedDocumentNode<
+    RouteCalculationQueryData,
+    RouteCalculationQueryVariables
+> = gql`
+    query RouteCalculation($id: ID!) {
         routeCalculation(id: $id) {
             id
             status
+            start {
+                label
+                latitude
+                longitude
+            }
+            destination {
+                label
+                latitude
+                longitude
+            }
+            activityProfile {
+                code
+                displayName
+            }
+            departureTime
+            arrivalTime
             distanceMeters
             durationSeconds
             geometry {
                 type
                 coordinates
+            }
+            createdAt
+            error {
+                code
+                message
             }
         }
     }
