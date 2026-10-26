@@ -34,7 +34,7 @@ spring:
 
 warp:
   security:
-    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN}
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN:local_internal_service_token_change_me}
   session:
     duration: ${SESSION_DURATION:PT12H}
   mail:

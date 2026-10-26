@@ -152,4 +152,34 @@ public class HttpClientConfiguration {
 
         return normalizedValue;
     }
+
+    @Bean
+    RestClient storageRestClient(
+            @Value("${warp.services.storage.url}")
+            String storageServiceUrl,
+            @Value("${warp.storage.connect-timeout:2s}")
+            Duration connectTimeout,
+            @Value("${warp.storage.read-timeout:5s}")
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(connectTimeout)
+                .build();
+
+        JdkClientHttpRequestFactory requestFactory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        requestFactory.setReadTimeout(readTimeout);
+
+        return RestClient.builder()
+                .baseUrl(storageServiceUrl)
+                .requestFactory(requestFactory)
+                .requestInterceptor(correlationIdInterceptor)
+                .requestInterceptor(serviceAuthenticationInterceptor)
+                .build();
+    }
 }

@@ -244,7 +244,20 @@ Meldet das Backend bei einer GraphQL-Operation `SESSION_INVALID`, wechselt der S
 
 `POST /api/v1/sessions` und `POST /api/v1/users` sind von CSRF ausgenommen. Für alle anderen zustandsverändernden REST-Requests (derzeit `DELETE /api/v1/sessions/current`) lädt `src/api/restClient.ts` den Token über `GET /api/v1/csrf`, hält ihn nur im Arbeitsspeicher und sendet ihn im vom BFF genannten Header (`X-XSRF-TOKEN`). Bei einem `403` wird der Token einmal erneuert und der Request wiederholt.
 
-> GraphQL-Mutationen benötigen ebenfalls den CSRF-Token. Sobald die erste Mutation im Frontend verwendet wird, muss dafür ein Apollo-Link ergänzt werden, der `getCsrfToken` aus dem REST-Client nutzt.
+GraphQL-Mutationen benötigen ebenfalls den CSRF-Token. Der Apollo-Link `src/api/csrfLink.ts` lädt ihn über `getCsrfToken` aus dem REST-Client, sendet ihn nur bei Mutationen (Queries bleiben unverändert) und wiederholt bei einem `403` einmal mit erneuertem Token.
+
+### Gespeicherte Routen
+
+| Pfad | Seite | Zugriff |
+|---|---|---|
+| `/saved-routes` | Liste mit Name, Start, Ziel, Profil und Wetterscore | angemeldet |
+| `/saved-routes/:routeId` | Detailansicht mit Karte | angemeldet |
+
+- Die Liste nutzt `savedRoutes(page:)` (20 Einträge pro Seite), die Detailseite `savedRoute(id:)`. Ist die Route nicht vorhanden oder gehört sie einem anderen Benutzer, zeigt die Seite „Diese Route wurde nicht gefunden“.
+- Die Karte (`RouteMap`) zeichnet die Abschnitte in den gespeicherten Wetterscore-Farben. Fehlen Abschnittsgeometrien, wird die gesamte Route in einer neutralen Farbe gezeichnet.
+- Löschen läuft immer über `ConfirmDialog` („Route wirklich löschen?“) und die Mutation `deleteSavedRoute`.
+- Namen werden mit `validateRouteName` geprüft (nicht leer, höchstens 100 Zeichen, wie im Storage-Service).
+- Das Formular `SaveRouteForm` ruft `saveRoute` mit `routeCalculationId` und `weatherEvaluationId` auf. Es erscheint im Routenplaner erst, wenn eine berechnete Route samt Wetterbewertung vorliegt.
 
 ### Rückfrage bei der Abmeldung
 

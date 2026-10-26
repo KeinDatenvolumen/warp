@@ -20,7 +20,7 @@ warp:
     test-error: ""
 
   security:
-    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN}
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN:local_internal_service_token_change_me}
     login-rate-limit:
       maximum-attempts: 5
       window: 60s

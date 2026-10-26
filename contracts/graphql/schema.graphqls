@@ -38,6 +38,18 @@ type Query {
     searchPlaces(query: String!, limit: Int = 5): [Place!]!
 
     """
+    Liefert die gespeicherten Routen des angemeldeten Benutzers.
+    Fehlt die Sitzung, wird SESSION_INVALID zurückgegeben.
+    """
+    savedRoutes(filter: SavedRouteFilter, page: PageInput): SavedRoutePage!
+
+    """
+    Liefert eine eigene gespeicherte Route.
+    Fremde oder unbekannte Routen führen zu SAVED_ROUTE_NOT_FOUND.
+    """
+    savedRoute(id: ID!): SavedRoute
+
+    """
     Liefert den aktuellen Zustand oder das Ergebnis einer
     zuvor gestarteten Routenberechnung.
     """
@@ -55,6 +67,21 @@ type Mutation {
     startRouteCalculation(
         input: RouteCalculationInput!
     ): RouteCalculationPayload!
+
+    """
+    Speichert eine berechnete Route samt Wetterbewertung als eigene Route.
+    """
+    saveRoute(input: SaveRouteInput!): SaveRoutePayload!
+
+    """
+    Ändert Namen und/oder Favoritenstatus einer eigenen gespeicherten Route.
+    """
+    updateSavedRoute(id: ID!, input: UpdateSavedRouteInput!): UpdateSavedRoutePayload!
+
+    """
+    Löscht eine eigene gespeicherte Route.
+    """
+    deleteSavedRoute(id: ID!): DeleteSavedRoutePayload!
 }
 
 """
@@ -249,3 +276,123 @@ enum ServiceHealthStatus {
 Zeitpunkt nach ISO 8601, beispielsweise 2026-10-08T19:01:35Z.
 """
 scalar DateTime
+
+"""
+Ein gespeicherter Ort (Start oder Ziel).
+"""
+type RoutePlace {
+    label: String!
+    latitude: Float!
+    longitude: Float!
+}
+
+type SegmentWeather {
+    windSpeedKmh: Float
+    windDirectionDegrees: Float
+    precipitationProbabilityPercent: Float
+    precipitationMm: Float
+    thunderstormProbabilityPercent: Float
+}
+
+type SavedRouteWeatherSegment {
+    segmentIndex: Int!
+    expectedArrivalTime: DateTime!
+    score: Int!
+    color: String!
+    weather: SegmentWeather
+    geometry: RouteGeometry
+}
+
+"""
+Kurzansicht einer gespeicherten Route für die Listenansicht.
+"""
+type SavedRouteSummary {
+    id: ID!
+    name: String!
+    start: RoutePlace!
+    destination: RoutePlace!
+    activityProfile: ActivityProfile!
+    weatherScore: Int!
+    favorite: Boolean!
+    createdAt: DateTime!
+}
+
+"""
+Vollständige Detailansicht einer gespeicherten Route inklusive Wetterscores.
+"""
+type SavedRoute {
+    id: ID!
+    name: String!
+    start: RoutePlace!
+    destination: RoutePlace!
+    activityProfile: ActivityProfile!
+    departureTime: DateTime!
+    arrivalTime: DateTime!
+    distanceMeters: Int!
+    durationSeconds: Int!
+    geometry: RouteGeometry!
+    weatherScore: Int!
+    weatherScoreVersion: String!
+    thunderstormCapApplied: Boolean!
+    weatherSegments: [SavedRouteWeatherSegment!]!
+    favorite: Boolean!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+type SavedRoutePage {
+    items: [SavedRouteSummary!]!
+    pageInfo: PageInfo!
+}
+
+type PageInfo {
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+}
+
+input SavedRouteFilter {
+    favorite: Boolean
+}
+
+input PageInput {
+    page: Int = 0
+    size: Int = 20
+}
+
+input UpdateSavedRouteInput {
+    name: String
+    favorite: Boolean
+}
+
+"""
+Feldbezogener, erwartbarer Fehler einer Mutation.
+"""
+type UserError {
+    field: String
+    code: String!
+    message: String!
+}
+
+type UpdateSavedRoutePayload {
+    route: SavedRoute
+    errors: [UserError!]!
+}
+
+input SaveRouteInput {
+    name: String!
+    routeCalculationId: ID!
+    weatherEvaluationId: ID!
+    favorite: Boolean = false
+}
+
+type SaveRoutePayload {
+    route: SavedRoute
+    errors: [UserError!]!
+}
+
+type DeleteSavedRoutePayload {
+    deletedRouteId: ID
+    errors: [UserError!]!
+}

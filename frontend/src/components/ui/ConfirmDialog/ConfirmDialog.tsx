@@ -2,6 +2,7 @@ import {useEffect, useId, useRef} from 'react'
 import styles from './ConfirmDialog.module.css'
 
 interface ConfirmDialogProps {
+    icon?: string
     open: boolean
     title: string
     description: string
@@ -17,6 +18,7 @@ export default function ConfirmDialog({
                                           description,
                                           confirmLabel,
                                           cancelLabel = 'Abbrechen',
+                                          icon = '⎋',
                                           onConfirm,
                                           onCancel
                                       }: ConfirmDialogProps) {
@@ -73,7 +75,7 @@ export default function ConfirmDialog({
             }}
         >
             <div className={styles.content}>
-                <span className={styles.icon} aria-hidden="true">⎋</span>
+                <span className={styles.icon} aria-hidden="true">{icon}</span>
 
                 <h2 id={titleId} className={styles.title}>
                     {title}

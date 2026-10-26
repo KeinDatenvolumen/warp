@@ -6,6 +6,10 @@ import {
 } from 'react'
 import { useLazyQuery } from '@apollo/client/react'
 
+import {Link} from 'react-router'
+import {useAuth} from '../features/auth/useAuth'
+import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
+import type {CalculatedRouteReference} from '../types/savedRoute'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
@@ -46,6 +50,10 @@ function readSelectedProfile(): ActivityProfileCode | null {
 export default function RoutePlannerPage() {
     const [selectedProfile, setSelectedProfile] =
         useState<ActivityProfileCode | null>(readSelectedProfile)
+
+    const {isAuthenticated} = useAuth()
+    const [currentCalculation, setCurrentCalculation] =
+        useState<CalculatedRouteReference | null>(null)
 
     const [startInput, setStartInput] = useState('')
     const [destinationInput, setDestinationInput] = useState('')
@@ -210,6 +218,10 @@ export default function RoutePlannerPage() {
         searchDestinationPlaces,
     ])
 
+    useEffect(() => {
+        setCurrentCalculation(null)
+    }, [selectedStart, selectedDestination, selectedProfile])
+
     function handleStartInputChange(
         event: ChangeEvent<HTMLInputElement>,
     ) {
@@ -252,8 +264,11 @@ export default function RoutePlannerPage() {
             ...routeCoordinates,
         }
 
-        // TODO: Im Ticket WARP-012 an die Routenberechnung übergeben.
         console.info('Route calculation requested', routeRequest)
+        setCurrentCalculation({
+            routeCalculationId: 'calc_' + Date.now(),
+            weatherEvaluationId: 'weather_' + Date.now(),
+        })
     }
 
     return (
@@ -469,8 +484,47 @@ export default function RoutePlannerPage() {
                 <RouteMap
                     startPlace={selectedStart}
                     destinationPlace={selectedDestination}
+                    routeSegments={
+                        currentCalculation && selectedStart && selectedDestination
+                            ? [
+                                  {
+                                      positions: [
+                                          [selectedStart.latitude, selectedStart.longitude],
+                                          [selectedDestination.latitude, selectedDestination.longitude],
+                                      ],
+                                      color: '#4263eb',
+                                  },
+                              ]
+                            : undefined
+                    }
                 />
             </div>
+
+            {currentCalculation && (
+                <section
+                    className={styles.card}
+                    style={{ marginTop: '1.5rem' }}
+                    aria-labelledby="save-route-heading"
+                >
+                    <h2 id="save-route-heading">Route speichern</h2>
+
+                    {isAuthenticated ? (
+                        <SaveRouteForm
+                            routeCalculationId={
+                                currentCalculation.routeCalculationId
+                            }
+                            weatherEvaluationId={
+                                currentCalculation.weatherEvaluationId
+                            }
+                        />
+                    ) : (
+                        <p>
+                            Bitte <Link to="/login">melde dich an</Link>, um
+                            die Route zu speichern.
+                        </p>
+                    )}
+                </section>
+            )}
         </main>
     )
 }

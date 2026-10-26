@@ -13,10 +13,11 @@ import org.springframework.boot.graphql.test.autoconfigure.GraphQlTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.graphql.test.tester.GraphQlTester;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import de.warp.bff.application.exception
-        .RouteCalculationNotFoundException;
-import de.warp.bff.application.exception
-        .RoutingServiceUnavailableException;
+import de.warp.bff.application.exception.EmailNotVerifiedException;
+import de.warp.bff.application.exception.RouteCalculationNotFoundException;
+import de.warp.bff.application.exception.RoutingServiceUnavailableException;
+import de.warp.bff.application.exception.SavedRouteNotFoundException;
+import de.warp.bff.application.exception.StorageServiceUnavailableException;
 
 @GraphQlTest(SystemHealthGraphQlController.class)
 @Import({
@@ -232,6 +233,75 @@ class GraphQlExceptionIntegrationTests {
                                     "code",
                                     "ROUTING_SERVICE_UNAVAILABLE"
                             );
+                });
+    }
+
+    @Test
+    void returnsSavedRouteNotFoundCode() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(new SavedRouteNotFoundException(new RuntimeException()));
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors).hasSize(1);
+                    var error = errors.getFirst();
+                    assertThat(error.getMessage()).isEqualTo("Die gespeicherte Route wurde nicht gefunden.");
+                    assertThat(error.getExtensions()).containsEntry("code", "SAVED_ROUTE_NOT_FOUND");
+                });
+    }
+
+    @Test
+    void returnsStorageServiceUnavailableCode() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(new StorageServiceUnavailableException(new RuntimeException()));
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors).hasSize(1);
+                    var error = errors.getFirst();
+                    assertThat(error.getMessage()).isEqualTo("Der Speicherdienst ist momentan nicht verfügbar.");
+                    assertThat(error.getExtensions()).containsEntry("code", "DOWNSTREAM_SERVICE_UNAVAILABLE");
+                });
+    }
+
+    @Test
+    void returnsEmailNotVerifiedCode() {
+        when(systemHealthService.getSystemHealth())
+                .thenThrow(new EmailNotVerifiedException());
+
+        graphQlTester
+                .document("""
+                    query SystemHealth {
+                        systemHealth {
+                            status
+                        }
+                    }
+                    """)
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors).hasSize(1);
+                    var error = errors.getFirst();
+                    assertThat(error.getMessage()).isEqualTo("Die E-Mail-Adresse ist noch nicht verifiziert.");
+                    assertThat(error.getExtensions()).containsEntry("code", "EMAIL_NOT_VERIFIED");
                 });
     }
 }

@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react'
-import {MapContainer, Marker, Popup, TileLayer, useMap} from 'react-leaflet'
+import {
+    MapContainer,
+    Marker,
+    Polyline,
+    Popup,
+    TileLayer,
+    useMap
+} from 'react-leaflet'
 import {divIcon, latLngBounds, type LatLngExpression} from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Place } from '../../types/searchPlaces'
+import type { RouteMapSegment } from '../../types/routeMap'
 import './RouteMap.css'
 
 const MAP_CENTER: LatLngExpression = [49.354111, 9.150306]
 
+// Konstante, damit der Viewport-Effekt nicht bei jedem Render neu läuft.
+const NO_SEGMENTS: RouteMapSegment[] = []
+
 interface RouteMapProps {
     startPlace: Place | null
     destinationPlace: Place | null
+    routeSegments?: RouteMapSegment[]
 }
 
 const startIcon = divIcon({
@@ -31,15 +43,30 @@ const destinationIcon = divIcon({
 interface MapViewportUpdaterProps {
     startPlace: Place | null
     destinationPlace: Place | null
+    routeSegments: RouteMapSegment[]
 }
 
 function MapViewportUpdater({
-    startPlace,
-    destinationPlace,
-}: MapViewportUpdaterProps) {
+                                startPlace,
+                                destinationPlace,
+                                routeSegments,
+                            }: MapViewportUpdaterProps) {
     const map = useMap()
 
     useEffect(() => {
+        const routePositions = routeSegments.flatMap(
+            (segment) => segment.positions,
+        )
+
+        if (routePositions.length >= 2) {
+            map.fitBounds(latLngBounds(routePositions), {
+                padding: [50, 50],
+                maxZoom: 15,
+            })
+
+            return
+        }
+
         if (startPlace && destinationPlace) {
             const bounds = latLngBounds([
                 [startPlace.latitude, startPlace.longitude],
@@ -68,15 +95,16 @@ function MapViewportUpdater({
                 14,
             )
         }
-    }, [map, startPlace, destinationPlace])
+    }, [map, startPlace, destinationPlace, routeSegments])
 
     return null
 }
 
 export default function RouteMap({
-    startPlace,
-    destinationPlace,
-}: RouteMapProps) {
+                                     startPlace,
+                                     destinationPlace,
+                                     routeSegments = NO_SEGMENTS,
+                                 }: RouteMapProps) {
     const [hasError, setHasError] = useState(false)
     const apiKey =
         import.meta.env.VITE_MAPTILER_PUBLIC_API_KEY
@@ -134,7 +162,20 @@ export default function RouteMap({
                 <MapViewportUpdater
                     startPlace={startPlace}
                     destinationPlace={destinationPlace}
+                    routeSegments={routeSegments}
                 />
+
+                {routeSegments.map((segment, index) => (
+                    <Polyline
+                        key={index}
+                        positions={segment.positions}
+                        pathOptions={{
+                            color: segment.color,
+                            weight: 6,
+                            opacity: 0.9,
+                        }}
+                    />
+                ))}
 
                 {startPlace && (
                     <Marker
