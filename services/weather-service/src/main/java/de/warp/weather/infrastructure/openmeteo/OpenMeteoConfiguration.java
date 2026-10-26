@@ -1,5 +1,7 @@
 package de.warp.weather.infrastructure.openmeteo;
 
+import de.warp.weather.application.WeatherCacheProperties;
+import de.warp.weather.application.WeatherScoringProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,10 +11,20 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
+import java.time.Clock;
 
 @Configuration
-@EnableConfigurationProperties(OpenMeteoProperties.class)
+@EnableConfigurationProperties({
+        OpenMeteoProperties.class,
+        WeatherCacheProperties.class,
+        WeatherScoringProperties.class
+})
 public class OpenMeteoConfiguration {
+
+    @Bean
+    public Clock weatherClock() {
+        return Clock.systemUTC();
+    }
 
     @Bean
     public RestClient openMeteoRestClient(

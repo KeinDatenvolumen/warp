@@ -154,6 +154,28 @@ public class HttpClientConfiguration {
     }
 
     @Bean
+    RestClient weatherServiceRestClient(
+            @Value("${warp.services.weather.url}")
+            String weatherServiceUrl,
+            @Value("${warp.weather.connect-timeout:2s}")
+            Duration connectTimeout,
+            @Value("${warp.weather.read-timeout:10s}")
+            Duration readTimeout,
+            CorrelationIdClientHttpRequestInterceptor
+                    correlationIdInterceptor,
+            InternalServiceAuthenticationInterceptor
+                    serviceAuthenticationInterceptor
+    ) {
+        return createRestClient(
+                weatherServiceUrl,
+                connectTimeout,
+                readTimeout,
+                correlationIdInterceptor,
+                serviceAuthenticationInterceptor
+        );
+    }
+
+    @Bean
     RestClient storageRestClient(
             @Value("${warp.services.storage.url}")
             String storageServiceUrl,

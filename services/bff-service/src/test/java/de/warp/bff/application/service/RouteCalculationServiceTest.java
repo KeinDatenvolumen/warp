@@ -22,7 +22,13 @@ import de.warp.bff.infrastructure.routing.dto
         .InternalRouteCalculationResponse;
 import de.warp.bff.infrastructure.routing.dto
         .InternalStartRouteCalculationRequest;
+import de.warp.bff.infrastructure.weather.WeatherApiDtos;
+import de.warp.bff.infrastructure.weather.WeatherClient;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class RouteCalculationServiceTest {
@@ -33,13 +39,17 @@ class RouteCalculationServiceTest {
     @Mock
     private RoutingClient routingClient;
 
+    @Mock
+    private WeatherClient weatherClient;
+
     private RouteCalculationService service;
 
     @BeforeEach
     void setUp() {
         service = new RouteCalculationService(
                 activityProfileService,
-                routingClient
+                routingClient,
+                weatherClient
         );
     }
 
@@ -159,6 +169,109 @@ class RouteCalculationServiceTest {
                 .isEqualTo(57600.0);
 
         verify(routingClient).getRouteCalculation("usr_123", "calc_123");
+    }
+
+    @Test
+    void evaluatesRouteWeatherWhenCompletedRouteHasGeometry() {
+        var geometry = JsonMapper.builder().build().readTree("""
+                {
+                  "type": "LineString",
+                  "coordinates": [
+                    [9.1511, 49.3536],
+                    [9.4620, 49.4200],
+                    [9.7736, 49.4924]
+                  ]
+                }
+                """);
+
+        InternalRouteCalculationResponse response =
+                new InternalRouteCalculationResponse(
+                        "calc_123",
+                        "COMPLETED",
+                        new InternalRouteCalculationResponse.RoutePoint(
+                                "Mosbach",
+                                49.3536,
+                                9.1511
+                        ),
+                        new InternalRouteCalculationResponse.RoutePoint(
+                                "Bad Mergentheim",
+                                49.4924,
+                                9.7736
+                        ),
+                        new InternalRouteCalculationResponse.ActivityProfileSnapshot(
+                                "BICYCLE",
+                                "cycling-regular"
+                        ),
+                        Instant.parse("2026-10-22T06:00:00Z"),
+                        Instant.parse("2026-10-22T07:12:00Z"),
+                        57600.0,
+                        4320.0,
+                        geometry,
+                        null,
+                        Instant.parse("2026-10-22T05:59:00Z"),
+                        Instant.parse("2026-10-22T06:00:00Z"),
+                        null
+                );
+
+        when(routingClient.getRouteCalculation("usr_123", "calc_123"))
+                .thenReturn(response);
+        when(activityProfileService.getActivityProfile("BICYCLE"))
+                .thenReturn(bicycleProfile());
+        when(weatherClient.evaluateRouteWeather(any()))
+                .thenReturn(new WeatherApiDtos.WeatherEvaluationResponse(
+                        "weval_123",
+                        "calc_123",
+                        "usr_123",
+                        "COMPLETED",
+                        Instant.parse("2026-10-22T06:00:00Z"),
+                        48,
+                        "v1.0",
+                        true,
+                        Instant.parse("2026-10-22T06:00:01Z"),
+                        Instant.parse("2026-10-22T07:00:01Z"),
+                        Instant.parse("2026-10-22T06:00:01Z"),
+                        List.of(
+                                new WeatherApiDtos.WeatherSegmentResponse(
+                                        0,
+                                        0,
+                                        Instant.parse("2026-10-22T06:00:00Z"),
+                                        48,
+                                        "#eab308",
+                                        new WeatherApiDtos.WeatherConditionResponse(
+                                                14.0,
+                                                180.0,
+                                                20.0,
+                                                0.5,
+                                                35.0,
+                                                16.5,
+                                                95
+                                        ),
+                                        new WeatherApiDtos.GeoJsonLineStringResponse(
+                                                "LineString",
+                                                List.of(
+                                                        List.of(9.1511, 49.3536),
+                                                        List.of(9.4620, 49.4200)
+                                                )
+                                        )
+                                )
+                        )
+                ));
+
+        RouteCalculationResult result =
+                service.getRouteCalculation("usr_123", "calc_123");
+
+        assertThat(result.weatherEvaluation()).isNotNull();
+        assertThat(result.weatherEvaluation().evaluationId()).isEqualTo("weval_123");
+        assertThat(result.weatherEvaluation().overallScore()).isEqualTo(48);
+        assertThat(result.weatherEvaluation().thunderstormCapApplied()).isTrue();
+        assertThat(result.weatherEvaluation().segments()).hasSize(1);
+        assertThat(result.weatherEvaluation().segments().getFirst().color()).isEqualTo("#eab308");
+
+        verify(weatherClient).evaluateRouteWeather(argThat(req ->
+                req.routeSnapshot().routeCalculationId().equals("calc_123")
+                        && req.routeSnapshot().activityProfile().code().equals("BICYCLE")
+                        && req.routeSnapshot().coordinates().size() == 3
+        ));
     }
 
     private boolean hasExpectedSnapshot(

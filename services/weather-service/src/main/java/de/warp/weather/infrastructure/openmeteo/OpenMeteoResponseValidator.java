@@ -6,6 +6,7 @@ import de.warp.weather.infrastructure.openmeteo.exception.InvalidOpenMeteoRespon
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class OpenMeteoResponseValidator {
@@ -29,9 +30,7 @@ public class OpenMeteoResponseValidator {
             );
         }
 
-        for (int index = 0;
-             index < responses.size();
-             index++) {
+        for (int index = 0; index < responses.size(); index++) {
             validateLocation(responses.get(index), index);
         }
     }
@@ -62,8 +61,7 @@ public class OpenMeteoResponseValidator {
             );
         }
 
-        OpenMeteoHourlyResponse hourly =
-                response.hourly();
+        OpenMeteoHourlyResponse hourly = response.hourly();
 
         if (hourly == null) {
             throw invalid(
@@ -72,44 +70,73 @@ public class OpenMeteoResponseValidator {
             );
         }
 
-        if (hourly.time() == null
-                || hourly.time().isEmpty()) {
+        if (hourly.time() == null || hourly.time().isEmpty()) {
             throw invalid(
                     locationIndex,
                     "hourly time axis is missing or empty"
             );
         }
 
-        validateRequiredLength(
+        if (hourly.time().stream().anyMatch(Objects::isNull)) {
+            throw invalid(
+                    locationIndex,
+                    "hourly time axis contains null values"
+            );
+        }
+
+        int expectedLength = hourly.time().size();
+
+        validateRequiredSeries(
                 hourly.temperature2m(),
-                hourly.time().size(),
+                expectedLength,
                 locationIndex,
                 "temperature_2m"
         );
 
-        validateRequiredLength(
+        validateRequiredSeries(
                 hourly.windSpeed10m(),
-                hourly.time().size(),
+                expectedLength,
                 locationIndex,
                 "wind_speed_10m"
         );
 
-        validateRequiredLength(
+        validateRequiredSeries(
                 hourly.precipitation(),
-                hourly.time().size(),
+                expectedLength,
                 locationIndex,
                 "precipitation"
         );
 
-        validateRequiredLength(
+        validateRequiredSeries(
                 hourly.weatherCode(),
-                hourly.time().size(),
+                expectedLength,
                 locationIndex,
                 "weather_code"
         );
+
+        validateOptionalSeriesLength(
+                hourly.windDirection10m(),
+                expectedLength,
+                locationIndex,
+                "wind_direction_10m"
+        );
+
+        validateOptionalSeriesLength(
+                hourly.precipitationProbability(),
+                expectedLength,
+                locationIndex,
+                "precipitation_probability"
+        );
+
+        validateOptionalSeriesLength(
+                hourly.cape(),
+                expectedLength,
+                locationIndex,
+                "cape"
+        );
     }
 
-    private void validateRequiredLength(
+    private void validateRequiredSeries(
             List<?> values,
             int expectedLength,
             int locationIndex,
@@ -123,6 +150,31 @@ public class OpenMeteoResponseValidator {
         }
 
         if (values.size() != expectedLength) {
+            throw invalid(
+                    locationIndex,
+                    variable
+                            + " contains "
+                            + values.size()
+                            + " entries, expected "
+                            + expectedLength
+            );
+        }
+
+        if (values.stream().anyMatch(Objects::isNull)) {
+            throw invalid(
+                    locationIndex,
+                    variable + " contains null values"
+            );
+        }
+    }
+
+    private void validateOptionalSeriesLength(
+            List<?> values,
+            int expectedLength,
+            int locationIndex,
+            String variable
+    ) {
+        if (values != null && values.size() != expectedLength) {
             throw invalid(
                     locationIndex,
                     variable

@@ -11,12 +11,12 @@ import de.warp.weather.domain.model.WeatherModel;
 import de.warp.weather.domain.model.WeatherValues;
 import de.warp.weather.infrastructure.openmeteo.dto.OpenMeteoForecastResponse;
 import de.warp.weather.infrastructure.openmeteo.dto.OpenMeteoHourlyResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +30,25 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
     private final OpenMeteoProperties properties;
     private final Clock clock;
 
+    @Autowired
+    public OpenMeteoWeatherProvider(
+            OpenMeteoClient client,
+            OpenMeteoResponseValidator validator,
+            OpenMeteoProperties properties,
+            Clock clock
+    ) {
+        this.client = Objects.requireNonNull(client);
+        this.validator = Objects.requireNonNull(validator);
+        this.properties = Objects.requireNonNull(properties);
+        this.clock = Objects.requireNonNull(clock);
+    }
+
     public OpenMeteoWeatherProvider(
             OpenMeteoClient client,
             OpenMeteoResponseValidator validator,
             OpenMeteoProperties properties
     ) {
-        this.client = Objects.requireNonNull(client);
-        this.validator = Objects.requireNonNull(validator);
-        this.properties = Objects.requireNonNull(properties);
-        this.clock = Clock.systemUTC();
+        this(client, validator, properties, Clock.systemUTC());
     }
 
     @Override
@@ -51,32 +61,6 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
         Map<String, WeatherForecastSeries> bestMatch =
                 loadForecasts(locations, period, WeatherModel.BEST_MATCH);
 
-        Map<String, EnumMap<WeatherModel, WeatherForecastSeries>> modelForecasts =
-                new LinkedHashMap<>();
-
-        for (ForecastLocation location : locations) {
-            modelForecasts.put(
-                    location.id(),
-                    new EnumMap<>(WeatherModel.class)
-            );
-        }
-
-        for (WeatherModel model : properties.comparisonModels()) {
-            if (model == null || model.isBestMatch()) {
-                continue;
-            }
-
-            Map<String, WeatherForecastSeries> forecasts =
-                    loadForecasts(locations, period, model);
-
-            for (ForecastLocation location : locations) {
-                modelForecasts.get(location.id()).put(
-                        model,
-                        forecasts.get(location.id())
-                );
-            }
-        }
-
         List<WeatherForecastLocation> result =
                 new ArrayList<>(locations.size());
 
@@ -84,7 +68,7 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
             result.add(new WeatherForecastLocation(
                     location,
                     bestMatch.get(location.id()),
-                    modelForecasts.get(location.id())
+                    Map.of()
             ));
         }
 

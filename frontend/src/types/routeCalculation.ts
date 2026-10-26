@@ -38,6 +38,26 @@ export interface RouteGeometry {
     coordinates: [number, number][]
 }
 
+export interface SegmentWeather {
+    windSpeedKmh: number | null
+    windDirectionDegrees: number | null
+    precipitationProbabilityPercent: number | null
+    precipitationMm: number | null
+    thunderstormProbabilityPercent: number | null
+    temperatureCelsius?: number | null
+    weatherCode?: number | null
+}
+
+export interface RouteWeatherSegment {
+    segmentIndex: number
+    distanceFromStartMeters?: number | null
+    expectedArrivalTime: string
+    score: number
+    color: string
+    weather?: SegmentWeather | null
+    geometry?: RouteGeometry | null
+}
+
 export interface RouteCalculation {
     id: string
     status: RouteCalculationStatus
@@ -49,6 +69,11 @@ export interface RouteCalculation {
     distanceMeters: number | null
     durationSeconds: number | null
     geometry: RouteGeometry | null
+    weatherEvaluationId?: string | null
+    weatherScore?: number | null
+    weatherScoreVersion?: string | null
+    thunderstormCapApplied?: boolean | null
+    weatherSegments?: RouteWeatherSegment[] | null
     createdAt: string
     error: RouteCalculationError | null
 }
