@@ -11,6 +11,21 @@
 			content="WaRP Entwicklungsdashboard"
 	/>
 	<title>WaRP Service Status</title>
+	<script>
+		(function () {
+			try {
+				var prefs = JSON.parse(localStorage.getItem('warp.theme') || '{}');
+				var profile = ['profile-1', 'profile-2', 'profile-3'].indexOf(prefs.profile) >= 0
+						? prefs.profile : 'profile-1';
+				var mode = ['light', 'dark', 'system'].indexOf(prefs.mode) >= 0
+						? prefs.mode : 'system';
+				var dark = mode === 'dark' ||
+						(mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+				document.documentElement.dataset.colorProfile = profile;
+				document.documentElement.dataset.colorMode = dark ? 'dark' : 'light';
+			} catch (e) { /* Standard-Theme bleibt */ }
+		})();
+	</script>
 </head>
 <body>
 <div id="root"></div>

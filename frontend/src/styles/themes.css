@@ -1,0 +1,38 @@
+/*
+ * Farbprofile
+ *
+ * Es gibt drei Farbprofile (data-color-profile), jeweils in einer hellen und
+ * einer dunklen Variante (data-color-mode). Beide Attribute setzt der
+ * ThemeProvider (src/features/theme) auf <html>.
+ *
+ * Die Blöcke sind absichtlich leer: Solange hier nichts überschrieben wird,
+ * gelten die Standardwerte aus variables.css.
+ *
+ * Farben ergänzen: die Variablen aus variables.css im passenden Block neu
+ * definieren, z. B. --color-primary, --color-background, --color-surface,
+ * --color-text. Für den dunklen Modus zusätzlich `color-scheme: dark;` setzen.
+ */
+
+:root[data-color-profile='profile-1'][data-color-mode='light'] {
+    /* TODO: Farben Profil 1 hell */
+}
+
+:root[data-color-profile='profile-1'][data-color-mode='dark'] {
+    /* TODO: Farben Profil 1 dunkel */
+}
+
+:root[data-color-profile='profile-2'][data-color-mode='light'] {
+    /* TODO: Farben Profil 2 hell */
+}
+
+:root[data-color-profile='profile-2'][data-color-mode='dark'] {
+    /* TODO: Farben Profil 2 dunkel */
+}
+
+:root[data-color-profile='profile-3'][data-color-mode='light'] {
+    /* TODO: Farben Profil 3 hell */
+}
+
+:root[data-color-profile='profile-3'][data-color-mode='dark'] {
+    /* TODO: Farben Profil 3 dunkel */
+}

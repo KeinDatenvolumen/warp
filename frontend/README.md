@@ -206,6 +206,10 @@ Alle nicht definierten Routen werden über die Route `*` abgefangen. Die 404-Sei
 
 > Eine Route `/status` ist im aktuellen Frontend nicht definiert.
 
+### Farbprofile und Modus
+
+Es gibt drei Farbprofile (`profile-1` bis `profile-3`) in hell und dunkel. Auswahl und Modus (Hell, Dunkel, Wie Gerät) liegen im `localStorage` unter `warp.theme`. Der `ThemeProvider` setzt `data-color-profile` und `data-color-mode` auf `<html>`. Die Farben selbst gehören in `src/styles/themes.css` (sechs Blöcke, derzeit leer, es gelten die Werte aus `variables.css`). Komponenten sollen Farben nur über die CSS-Variablen aus `variables.css` verwenden.
+
 ## Anwendungslayout
 
 Alle regulären Seiten werden innerhalb eines gemeinsamen Anwendungslayouts dargestellt. Das Layout enthält:
