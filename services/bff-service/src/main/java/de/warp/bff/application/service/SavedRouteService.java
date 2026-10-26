@@ -56,7 +56,7 @@ public class SavedRouteService {
         StorageApiDtos.RouteSnapshot routeSnapshot =
                 resolveRouteSnapshot(userId, routeCalculationId);
         StorageApiDtos.WeatherSnapshot weatherSnapshot =
-                resolveWeatherSnapshot(weatherEvaluationId);
+                resolveWeatherSnapshot(weatherEvaluationId, routeSnapshot);
 
         String idempotencyKey = "save_" + UUID.nameUUIDFromBytes(
                 (userId + ":" + routeCalculationId + ":" + weatherEvaluationId)
@@ -193,22 +193,31 @@ public class SavedRouteService {
     }
 
     private StorageApiDtos.WeatherSnapshot resolveWeatherSnapshot(
-            String weatherEvaluationId
+            String weatherEvaluationId,
+            StorageApiDtos.RouteSnapshot routeSnapshot
     ) {
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        String effectiveWeatherId = weatherEvaluationId != null && !weatherEvaluationId.isBlank()
+                ? (weatherEvaluationId.length() > 40 ? weatherEvaluationId.substring(0, 40) : weatherEvaluationId)
+                : "weather_dummy";
+
+        OffsetDateTime departure = routeSnapshot != null && routeSnapshot.departureTime() != null
+                ? routeSnapshot.departureTime()
+                : OffsetDateTime.now(ZoneOffset.UTC);
+        StorageApiDtos.GeoJsonLineString geometry = routeSnapshot != null ? routeSnapshot.geometry() : null;
+
         return new StorageApiDtos.WeatherSnapshot(
-                weatherEvaluationId,
+                effectiveWeatherId,
                 78,
                 "1.0",
                 false,
                 List.of(
                         new StorageApiDtos.WeatherSegment(
                                 0,
-                                now.plusMinutes(30),
+                                departure.plusMinutes(30),
                                 78,
                                 "#55AA40",
                                 null,
-                                null
+                                geometry
                         )
                 )
         );

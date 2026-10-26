@@ -162,4 +162,22 @@ class SavedRouteServiceTest {
         assertThat(request.routeSnapshot().routeCalculationId()).isEqualTo("calc_unknown");
         assertThat(request.weatherSnapshot().weatherEvaluationId()).isEqualTo("weather_1");
     }
+
+    @Test
+    void saveRouteCapsWeatherEvaluationIdToAtMost40Characters() {
+        when(routeCalculationService.getRouteCalculation(anyString(), anyString()))
+                .thenThrow(new RuntimeException("not found"));
+
+        String longWeatherId = "weather_calc_c8ba750ca8d44a7b975f28fe96b5f86c";
+        savedRouteService.saveRoute("usr_1", "Long Weather Tour", "calc_1", longWeatherId, false);
+
+        ArgumentCaptor<CreateSavedRouteRequest> captor =
+                ArgumentCaptor.forClass(CreateSavedRouteRequest.class);
+        verify(storageClient).createSavedRoute(eq("usr_1"), anyString(), captor.capture());
+
+        CreateSavedRouteRequest request = captor.getValue();
+        assertThat(request.weatherSnapshot().weatherEvaluationId()).hasSizeLessThanOrEqualTo(40);
+        assertThat(request.weatherSnapshot().weatherEvaluationId())
+                .isEqualTo(longWeatherId.substring(0, 40));
+    }
 }

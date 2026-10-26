@@ -797,7 +797,7 @@ export default function RoutePlannerPage() {
                     {isAuthenticated ? (
                         <SaveRouteForm
                             routeCalculationId={completedRouteCalculation.id}
-                            weatherEvaluationId={`weather_${completedRouteCalculation.id}`}
+                            weatherEvaluationId={`w_${completedRouteCalculation.id}`.slice(0, 40)}
                         />
                     ) : (
                         <p className={styles.hint}>
