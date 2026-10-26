@@ -250,7 +250,7 @@ GraphQL-Mutationen benötigen ebenfalls den CSRF-Token. Der Apollo-Link `src/api
 
 | Pfad | Seite | Zugriff |
 |---|---|---|
-| `/saved-routes` | Liste mit Name, Start, Ziel, Profil und Wetterscore | angemeldet |
+| /saved-routes | Liste mit Name, Start, Ziel, Profil, Wetterscore und Favoriten | angemeldet |
 | `/saved-routes/:routeId` | Detailansicht mit Karte | angemeldet |
 
 - Die Liste nutzt `savedRoutes(page:)` (20 Einträge pro Seite), die Detailseite `savedRoute(id:)`. Ist die Route nicht vorhanden oder gehört sie einem anderen Benutzer, zeigt die Seite „Diese Route wurde nicht gefunden“.
@@ -258,6 +258,7 @@ GraphQL-Mutationen benötigen ebenfalls den CSRF-Token. Der Apollo-Link `src/api
 - Löschen läuft immer über `ConfirmDialog` („Route wirklich löschen?“) und die Mutation `deleteSavedRoute`.
 - Namen werden mit `validateRouteName` geprüft (nicht leer, höchstens 100 Zeichen, wie im Storage-Service).
 - Das Formular `SaveRouteForm` ruft `saveRoute` mit `routeCalculationId` und `weatherEvaluationId` auf. Es erscheint im Routenplaner erst, wenn eine berechnete Route samt Wetterbewertung vorliegt.
+- Favoriten werden mit `FavoriteButton` über die Mutation `updateSavedRoute` gesetzt und entfernt. Der Button ist in der Liste und auf der Detailseite verfügbar. Favoriten stehen in der Liste (serverseitig sortiert) oben, sind farblich hervorgehoben und lassen sich über den Filter „Nur Favoriten“ (`savedRoutes(filter: {favorite: true})`) einschränken.
 
 ### Rückfrage bei der Abmeldung
 

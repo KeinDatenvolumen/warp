@@ -12,6 +12,7 @@ import MessageCard from '../components/ui/MessageCard/MessageCard'
 import {formatDate} from '../features/saved-routes/format'
 import listStyles from '../features/saved-routes/SavedRoutes.module.css'
 import styles from './PagePlaceholder.module.css'
+import FavoriteButton from '../features/saved-routes/FavoriteButton'
 
 const PAGE_SIZE = 20
 
@@ -28,9 +29,14 @@ export default function SavedRoutesPage() {
     const [routeToDelete, setRouteToDelete] =
         useState<RouteToDelete | null>(null)
     const [deleteError, setDeleteError] = useState<string>()
+    const [favoriteError, setFavoriteError] = useState<string>()
+    const [onlyFavorites, setOnlyFavorites] = useState(false)
 
     const {data, loading, error, refetch} = useQuery(SAVED_ROUTES_QUERY, {
-        variables: {page: {page, size: PAGE_SIZE}},
+        variables: {
+            filter: onlyFavorites ? {favorite: true} : undefined,
+            page: {page, size: PAGE_SIZE}
+        },
         fetchPolicy: 'cache-and-network'
     })
 
@@ -44,6 +50,12 @@ export default function SavedRoutesPage() {
             setPage(page - 1)
         }
     }, [data, page])
+
+    function changeFilter(favoritesOnly: boolean): void {
+        setOnlyFavorites(favoritesOnly)
+        setPage(0)
+        setFavoriteError(undefined)
+    }
 
     async function handleConfirmDelete(): Promise<void> {
         if (!routeToDelete) {
@@ -99,9 +111,46 @@ export default function SavedRoutesPage() {
             </section>
 
             <div className={listStyles.section}>
+                <div
+                    className={listStyles.filter}
+                    role="group"
+                    aria-label="Routen filtern"
+                >
+                    <button
+                        type="button"
+                        className={
+                            onlyFavorites
+                                ? listStyles.filterButton
+                                : `${listStyles.filterButton} ${listStyles.filterButtonActive}`
+                        }
+                        aria-pressed={!onlyFavorites}
+                        onClick={() => changeFilter(false)}
+                    >
+                        Alle
+                    </button>
+                    <button
+                        type="button"
+                        className={
+                            onlyFavorites
+                                ? `${listStyles.filterButton} ${listStyles.filterButtonActive}`
+                                : listStyles.filterButton
+                        }
+                        aria-pressed={onlyFavorites}
+                        onClick={() => changeFilter(true)}
+                    >
+                        ★ Nur Favoriten
+                    </button>
+                </div>
+
                 {deleteError && (
                     <p className={listStyles.notice} role="alert">
                         {deleteError}
+                    </p>
+                )}
+
+                {favoriteError && (
+                    <p className={listStyles.notice} role="alert">
+                        {favoriteError}
                     </p>
                 )}
 
@@ -134,10 +183,18 @@ export default function SavedRoutesPage() {
 
                 {data && items.length === 0 && page === 0 && (
                     <MessageCard>
-                        <p>
-                            Du hast noch keine Route gespeichert. Plane eine
-                            Route im <Link to="/route-planner">Routenplaner</Link>.
-                        </p>
+                        {onlyFavorites ? (
+                            <p>
+                                Du hast noch keine Route als Favorit markiert.
+                                Markiere eine Route mit dem Stern.
+                            </p>
+                        ) : (
+                            <p>
+                                Du hast noch keine Route gespeichert. Plane
+                                eine Route im{' '}
+                                <Link to="/route-planner">Routenplaner</Link>.
+                            </p>
+                        )}
                     </MessageCard>
                 )}
 
@@ -147,7 +204,14 @@ export default function SavedRoutesPage() {
                         aria-label="Gespeicherte Routen"
                     >
                         {items.map((route) => (
-                            <li key={route.id} className={listStyles.item}>
+                            <li
+                                key={route.id}
+                                className={
+                                    route.favorite
+                                        ? `${listStyles.item} ${listStyles.itemFavorite}`
+                                        : listStyles.item
+                                }
+                            >
                                 <Link
                                     to={`/saved-routes/${route.id}`}
                                     className={listStyles.itemLink}
@@ -166,20 +230,29 @@ export default function SavedRoutesPage() {
                                     </span>
                                 </Link>
 
-                                <button
-                                    type="button"
-                                    className={listStyles.deleteButton}
-                                    aria-label={`Route ${route.name} löschen`}
-                                    disabled={deleting}
-                                    onClick={() =>
-                                        setRouteToDelete({
-                                            id: route.id,
-                                            name: route.name
-                                        })
-                                    }
-                                >
-                                    Löschen
-                                </button>
+                                <div className={listStyles.itemActions}>
+                                    <FavoriteButton
+                                        routeId={route.id}
+                                        routeName={route.name}
+                                        favorite={route.favorite}
+                                        onError={setFavoriteError}
+                                        onChanged={() => void refetch()}
+                                    />
+                                    <button
+                                        type="button"
+                                        className={listStyles.deleteButton}
+                                        aria-label={`Route ${route.name} löschen`}
+                                        disabled={deleting}
+                                        onClick={() =>
+                                            setRouteToDelete({
+                                                id: route.id,
+                                                name: route.name
+                                            })
+                                        }
+                                    >
+                                        Löschen
+                                    </button>
+                                </div>
                             </li>
                         ))}
                     </ul>

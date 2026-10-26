@@ -38,6 +38,7 @@ const route = {
     durationSeconds: 11520,
     geometry: line([[9.15, 49.35], [9.77, 49.49]]),
     weatherScore: 78,
+    favorite: true,
     weatherSegments: [
         {
             segmentIndex: 0,
@@ -105,5 +106,21 @@ describe('SavedRouteDetailPage', () => {
         expect(
             screen.getByText('Diese Route wurde nicht gefunden.')
         ).toBeInTheDocument()
+    })
+
+    it('zeigt den Favoritenstatus', () => {
+        useQueryMock.mockReturnValue({
+            data: {savedRoute: route},
+            loading: false,
+            error: undefined
+        })
+
+        renderPage()
+
+        expect(
+            screen.getByRole('button', {
+                name: 'Route Fahrradtour als Favorit markieren'
+            })
+        ).toHaveAttribute('aria-pressed', 'true')
     })
 })
