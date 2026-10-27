@@ -39,6 +39,10 @@ import {
     formatDistance,
     formatDuration,
 } from '../features/route-planner/routeResultFormatting'
+import {
+    canExportRouteAsGpx,
+    downloadRouteAsGpx,
+} from '../features/route-planner/gpxExport'
 
 import styles from './RoutePlannerPage.module.css'
 
@@ -198,6 +202,12 @@ export default function RoutePlannerPage() {
         routeCalculation?.status === 'COMPLETED'
             ? routeCalculation
             : null
+
+    const routeCanBeExportedAsGpx =
+        completedRouteCalculation !== null &&
+        canExportRouteAsGpx(
+            completedRouteCalculation.geometry,
+        )
 
     const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
         if (!completedRouteCalculation?.weatherSegments) {
@@ -391,6 +401,24 @@ export default function RoutePlannerPage() {
         setDepartureTime(event.target.value)
         setMinimumDepartureTime(createMinimumDepartureTime())
         setMaximumDepartureTime(createMaximumDepartureTime())
+    }
+
+    function handleGpxExport() {
+        if (
+            !completedRouteCalculation?.geometry ||
+            !routeCanBeExportedAsGpx
+        ) {
+            return
+        }
+
+        downloadRouteAsGpx({
+            startLabel:
+                completedRouteCalculation.start.label,
+            destinationLabel:
+                completedRouteCalculation.destination.label,
+            geometry:
+                completedRouteCalculation.geometry,
+        })
     }
 
     async function handleRouteCalculation() {
@@ -758,6 +786,15 @@ export default function RoutePlannerPage() {
                 >
                     <div className={styles.resultsHeader}>
                         <h2 id="route-result-heading">Routenergebnis</h2>
+
+                        <button
+                            type="button"
+                            className={styles.exportButton}
+                            disabled={!routeCanBeExportedAsGpx}
+                            onClick={handleGpxExport}
+                        >
+                            Als GPX exportieren
+                        </button>
                     </div>
 
                     <dl className={styles.statsGrid}>
