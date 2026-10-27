@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {ApiRequestError} from '../api/restClient'
 import ProfilePage from './ProfilePage'
+import {ThemeProvider} from '../features/theme/ThemeContext'
 
 const useQueryMock = vi.hoisted(() => vi.fn())
 const changeEmailMock = vi.hoisted(() => vi.fn())
@@ -51,7 +52,11 @@ describe('ProfilePage', () => {
     it('zeigt Name und E-Mail an, der Name ist nicht bearbeitbar', () => {
         mockQuery(user)
 
-        render(<ProfilePage/>)
+        render(
+    <ThemeProvider>
+        <ProfilePage/>
+    </ThemeProvider>
+)
 
         expect(screen.getByText('Max Mustermann')).toBeInTheDocument()
         expect(screen.getByText('max@example.de')).toBeInTheDocument()
@@ -62,7 +67,11 @@ describe('ProfilePage', () => {
     it('weist auf eine nicht bestätigte E-Mail-Adresse hin', () => {
         mockQuery({...user, emailVerified: false})
 
-        render(<ProfilePage/>)
+        render(
+    <ThemeProvider>
+        <ProfilePage/>
+    </ThemeProvider>
+)
 
         expect(screen.getByText('Nicht bestätigt')).toBeInTheDocument()
         expect(
@@ -74,7 +83,11 @@ describe('ProfilePage', () => {
         const refetch = mockQuery(user)
         const userEventSession = userEvent.setup()
 
-        render(<ProfilePage/>)
+        render(
+    <ThemeProvider>
+        <ProfilePage/>
+    </ThemeProvider>
+)
 
         await userEventSession.type(
             screen.getByLabelText('Neue E-Mail-Adresse'),
@@ -102,7 +115,11 @@ describe('ProfilePage', () => {
         mockQuery(user)
         const userEventSession = userEvent.setup()
 
-        render(<ProfilePage/>)
+        render(
+    <ThemeProvider>
+        <ProfilePage/>
+    </ThemeProvider>
+)
 
         await userEventSession.type(
             screen.getByLabelText('Aktuelles Passwort'),
@@ -133,7 +150,11 @@ describe('ProfilePage', () => {
         )
         const userEventSession = userEvent.setup()
 
-        render(<ProfilePage/>)
+        render(
+    <ThemeProvider>
+        <ProfilePage/>
+    </ThemeProvider>
+)
 
         await userEventSession.type(
             screen.getByLabelText('Aktuelles Passwort'),

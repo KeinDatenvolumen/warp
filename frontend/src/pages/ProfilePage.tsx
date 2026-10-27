@@ -7,6 +7,7 @@ import ChangePasswordForm from '../features/profile/ChangePasswordForm'
 import profileStyles from '../features/profile/Profile.module.css'
 import {formatDate} from '../features/saved-routes/format'
 import styles from './PagePlaceholder.module.css'
+import ThemeSettings from '../features/profile/ThemeSettings'
 
 export default function ProfilePage() {
     const {data, loading, error, refetch} = useQuery(CURRENT_USER_QUERY, {
@@ -110,6 +111,8 @@ export default function ProfilePage() {
                         <ChangePasswordForm/>
                     </>
                 )}
+
+                <ThemeSettings/>
             </div>
         </main>
     )
