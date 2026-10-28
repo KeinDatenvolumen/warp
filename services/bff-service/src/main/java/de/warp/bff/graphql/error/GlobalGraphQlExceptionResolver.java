@@ -9,6 +9,7 @@ import de.warp.bff.application.exception.StorageServiceUnavailableException;
 import de.warp.bff.application.exception.StorageValidationException;
 import de.warp.bff.graphql.SessionInvalidException;
 import de.warp.bff.infrastructure.geocoding.GeocodingServiceUnavailableException;
+import de.warp.bff.application.exception.DownstreamServiceUnavailableException;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
@@ -150,6 +151,20 @@ public class GlobalGraphQlExceptionResolver
                         ErrorType.INTERNAL_ERROR,
                         GraphQlErrorCode.GEOCODING_SERVICE_UNAVAILABLE,
                         GEOCODING_SERVICE_UNAVAILABLE_MESSAGE
+                );
+            }
+
+            case DownstreamServiceUnavailableException ignored -> {
+                LOGGER.warn(
+                        "Der Identitätsdienst ist nicht verfügbar.",
+                        exception
+                );
+
+                yield createError(
+                        environment,
+                        ErrorType.INTERNAL_ERROR,
+                        GraphQlErrorCode.DOWNSTREAM_SERVICE_UNAVAILABLE,
+                        "Der Identitätsdienst ist momentan nicht verfügbar."
                 );
             }
 

@@ -4,6 +4,8 @@ import de.warp.bff.api.dto.ApiErrorResponse;
 import de.warp.bff.api.dto.FieldErrorResponse;
 import de.warp.bff.application.exception.InvalidCredentialsException;
 import de.warp.bff.application.exception.TooManyLoginAttemptsException;
+import de.warp.bff.application.exception.AccountChangeRejectedException;
+import de.warp.bff.graphql.SessionInvalidException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -137,6 +139,38 @@ public class GlobalRestExceptionHandler {
                 "MALFORMED_REQUEST_BODY",
                 "Der Inhalt der Anfrage konnte nicht gelesen werden.",
                 List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(SessionInvalidException.class)
+    public ResponseEntity<ApiErrorResponse> handleSessionInvalid(
+            SessionInvalidException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.UNAUTHORIZED,
+                "not-authenticated",
+                "NOT_AUTHENTICATED",
+                "Du bist nicht angemeldet.",
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(AccountChangeRejectedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountChangeRejected(
+            AccountChangeRejectedException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                exception.getStatus(),
+                exception.getCode()
+                        .toLowerCase(java.util.Locale.ROOT)
+                        .replace('_', '-'),
+                exception.getCode(),
+                exception.getMessage(),
+                exception.getFieldErrors(),
                 request
         );
     }

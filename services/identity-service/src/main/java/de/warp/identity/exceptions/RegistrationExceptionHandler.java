@@ -172,6 +172,55 @@ public class RegistrationExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(
+            UserNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.NOT_FOUND,
+                "user-not-found",
+                "USER_NOT_FOUND",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(IncorrectPasswordException.class)
+    public ResponseEntity<ApiErrorResponse> handleIncorrectPassword(
+            IncorrectPasswordException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.FORBIDDEN,
+                "invalid-password",
+                "INVALID_PASSWORD",
+                exception.getMessage(),
+                List.of(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidAccountChangeException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidAccountChange(
+            InvalidAccountChangeException exception,
+            HttpServletRequest request
+    ) {
+        return createProblemResponse(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "invalid-account-change-request",
+                "INVALID_ACCOUNT_CHANGE_REQUEST",
+                "Die Eingaben sind ungültig.",
+                List.of(new FieldErrorResponse(
+                        exception.getField(),
+                        exception.getCode(),
+                        exception.getMessage()
+                )),
+                request
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,

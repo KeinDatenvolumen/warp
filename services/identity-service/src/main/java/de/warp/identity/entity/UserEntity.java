@@ -84,6 +84,17 @@ import java.time.Instant;
             this.emailVerified = true;
         }
 
+        public void changeEmail(String newEmail) {
+            if (newEmail == null || newEmail.isBlank()) {
+                throw new IllegalArgumentException(
+                        "email darf nicht leer sein"
+                );
+            }
+
+            this.email = newEmail;
+            this.emailVerified = false;
+        }
+
         public void changePasswordHash(String passwordHash) {
             if (passwordHash == null || passwordHash.isBlank()) {
                 throw new IllegalArgumentException(
