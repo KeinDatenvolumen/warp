@@ -201,7 +201,6 @@ export default function SavedRoutesPage() {
             Nur Favoriten
         </button>
     </div>
-                </div>
 
                 {deleteError && (
                     <div
