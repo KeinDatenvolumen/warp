@@ -51,12 +51,6 @@ export default function SavedRouteDetailPage() {
     const [deleteError, setDeleteError] = useState<string>()
     const [favoriteError, setFavoriteError] = useState<string>()
 
-    const [confirmOpen, setConfirmOpen] =
-        useState(false)
-
-    const [deleteError, setDeleteError] =
-        useState<string>()
-
     const {
         data,
         loading,
