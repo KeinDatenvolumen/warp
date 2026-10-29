@@ -43,7 +43,8 @@ class UserGraphQlControllerTest {
                 new AuthenticatedSessionPrincipal(
                         "usr_1",
                         Instant.parse("2026-10-17T08:00:00Z"),
-                        Instant.parse("2026-10-17T20:00:00Z")
+                        Instant.parse("2026-10-17T20:00:00Z"),
+                        true
                 );
 
         UserGraphQlController.CurrentUserPayload result =
