@@ -1,38 +1,612 @@
 /*
- * Farbprofile
+ * WaRP-Farbschemata
  *
- * Es gibt drei Farbprofile (data-color-profile), jeweils in einer hellen und
- * einer dunklen Variante (data-color-mode). Beide Attribute setzt der
- * ThemeProvider (src/features/theme) auf <html>.
- *
- * Die Blöcke sind absichtlich leer: Solange hier nichts überschrieben wird,
- * gelten die Standardwerte aus variables.css.
- *
- * Farben ergänzen: die Variablen aus variables.css im passenden Block neu
- * definieren, z. B. --color-primary, --color-background, --color-surface,
- * --color-text. Für den dunklen Modus zusätzlich `color-scheme: dark;` setzen.
+ * Jedes Farbschema besitzt einen eigenen Light- und Dark-Mode.
+ * Komponenten verwenden ausschließlich die semantischen Variablen.
  */
 
-:root[data-color-profile='profile-1'][data-color-mode='light'] {
-    /* TODO: Farben Profil 1 hell */
+/*
+ * Farbschema 1: Lebendig und warm
+ * Light Mode
+ */
+
+:root[data-color-profile="profile-1"][data-color-mode="light"] {
+    color-scheme: light;
+
+    --color-text: #23251f;
+    --color-text-strong: #1b1d19;
+    --color-text-muted: #5e6257;
+    --color-text-subtle: #6b7064;
+    --color-text-disabled: #858a7e;
+    --color-text-inverse: #ffffff;
+
+    --color-background: #fffaf2;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-surface-muted: #f8f1e5;
+    --color-surface-selected: #fff0df;
+
+    --color-navigation: #fffdf8;
+    --color-input-background: #ffffff;
+    --color-dialog-background: #ffffff;
+    --color-overlay: rgb(28 24 17 / 42%);
+
+    --color-border: #ded6c8;
+    --color-border-strong: #c4b9a7;
+    --color-border-disabled: #e5dfd5;
+
+    --color-primary: #b93600;
+    --color-primary-dark: #952c00;
+    --color-primary-hover: #a83200;
+    --color-primary-active: #842700;
+    --color-primary-soft: #ffead8;
+    --color-primary-soft-hover: #ffdec2;
+    --color-on-primary: #ffffff;
+
+    --color-focus-ring: #b93600;
+    --color-focus-ring-outer: rgb(185 54 0 / 24%);
+
+    --color-secondary: #4d7e2c;
+    --color-secondary-hover: #3f6923;
+    --color-secondary-soft: #edf5df;
+    --color-on-secondary: #ffffff;
+
+    --color-selected: #b93600;
+    --color-selected-surface: #ffead8;
+    --color-selected-border: #b93600;
+
+    --color-disabled-background: #ebe6dc;
+    --color-disabled-border: #d8d1c5;
+    --color-disabled-text: #7d8178;
+
+    --color-success: #3d7522;
+    --color-success-dark: #2f5c19;
+    --color-success-text: #2f5c19;
+    --color-success-soft: #edf7e8;
+    --color-success-border: #9fc28a;
+    --color-on-success: #ffffff;
+
+    --color-warning: #8a6200;
+    --color-warning-dark: #6e4e00;
+    --color-warning-text: #785600;
+    --color-warning-soft: #fff7d6;
+    --color-warning-border: #d9b84f;
+    --color-on-warning: #201700;
+
+    --color-danger: #b42323;
+    --color-danger-dark: #8f1d1d;
+    --color-danger-text: #9d2020;
+    --color-danger-soft: #fff0f0;
+    --color-danger-border: #dfa1a1;
+    --color-on-danger: #ffffff;
+
+    --color-info: #365f7a;
+    --color-info-dark: #294b62;
+    --color-info-text: #294b62;
+    --color-info-soft: #edf6fa;
+    --color-info-border: #9bbdce;
+    --color-on-info: #ffffff;
+
+    --color-map-panel: rgb(255 255 255 / 96%);
+    --color-map-control: #ffffff;
+    --color-map-control-hover: #fff0df;
+    --color-map-control-text: #23251f;
+
+    --color-route-start: #3d7522;
+    --color-route-destination: #b93600;
+    --color-route-line: #d64000;
+    --color-route-line-outline: #ffffff;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(67 48 24 / 7%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(67 48 24 / 9%);
+    --shadow-large: 0 1rem 2.75rem rgb(67 48 24 / 13%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(185 54 0 / 18%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(40 29 18 / 20%);
 }
 
-:root[data-color-profile='profile-1'][data-color-mode='dark'] {
-    /* TODO: Farben Profil 1 dunkel */
+/*
+ * Farbschema 1: Lebendig und warm
+ * Dark Mode
+ */
+
+:root[data-color-profile="profile-1"][data-color-mode="dark"] {
+    color-scheme: dark;
+
+    --color-text: #f7f3e8;
+    --color-text-strong: #fffdf7;
+    --color-text-muted: #c5c9b9;
+    --color-text-subtle: #abb09f;
+    --color-text-disabled: #777c6e;
+    --color-text-inverse: #241305;
+
+    --color-background: #171914;
+    --color-surface: #21241d;
+    --color-surface-raised: #292d24;
+    --color-surface-muted: #1c1f19;
+    --color-surface-selected: #3a2b19;
+
+    --color-navigation: #1c1f19;
+    --color-input-background: #262a21;
+    --color-dialog-background: #292d24;
+    --color-overlay: rgb(0 0 0 / 64%);
+
+    --color-border: #41473a;
+    --color-border-strong: #5b6351;
+    --color-border-disabled: #34382f;
+
+    --color-primary: #ff8a24;
+    --color-primary-dark: #ff7420;
+    --color-primary-hover: #ff9a3f;
+    --color-primary-active: #f87c07;
+    --color-primary-soft: #432914;
+    --color-primary-soft-hover: #513219;
+    --color-on-primary: #241305;
+
+    --color-focus-ring: #ff9a3f;
+    --color-focus-ring-outer: rgb(255 154 63 / 30%);
+
+    --color-secondary: #a5ca52;
+    --color-secondary-hover: #b5d86a;
+    --color-secondary-soft: #29351f;
+    --color-on-secondary: #15200e;
+
+    --color-selected: #ff8a24;
+    --color-selected-surface: #432914;
+    --color-selected-border: #ff8a24;
+
+    --color-disabled-background: #30342b;
+    --color-disabled-border: #3d4236;
+    --color-disabled-text: #858a7a;
+
+    --color-success: #9acb61;
+    --color-success-dark: #84b84e;
+    --color-success-text: #b8df87;
+    --color-success-soft: #22311b;
+    --color-success-border: #52783a;
+    --color-on-success: #14200d;
+
+    --color-warning: #ffd05c;
+    --color-warning-dark: #e7b93c;
+    --color-warning-text: #ffe08a;
+    --color-warning-soft: #3a2d0b;
+    --color-warning-border: #806825;
+    --color-on-warning: #241b00;
+
+    --color-danger: #ff8a8a;
+    --color-danger-dark: #ef6d6d;
+    --color-danger-text: #ffaaaa;
+    --color-danger-soft: #3b1f1f;
+    --color-danger-border: #865151;
+    --color-on-danger: #2a1010;
+
+    --color-info: #8ec9e8;
+    --color-info-dark: #6eb1d5;
+    --color-info-text: #a9daf2;
+    --color-info-soft: #19303c;
+    --color-info-border: #436f84;
+    --color-on-info: #10232c;
+
+    --color-map-panel: rgb(33 36 29 / 96%);
+    --color-map-control: #292d24;
+    --color-map-control-hover: #3a2b19;
+    --color-map-control-text: #f7f3e8;
+
+    --color-route-start: #a5ca52;
+    --color-route-destination: #ff8a24;
+    --color-route-line: #ff8a24;
+    --color-route-line-outline: #241305;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(0 0 0 / 20%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(0 0 0 / 26%);
+    --shadow-large: 0 1rem 2.75rem rgb(0 0 0 / 34%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(255 138 36 / 16%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(0 0 0 / 48%);
 }
 
-:root[data-color-profile='profile-2'][data-color-mode='light'] {
-    /* TODO: Farben Profil 2 hell */
+/*
+ * Farbschema 2: Gedämpft und hochwertig
+ * Light Mode
+ */
+
+:root[data-color-profile="profile-2"][data-color-mode="light"] {
+    color-scheme: light;
+
+    --color-text: #292d30;
+    --color-text-strong: #202326;
+    --color-text-muted: #59636a;
+    --color-text-subtle: #687178;
+    --color-text-disabled: #858b8f;
+    --color-text-inverse: #ffffff;
+
+    --color-background: #f7f3ed;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-surface-muted: #eee7dc;
+    --color-surface-selected: #e8edf0;
+
+    --color-navigation: #fbf8f3;
+    --color-input-background: #ffffff;
+    --color-dialog-background: #ffffff;
+    --color-overlay: rgb(31 34 36 / 44%);
+
+    --color-border: #d8d0c5;
+    --color-border-strong: #b9b0a5;
+    --color-border-disabled: #e3ddd5;
+
+    --color-primary: #465868;
+    --color-primary-dark: #374754;
+    --color-primary-hover: #3d4e5d;
+    --color-primary-active: #303f4b;
+    --color-primary-soft: #e8edf0;
+    --color-primary-soft-hover: #dce4e8;
+    --color-on-primary: #ffffff;
+
+    --color-focus-ring: #465868;
+    --color-focus-ring-outer: rgb(70 88 104 / 25%);
+
+    --color-secondary: #66765f;
+    --color-secondary-hover: #566550;
+    --color-secondary-soft: #edf0e9;
+    --color-on-secondary: #ffffff;
+
+    --color-selected: #465868;
+    --color-selected-surface: #e8edf0;
+    --color-selected-border: #465868;
+
+    --color-disabled-background: #e9e4dc;
+    --color-disabled-border: #d6d0c8;
+    --color-disabled-text: #81868a;
+
+    --color-success: #4d7147;
+    --color-success-dark: #3b5937;
+    --color-success-text: #3b5937;
+    --color-success-soft: #edf4ea;
+    --color-success-border: #a4b99e;
+    --color-on-success: #ffffff;
+
+    --color-warning: #83612f;
+    --color-warning-dark: #684c24;
+    --color-warning-text: #6e4f21;
+    --color-warning-soft: #fbf3df;
+    --color-warning-border: #cfb77e;
+    --color-on-warning: #ffffff;
+
+    --color-danger: #a83a3a;
+    --color-danger-dark: #852d2d;
+    --color-danger-text: #8d3030;
+    --color-danger-soft: #faeeee;
+    --color-danger-border: #d6a2a2;
+    --color-on-danger: #ffffff;
+
+    --color-info: #466a7e;
+    --color-info-dark: #365365;
+    --color-info-text: #365365;
+    --color-info-soft: #edf4f7;
+    --color-info-border: #9eb8c5;
+    --color-on-info: #ffffff;
+
+    --color-map-panel: rgb(255 255 255 / 96%);
+    --color-map-control: #ffffff;
+    --color-map-control-hover: #e8edf0;
+    --color-map-control-text: #292d30;
+
+    --color-route-start: #66765f;
+    --color-route-destination: #865f42;
+    --color-route-line: #465868;
+    --color-route-line-outline: #ffffff;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(47 49 51 / 7%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(47 49 51 / 9%);
+    --shadow-large: 0 1rem 2.75rem rgb(47 49 51 / 13%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(70 88 104 / 18%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(47 49 51 / 22%);
 }
 
-:root[data-color-profile='profile-2'][data-color-mode='dark'] {
-    /* TODO: Farben Profil 2 dunkel */
+/*
+ * Farbschema 2: Gedämpft und hochwertig
+ * Dark Mode
+ */
+
+:root[data-color-profile="profile-2"][data-color-mode="dark"] {
+    color-scheme: dark;
+
+    --color-text: #f2eee8;
+    --color-text-strong: #fffdf8;
+    --color-text-muted: #c6c2bc;
+    --color-text-subtle: #aba8a3;
+    --color-text-disabled: #777a7c;
+    --color-text-inverse: #1e252b;
+
+    --color-background: #202325;
+    --color-surface: #292d30;
+    --color-surface-raised: #32373a;
+    --color-surface-muted: #25282a;
+    --color-surface-selected: #364048;
+
+    --color-navigation: #25282a;
+    --color-input-background: #2d3235;
+    --color-dialog-background: #32373a;
+    --color-overlay: rgb(0 0 0 / 66%);
+
+    --color-border: #484f53;
+    --color-border-strong: #626b70;
+    --color-border-disabled: #3b4043;
+
+    --color-primary: #b9c5d0;
+    --color-primary-dark: #a4b3c0;
+    --color-primary-hover: #c9d3dc;
+    --color-primary-active: #a7b5c1;
+    --color-primary-soft: #364048;
+    --color-primary-soft-hover: #404c55;
+    --color-on-primary: #1e252b;
+
+    --color-focus-ring: #c0ccd6;
+    --color-focus-ring-outer: rgb(192 204 214 / 28%);
+
+    --color-secondary: #aab7a3;
+    --color-secondary-hover: #bcc7b6;
+    --color-secondary-soft: #303a2f;
+    --color-on-secondary: #1c251b;
+
+    --color-selected: #b9c5d0;
+    --color-selected-surface: #364048;
+    --color-selected-border: #b9c5d0;
+
+    --color-disabled-background: #34393c;
+    --color-disabled-border: #41474a;
+    --color-disabled-text: #808588;
+
+    --color-success: #9fc098;
+    --color-success-dark: #86aa7e;
+    --color-success-text: #b6d3b0;
+    --color-success-soft: #293729;
+    --color-success-border: #587653;
+    --color-on-success: #182117;
+
+    --color-warning: #d8b979;
+    --color-warning-dark: #c3a15e;
+    --color-warning-text: #eed29a;
+    --color-warning-soft: #3a3020;
+    --color-warning-border: #77613d;
+    --color-on-warning: #261e10;
+
+    --color-danger: #e28f8f;
+    --color-danger-dark: #cc7474;
+    --color-danger-text: #f0abab;
+    --color-danger-soft: #3f2929;
+    --color-danger-border: #805555;
+    --color-on-danger: #2b1616;
+
+    --color-info: #9ac2d5;
+    --color-info-dark: #7aa9bf;
+    --color-info-text: #b2d3e2;
+    --color-info-soft: #253741;
+    --color-info-border: #526f7d;
+    --color-on-info: #14252d;
+
+    --color-map-panel: rgb(41 45 48 / 96%);
+    --color-map-control: #32373a;
+    --color-map-control-hover: #404c55;
+    --color-map-control-text: #f2eee8;
+
+    --color-route-start: #aab7a3;
+    --color-route-destination: #c69e7e;
+    --color-route-line: #b9c5d0;
+    --color-route-line-outline: #202325;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(0 0 0 / 22%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(0 0 0 / 28%);
+    --shadow-large: 0 1rem 2.75rem rgb(0 0 0 / 36%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(185 197 208 / 14%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(0 0 0 / 50%);
 }
 
-:root[data-color-profile='profile-3'][data-color-mode='light'] {
-    /* TODO: Farben Profil 3 hell */
+/*
+ * Farbschema 3: Natürlich und minimalistisch
+ * Light Mode
+ */
+
+:root[data-color-profile="profile-3"][data-color-mode="light"] {
+    color-scheme: light;
+
+    --color-text: #2c2f2b;
+    --color-text-strong: #20231f;
+    --color-text-muted: #596057;
+    --color-text-subtle: #687066;
+    --color-text-disabled: #858b83;
+    --color-text-inverse: #ffffff;
+
+    --color-background: #f1eee6;
+    --color-surface: #faf8f3;
+    --color-surface-raised: #ffffff;
+    --color-surface-muted: #e8e4db;
+    --color-surface-selected: #e1e7df;
+
+    --color-navigation: #f7f4ed;
+    --color-input-background: #ffffff;
+    --color-dialog-background: #faf8f3;
+    --color-overlay: rgb(32 35 31 / 44%);
+
+    --color-border: #d1ccc0;
+    --color-border-strong: #b6b0a4;
+    --color-border-disabled: #dedad1;
+
+    --color-primary: #4d594b;
+    --color-primary-dark: #3c473a;
+    --color-primary-hover: #424e40;
+    --color-primary-active: #333d31;
+    --color-primary-soft: #e1e7df;
+    --color-primary-soft-hover: #d5ded2;
+    --color-on-primary: #ffffff;
+
+    --color-focus-ring: #4d594b;
+    --color-focus-ring-outer: rgb(77 89 75 / 25%);
+
+    --color-secondary: #687566;
+    --color-secondary-hover: #566453;
+    --color-secondary-soft: #e8ece6;
+    --color-on-secondary: #ffffff;
+
+    --color-selected: #4d594b;
+    --color-selected-surface: #e1e7df;
+    --color-selected-border: #4d594b;
+
+    --color-disabled-background: #e3e0d8;
+    --color-disabled-border: #d2cec5;
+    --color-disabled-text: #7c827a;
+
+    --color-success: #486b45;
+    --color-success-dark: #365434;
+    --color-success-text: #365434;
+    --color-success-soft: #eaf3e8;
+    --color-success-border: #9db49a;
+    --color-on-success: #ffffff;
+
+    --color-warning: #806230;
+    --color-warning-dark: #644c25;
+    --color-warning-text: #6d5126;
+    --color-warning-soft: #f8f1dd;
+    --color-warning-border: #cbb77f;
+    --color-on-warning: #ffffff;
+
+    --color-danger: #9f3838;
+    --color-danger-dark: #7c2b2b;
+    --color-danger-text: #862f2f;
+    --color-danger-soft: #f8ecec;
+    --color-danger-border: #d1a0a0;
+    --color-on-danger: #ffffff;
+
+    --color-info: #456674;
+    --color-info-dark: #35505b;
+    --color-info-text: #35505b;
+    --color-info-soft: #ebf2f4;
+    --color-info-border: #9bb3bd;
+    --color-on-info: #ffffff;
+
+    --color-map-panel: rgb(250 248 243 / 96%);
+    --color-map-control: #faf8f3;
+    --color-map-control-hover: #e1e7df;
+    --color-map-control-text: #2c2f2b;
+
+    --color-route-start: #486b45;
+    --color-route-destination: #7a5037;
+    --color-route-line: #4d594b;
+    --color-route-line-outline: #ffffff;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(44 47 43 / 7%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(44 47 43 / 9%);
+    --shadow-large: 0 1rem 2.75rem rgb(44 47 43 / 13%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(77 89 75 / 18%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(44 47 43 / 22%);
 }
 
-:root[data-color-profile='profile-3'][data-color-mode='dark'] {
-    /* TODO: Farben Profil 3 dunkel */
+/*
+ * Farbschema 3: Natürlich und minimalistisch
+ * Dark Mode
+ */
+
+:root[data-color-profile="profile-3"][data-color-mode="dark"] {
+    color-scheme: dark;
+
+    --color-text: #f1eee6;
+    --color-text-strong: #fcfaf4;
+    --color-text-muted: #c8c2b5;
+    --color-text-subtle: #ada89d;
+    --color-text-disabled: #777c75;
+    --color-text-inverse: #1f221f;
+
+    --color-background: #1f221f;
+    --color-surface: #282c28;
+    --color-surface-raised: #313631;
+    --color-surface-muted: #242724;
+    --color-surface-selected: #354035;
+
+    --color-navigation: #242724;
+    --color-input-background: #2c302c;
+    --color-dialog-background: #313631;
+    --color-overlay: rgb(0 0 0 / 66%);
+
+    --color-border: #464c46;
+    --color-border-strong: #606860;
+    --color-border-disabled: #393e39;
+
+    --color-primary: #b7c5b4;
+    --color-primary-dark: #a0b09d;
+    --color-primary-hover: #c7d2c4;
+    --color-primary-active: #a5b4a2;
+    --color-primary-soft: #354035;
+    --color-primary-soft-hover: #3f4c3f;
+    --color-on-primary: #1f221f;
+
+    --color-focus-ring: #becbbb;
+    --color-focus-ring-outer: rgb(190 203 187 / 28%);
+
+    --color-secondary: #aab5a7;
+    --color-secondary-hover: #bbc4b8;
+    --color-secondary-soft: #303a30;
+    --color-on-secondary: #1c231c;
+
+    --color-selected: #b7c5b4;
+    --color-selected-surface: #354035;
+    --color-selected-border: #b7c5b4;
+
+    --color-disabled-background: #333833;
+    --color-disabled-border: #414741;
+    --color-disabled-text: #7e847e;
+
+    --color-success: #9fc49b;
+    --color-success-dark: #86ad82;
+    --color-success-text: #b5d5b1;
+    --color-success-soft: #293829;
+    --color-success-border: #577657;
+    --color-on-success: #172117;
+
+    --color-warning: #d7bb7a;
+    --color-warning-dark: #c0a15e;
+    --color-warning-text: #ebd19c;
+    --color-warning-soft: #393120;
+    --color-warning-border: #74623e;
+    --color-on-warning: #251f11;
+
+    --color-danger: #df9292;
+    --color-danger-dark: #c77878;
+    --color-danger-text: #efadad;
+    --color-danger-soft: #3e2929;
+    --color-danger-border: #7d5555;
+    --color-on-danger: #291616;
+
+    --color-info: #98bdc8;
+    --color-info-dark: #7fa4b0;
+    --color-info-text: #b1d1da;
+    --color-info-soft: #27363a;
+    --color-info-border: #536f77;
+    --color-on-info: #152428;
+
+    --color-map-panel: rgb(40 44 40 / 96%);
+    --color-map-control: #313631;
+    --color-map-control-hover: #3f4c3f;
+    --color-map-control-text: #f1eee6;
+
+    --color-route-start: #9fc49b;
+    --color-route-destination: #c49d82;
+    --color-route-line: #b7c5b4;
+    --color-route-line-outline: #1f221f;
+
+    --shadow-small: 0 0.25rem 0.875rem rgb(0 0 0 / 22%);
+    --shadow-medium: 0 0.625rem 1.875rem rgb(0 0 0 / 28%);
+    --shadow-large: 0 1rem 2.75rem rgb(0 0 0 / 36%);
+    --shadow-primary: 0 0.5rem 1.25rem rgb(183 197 180 / 14%);
+    --shadow-dialog: 0 1.25rem 3.5rem rgb(0 0 0 / 50%);
+}
+
+/*
+ * Reduzierte Bewegung
+ */
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-fast: 1ms;
+        --transition-default: 1ms;
+        --transition-slow: 1ms;
+    }
 }

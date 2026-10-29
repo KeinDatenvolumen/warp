@@ -2,14 +2,15 @@ import {StrictMode} from 'react'
 import {createRoot} from 'react-dom/client'
 import {ApolloProvider} from '@apollo/client/react'
 import {BrowserRouter} from 'react-router'
+import {apolloClient} from '../api/apolloClient'
 import {ThemeProvider} from '../features/theme/ThemeContext'
 import App from './App'
+
+import '../styles/reset.css'
 import '../styles/variables.css'
 import '../styles/themes.css'
-import '../styles/reset.css'
 import '../styles/typography.css'
 import '../styles/global.css'
-import {apolloClient} from '../api/apolloClient'
 
 const rootElement = document.getElementById('root')
 
@@ -26,5 +27,5 @@ createRoot(rootElement).render(
                 </BrowserRouter>
             </ApolloProvider>
         </ThemeProvider>
-    </StrictMode>
+    </StrictMode>,
 )

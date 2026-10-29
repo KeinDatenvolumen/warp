@@ -1,18 +1,22 @@
-import {Route, Routes} from 'react-router'
-import AppLayout from './AppLayout'
-import HomePage from '../pages/HomePage'
-import LoginPage from '../pages/LoginPage'
-import ProfilePage from '../pages/ProfilePage'
-import RoutePlannerPage from '../pages/RoutePlannerPage'
-import SavedRoutesPage from '../pages/SavedRoutesPage'
-import SavedRouteDetailPage from '../pages/SavedRouteDetailPage'
-import {SystemStatusPage} from '../pages/SystemStatusPage'
-import {NotFoundPage} from '../pages/NotFoundPage'
+import {
+    Navigate,
+    Route,
+    Routes,
+} from 'react-router'
 import ProtectedRoute from '../components/routing/ProtectedRoute'
-import RegistrationPage from '../pages/RegistrationPage'
 import EmailVerificationPage from '../pages/EmailVerificationPage'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage'
+import HomePage from '../pages/HomePage'
+import LoginPage from '../pages/LoginPage'
+import {NotFoundPage} from '../pages/NotFoundPage'
+import ProfilePage from '../pages/ProfilePage'
+import RegistrationPage from '../pages/RegistrationPage'
 import ResetPasswordPage from '../pages/ResetPasswordPage'
+import RoutePlannerPage from '../pages/RoutePlannerPage'
+import SavedRouteDetailPage from '../pages/SavedRouteDetailPage'
+import SavedRoutesPage from '../pages/SavedRoutesPage'
+import {SystemStatusPage} from '../pages/SystemStatusPage'
+import AppLayout from './AppLayout'
 
 export default function AppRoutes() {
     return (
@@ -20,7 +24,12 @@ export default function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route
                     path="/"
-                    element={<HomePage />}
+                    element={
+                        <Navigate
+                            to="/route-planner"
+                            replace
+                        />
+                    }
                 />
 
                 <Route
@@ -78,6 +87,11 @@ export default function AppRoutes() {
                             <SavedRouteDetailPage />
                         </ProtectedRoute>
                     }
+                />
+
+                <Route
+                    path="/system-health"
+                    element={<HomePage />}
                 />
 
                 <Route

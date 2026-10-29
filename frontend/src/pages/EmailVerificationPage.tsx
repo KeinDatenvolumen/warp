@@ -3,17 +3,23 @@ import {
     type FormEvent,
     useEffect,
     useRef,
-    useState
+    useState,
 } from 'react'
 import {Link, useSearchParams} from 'react-router'
-import {confirmEmail, resendVerificationEmail} from '../api/emailVerificationApi'
+
+import {
+    confirmEmail,
+    resendVerificationEmail,
+} from '../api/emailVerificationApi'
 import {ApiRequestError} from '../api/restClient'
 import Loader from '../components/ui/Loader/Loader'
 import {
     mapConfirmError,
-    mapResendError
+    mapResendError,
 } from '../features/email-verification/emailVerificationErrorMapping'
-import {validateResendEmail} from '../features/email-verification/emailVerificationValidation'
+import {
+    validateResendEmail,
+} from '../features/email-verification/emailVerificationValidation'
 import styles from './EmailVerificationPage.module.css'
 
 type VerificationState =
@@ -24,51 +30,78 @@ type VerificationState =
 
 export default function EmailVerificationPage() {
     const [searchParams] = useSearchParams()
-    const token = searchParams.get('token')?.trim() || ''
 
-    const [state, setState] = useState<VerificationState>(() =>
-        token ? {status: 'verifying'} : {status: 'no_token'}
-    )
+    const token =
+        searchParams.get('token')?.trim() || ''
 
-    const verificationStartedRef = useRef<string | null>(null)
+    const [state, setState] =
+        useState<VerificationState>(() =>
+            token
+                ? {status: 'verifying'}
+                : {status: 'no_token'},
+        )
 
-    const [resendEmailInput, setResendEmailInput] = useState('')
-    const [resendEmailError, setResendEmailError] = useState<string>()
-    const [resendFormError, setResendFormError] = useState<string>()
-    const [resendSuccessMessage, setResendSuccessMessage] = useState<string>()
-    const [isResending, setIsResending] = useState(false)
+    const verificationStartedRef =
+        useRef<string | null>(null)
+
+    const [resendEmailInput, setResendEmailInput] =
+        useState('')
+
+    const [resendEmailError, setResendEmailError] =
+        useState<string>()
+
+    const [resendFormError, setResendFormError] =
+        useState<string>()
+
+    const [
+        resendSuccessMessage,
+        setResendSuccessMessage,
+    ] = useState<string>()
+
+    const [isResending, setIsResending] =
+        useState(false)
 
     useEffect(() => {
         if (!token) {
-            setState({status: 'no_token'})
+            setState({
+                status: 'no_token',
+            })
             return
         }
 
-        if (verificationStartedRef.current === token) {
+        if (
+            verificationStartedRef.current === token
+        ) {
             return
         }
+
         verificationStartedRef.current = token
 
-        confirmEmail(token)
+        void confirmEmail(token)
             .then(() => {
-                setState({status: 'success'})
+                setState({
+                    status: 'success',
+                })
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 const message =
                     error instanceof ApiRequestError
                         ? mapConfirmError(
-                              error.status,
-                              error.code,
-                              error.message
-                          )
+                            error.status,
+                            error.code,
+                            error.message,
+                        )
                         : 'Die E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuche es erneut.'
 
-                setState({status: 'error', message})
+                setState({
+                    status: 'error',
+                    message,
+                })
             })
     }, [token])
 
     function handleResendEmailChange(
-        event: ChangeEvent<HTMLInputElement>
+        event: ChangeEvent<HTMLInputElement>,
     ): void {
         setResendEmailInput(event.target.value)
         setResendEmailError(undefined)
@@ -77,7 +110,7 @@ export default function EmailVerificationPage() {
     }
 
     async function handleResendSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ): Promise<void> {
         event.preventDefault()
 
@@ -85,7 +118,9 @@ export default function EmailVerificationPage() {
             return
         }
 
-        const validationError = validateResendEmail(resendEmailInput)
+        const validationError =
+            validateResendEmail(resendEmailInput)
+
         if (validationError) {
             setResendEmailError(validationError)
             return
@@ -97,19 +132,27 @@ export default function EmailVerificationPage() {
         setResendSuccessMessage(undefined)
 
         try {
-            await resendVerificationEmail(resendEmailInput.trim())
-            setResendSuccessMessage(
-                'Falls ein Benutzerkonto mit dieser E-Mail-Adresse existiert, wurde eine neue Bestätigungs-E-Mail versendet.'
+            await resendVerificationEmail(
+                resendEmailInput.trim(),
             )
+
+            setResendSuccessMessage(
+                'Falls ein Benutzerkonto mit dieser E-Mail-Adresse existiert, wurde eine neue Bestätigungs-E-Mail versendet.',
+            )
+
             setResendEmailInput('')
         } catch (error) {
             if (error instanceof ApiRequestError) {
                 setResendFormError(
-                    mapResendError(error.status, error.code, error.message)
+                    mapResendError(
+                        error.status,
+                        error.code,
+                        error.message,
+                    ),
                 )
             } else {
                 setResendFormError(
-                    'Die Bestätigungs-E-Mail konnte nicht erneut gesendet werden. Bitte versuche es erneut.'
+                    'Die Bestätigungs-E-Mail konnte nicht erneut gesendet werden. Bitte versuche es erneut.',
                 )
             }
         } finally {
@@ -118,118 +161,273 @@ export default function EmailVerificationPage() {
     }
 
     return (
-        <main className={styles.page}>
-            <section className={styles.card}>
-                <p className={styles.eyebrow}>E-Mail-Verifikation</p>
+        <div className={styles.page}>
+            <section
+                className={styles.card}
+                aria-labelledby="verification-heading"
+            >
+                <p className={styles.eyebrow}>
+                    E-Mail-Verifikation
+                </p>
 
                 {state.status === 'verifying' && (
                     <div className={styles.loaderWrapper}>
                         <Loader />
-                        <h1>E-Mail-Adresse wird bestätigt …</h1>
-                        <p className={styles.description}>
-                            Bitte habe einen kurzen Moment Geduld.
+
+                        <h1 id="verification-heading">
+                            E-Mail-Adresse wird bestätigt …
+                        </h1>
+
+                        <p
+                            className={styles.description}
+                            role="status"
+                        >
+                            Bitte habe einen kurzen Moment
+                            Geduld.
                         </p>
                     </div>
                 )}
 
                 {state.status === 'success' && (
                     <div>
-                        <h1>E-Mail-Adresse bestätigt</h1>
-                        <p className={styles.description}>
-                            Deine E-Mail-Adresse wurde erfolgreich bestätigt.
-                            Dein Konto ist jetzt vollständig aktiviert und du kannst
-                            dich anmelden.
-                        </p>
-                        <Link to="/login" className={styles.button}>
+                        <header className={styles.header}>
+                            <span
+                                className={
+                                    styles.successHeaderIcon
+                                }
+                                aria-hidden="true"
+                            >
+                                ✓
+                            </span>
+
+                            <h1 id="verification-heading">
+                                E-Mail-Adresse bestätigt
+                            </h1>
+                        </header>
+
+                        <div
+                            className={
+                                styles.successMessage
+                            }
+                            role="status"
+                        >
+                            <p>
+                                Deine E-Mail-Adresse wurde
+                                erfolgreich bestätigt. Dein
+                                Konto ist jetzt vollständig
+                                aktiviert und du kannst dich
+                                anmelden.
+                            </p>
+                        </div>
+
+                        <Link
+                            to="/login"
+                            className={styles.button}
+                        >
                             Zum Login
                         </Link>
                     </div>
                 )}
 
-                {(state.status === 'error' || state.status === 'no_token') && (
+                {(state.status === 'error' ||
+                    state.status === 'no_token') && (
                     <div>
-                        <h1>
-                            {state.status === 'error'
-                                ? 'Bestätigung fehlgeschlagen'
-                                : 'Bestätigungslink unvollständig'}
-                        </h1>
+                        <header className={styles.header}>
+                            <span
+                                className={
+                                    styles.errorHeaderIcon
+                                }
+                                aria-hidden="true"
+                            >
+                                !
+                            </span>
 
-                        <p className={styles.formError} role="alert">
-                            {state.status === 'error'
-                                ? state.message
-                                : 'Es wurde kein Bestätigungstoken übergeben. Bitte verwende den vollständigen Link aus deiner E-Mail.'}
-                        </p>
+                            <h1 id="verification-heading">
+                                {state.status === 'error'
+                                    ? 'Bestätigung fehlgeschlagen'
+                                    : 'Bestätigungslink unvollständig'}
+                            </h1>
+                        </header>
 
-                        <div className={styles.resendSection}>
-                            <h2>Bestätigungs-E-Mail erneut anfordern</h2>
-                            <p className={styles.description}>
-                                Gib deine E-Mail-Adresse ein, um einen neuen
-                                Bestätigungslink zu erhalten.
+                        <div
+                            className={styles.formError}
+                            role="alert"
+                        >
+                            <span
+                                className={styles.errorIcon}
+                                aria-hidden="true"
+                            >
+                                !
+                            </span>
+
+                            <span>
+                                {state.status === 'error'
+                                    ? state.message
+                                    : 'Es wurde kein Bestätigungstoken übergeben. Bitte verwende den vollständigen Link aus deiner E-Mail.'}
+                            </span>
+                        </div>
+
+                        <section
+                            className={
+                                styles.resendSection
+                            }
+                            aria-labelledby="resend-heading"
+                        >
+                            <h2 id="resend-heading">
+                                Bestätigungs-E-Mail erneut
+                                anfordern
+                            </h2>
+
+                            <p
+                                className={
+                                    styles.description
+                                }
+                            >
+                                Gib deine E-Mail-Adresse
+                                ein, um einen neuen
+                                Bestätigungslink zu
+                                erhalten.
                             </p>
 
-                            <form onSubmit={(e) => void handleResendSubmit(e)} noValidate>
-                                <div className={styles.field}>
+                            <form
+                                className={styles.form}
+                                onSubmit={
+                                    handleResendSubmit
+                                }
+                                noValidate
+                                aria-busy={isResending}
+                            >
+                                <div
+                                    className={
+                                        styles.field
+                                    }
+                                >
                                     <label htmlFor="resend-email">
                                         E-Mail-Adresse
                                     </label>
+
                                     <input
                                         id="resend-email"
                                         name="email"
                                         type="email"
+                                        inputMode="email"
                                         autoComplete="email"
-                                        value={resendEmailInput}
-                                        onChange={handleResendEmailChange}
-                                        aria-invalid={resendEmailError !== undefined}
+                                        autoCapitalize="none"
+                                        spellCheck={false}
+                                        value={
+                                            resendEmailInput
+                                        }
+                                        onChange={
+                                            handleResendEmailChange
+                                        }
+                                        aria-invalid={
+                                            resendEmailError !==
+                                            undefined
+                                        }
                                         aria-describedby={
                                             resendEmailError
                                                 ? 'resend-email-error'
                                                 : undefined
                                         }
                                     />
+
                                     {resendEmailError && (
                                         <p
                                             id="resend-email-error"
-                                            className={styles.fieldError}
+                                            className={
+                                                styles.fieldError
+                                            }
                                             role="alert"
                                         >
-                                            {resendEmailError}
+                                            {
+                                                resendEmailError
+                                            }
                                         </p>
                                     )}
                                 </div>
 
                                 {resendFormError && (
-                                    <p className={styles.formError} role="alert">
-                                        {resendFormError}
-                                    </p>
+                                    <div
+                                        className={
+                                            styles.formError
+                                        }
+                                        role="alert"
+                                    >
+                                        <span
+                                            className={
+                                                styles.errorIcon
+                                            }
+                                            aria-hidden="true"
+                                        >
+                                            !
+                                        </span>
+
+                                        <span>
+                                            {
+                                                resendFormError
+                                            }
+                                        </span>
+                                    </div>
                                 )}
 
                                 {resendSuccessMessage && (
-                                    <p
-                                        className={styles.successMessage}
+                                    <div
+                                        className={
+                                            styles.successMessage
+                                        }
                                         role="status"
                                     >
-                                        {resendSuccessMessage}
-                                    </p>
+                                        <span
+                                            className={
+                                                styles.successIcon
+                                            }
+                                            aria-hidden="true"
+                                        >
+                                            ✓
+                                        </span>
+
+                                        <span>
+                                            {
+                                                resendSuccessMessage
+                                            }
+                                        </span>
+                                    </div>
                                 )}
 
                                 <button
                                     type="submit"
-                                    className={styles.button}
+                                    className={
+                                        styles.button
+                                    }
                                     disabled={isResending}
+                                    aria-busy={
+                                        isResending
+                                    }
                                 >
                                     {isResending
                                         ? 'Wird versendet …'
                                         : 'Neue Bestätigungs-E-Mail senden'}
                                 </button>
                             </form>
-                        </div>
+                        </section>
 
-                        <div className={styles.footerLinks}>
-                            <Link to="/login">Zurück zum Login</Link>
+                        <div
+                            className={
+                                styles.footerLinks
+                            }
+                        >
+                            <Link
+                                to="/login"
+                                className={
+                                    styles.loginLink
+                                }
+                            >
+                                Zurück zum Login
+                            </Link>
                         </div>
                     </div>
                 )}
             </section>
-        </main>
+        </div>
     )
 }

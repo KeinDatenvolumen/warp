@@ -2,21 +2,22 @@ import {
     type ChangeEvent,
     type FormEvent,
     useRef,
-    useState
+    useState,
 } from 'react'
 import {Link} from 'react-router'
+
 import {sendPasswordResetEmail} from '../api/passwordResetApi'
 import {ApiRequestError} from '../api/restClient'
 import {mapPasswordResetSendError} from '../features/password-reset/passwordResetErrorMapping'
 import {
     validateForgotPassword,
     type ForgotPasswordFieldErrors,
-    type ForgotPasswordValues
+    type ForgotPasswordValues,
 } from '../features/password-reset/passwordResetValidation'
 import styles from './ForgotPasswordPage.module.css'
 
 const initialValues: ForgotPasswordValues = {
-    email: ''
+    email: '',
 }
 
 export default function ForgotPasswordPage() {
@@ -39,10 +40,10 @@ export default function ForgotPasswordPage() {
     const emailRef = useRef<HTMLInputElement>(null)
 
     function handleChange(
-        event: ChangeEvent<HTMLInputElement>
+        event: ChangeEvent<HTMLInputElement>,
     ): void {
         setValues({
-            email: event.target.value
+            email: event.target.value,
         })
 
         setErrors({})
@@ -51,7 +52,7 @@ export default function ForgotPasswordPage() {
     }
 
     async function handleSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ): Promise<void> {
         event.preventDefault()
 
@@ -76,13 +77,13 @@ export default function ForgotPasswordPage() {
 
         try {
             await sendPasswordResetEmail(
-                values.email.trim()
+                values.email.trim(),
             )
 
             setSuccessMessage(
-                'Falls für diese E-Mail-Adresse ein Benutzerkonto '
-                + 'existiert, wurde ein Link zum Zurücksetzen '
-                + 'des Passworts versendet.'
+                'Falls für diese E-Mail-Adresse ein Benutzerkonto ' +
+                'existiert, wurde ein Link zum Zurücksetzen ' +
+                'des Passworts versendet.',
             )
 
             setValues(initialValues)
@@ -92,14 +93,14 @@ export default function ForgotPasswordPage() {
                     mapPasswordResetSendError(
                         error.status,
                         error.code,
-                        error.message
-                    )
+                        error.message,
+                    ),
                 )
             } else {
                 setFormError(
-                    'Die Passwort-Rücksetzungs-E-Mail konnte '
-                    + 'nicht versendet werden. Bitte versuche '
-                    + 'es später erneut.'
+                    'Die Passwort-Rücksetzungs-E-Mail konnte ' +
+                    'nicht versendet werden. Bitte versuche ' +
+                    'es später erneut.',
                 )
             }
 
@@ -111,26 +112,57 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <main className={styles.page}>
-            <section className={styles.card}>
-                <p className={styles.eyebrow}>
-                    Passwort-Rücksetzung
-                </p>
+        <div className={styles.page}>
+            <section
+                className={styles.card}
+                aria-labelledby="forgot-password-heading"
+            >
+                <header className={styles.header}>
+                    <span
+                        className={styles.headerIcon}
+                        aria-hidden="true"
+                    >
+                        ↺
+                    </span>
 
-                <h1>Passwort vergessen?</h1>
+                    <div>
+                        <p className={styles.eyebrow}>
+                            Passwort-Rücksetzung
+                        </p>
+
+                        <h1 id="forgot-password-heading">
+                            Passwort vergessen?
+                        </h1>
+                    </div>
+                </header>
 
                 <p className={styles.description}>
-                    Gib die E-Mail-Adresse deines Benutzerkontos
-                    ein. Wenn ein Konto mit dieser Adresse
-                    existiert, senden wir dir einen zeitlich
-                    begrenzten Link zum Zurücksetzen deines
-                    Passworts.
+                    Gib die E-Mail-Adresse deines
+                    Benutzerkontos ein. Wenn ein Konto mit
+                    dieser Adresse existiert, senden wir dir
+                    einen zeitlich begrenzten Link zum
+                    Zurücksetzen deines Passworts.
                 </p>
 
+                <div className={styles.privacyNotice}>
+                    <span
+                        className={styles.privacyIcon}
+                        aria-hidden="true"
+                    >
+                        i
+                    </span>
+
+                    <p>
+                        Aus Datenschutzgründen erhältst du
+                        dieselbe Rückmeldung, unabhängig
+                        davon, ob ein Konto mit dieser
+                        E-Mail-Adresse existiert.
+                    </p>
+                </div>
+
                 <form
-                    onSubmit={(event) =>
-                        void handleSubmit(event)
-                    }
+                    className={styles.form}
+                    onSubmit={handleSubmit}
                     noValidate
                     aria-busy={isSubmitting}
                 >
@@ -150,7 +182,9 @@ export default function ForgotPasswordPage() {
                             spellCheck={false}
                             value={values.email}
                             onChange={handleChange}
-                            aria-invalid={Boolean(errors.email)}
+                            aria-invalid={Boolean(
+                                errors.email,
+                            )}
                             aria-describedby={
                                 errors.email
                                     ? 'forgot-password-email-error'
@@ -170,21 +204,39 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     {formError && (
-                        <p
+                        <div
                             className={styles.formError}
                             role="alert"
                         >
-                            {formError}
-                        </p>
+                            <span
+                                className={styles.errorIcon}
+                                aria-hidden="true"
+                            >
+                                !
+                            </span>
+
+                            <span>{formError}</span>
+                        </div>
                     )}
 
                     {successMessage && (
-                        <p
-                            className={styles.successMessage}
+                        <div
+                            className={
+                                styles.successMessage
+                            }
                             role="status"
                         >
-                            {successMessage}
-                        </p>
+                            <span
+                                className={
+                                    styles.successIcon
+                                }
+                                aria-hidden="true"
+                            >
+                                ✓
+                            </span>
+
+                            <span>{successMessage}</span>
+                        </div>
                     )}
 
                     <button
@@ -200,11 +252,16 @@ export default function ForgotPasswordPage() {
                 </form>
 
                 <div className={styles.footerLinks}>
-                    <Link to="/login">
+                    <Link
+                        to="/login"
+                        className={styles.loginLink}
+                    >
+                        <span aria-hidden="true">←</span>
+                        {' '}
                         Zurück zum Login
                     </Link>
                 </div>
             </section>
-        </main>
+        </div>
     )
 }

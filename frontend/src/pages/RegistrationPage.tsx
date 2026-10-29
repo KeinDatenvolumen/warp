@@ -1,57 +1,89 @@
 import {
     type ChangeEvent,
     type FormEvent,
-    useState
+    useState,
 } from 'react'
 import {Link} from 'react-router'
+
 import {registerUser} from '../api/registrationApi'
 import {ApiRequestError} from '../api/restClient'
 import {mapRegistrationApiErrors} from '../features/registration/registrationErrorMapping'
 import {
     validateRegistration,
     type RegistrationFieldErrors,
-    type RegistrationValues
+    type RegistrationValues,
 } from '../features/registration/registrationValidation'
 import styles from './RegistrationPage.module.css'
 
 const initialValues: RegistrationValues = {
     name: '',
     email: '',
-    password: ''
+    password: '',
 }
 
 export default function RegistrationPage() {
-    const [values, setValues] = useState(initialValues)
+    const [values, setValues] =
+        useState<RegistrationValues>(initialValues)
+
     const [errors, setErrors] =
         useState<RegistrationFieldErrors>({})
+
     const [formError, setFormError] =
         useState<string>()
+
     const [successMessage, setSuccessMessage] =
         useState<string>()
+
     const [isSubmitting, setIsSubmitting] =
         useState(false)
 
     function handleChange(
-        event: ChangeEvent<HTMLInputElement>
+        event: ChangeEvent<HTMLInputElement>,
     ): void {
         const {name, value} = event.target
 
-        setValues((current) => ({
-            ...current,
-            [name]: value
-        }))
+        if (name === 'name') {
+            setValues((currentValues) => ({
+                ...currentValues,
+                name: value,
+            }))
 
-        setErrors((current) => ({
-            ...current,
-            [name]: undefined
-        }))
+            setErrors((currentErrors) => ({
+                ...currentErrors,
+                name: undefined,
+            }))
+        }
+
+        if (name === 'email') {
+            setValues((currentValues) => ({
+                ...currentValues,
+                email: value,
+            }))
+
+            setErrors((currentErrors) => ({
+                ...currentErrors,
+                email: undefined,
+            }))
+        }
+
+        if (name === 'password') {
+            setValues((currentValues) => ({
+                ...currentValues,
+                password: value,
+            }))
+
+            setErrors((currentErrors) => ({
+                ...currentErrors,
+                password: undefined,
+            }))
+        }
 
         setFormError(undefined)
         setSuccessMessage(undefined)
     }
 
     async function handleSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ): Promise<void> {
         event.preventDefault()
 
@@ -76,25 +108,25 @@ export default function RegistrationPage() {
             const response = await registerUser({
                 name: values.name.trim(),
                 email: values.email.trim(),
-                password: values.password
+                password: values.password,
             })
 
             setSuccessMessage(response.message)
-
         } catch (error) {
             if (error instanceof ApiRequestError) {
-                const mapped = mapRegistrationApiErrors(
-                    error.status,
-                    error.code,
-                    error.fieldErrors,
-                    error.message
-                )
+                const mapped =
+                    mapRegistrationApiErrors(
+                        error.status,
+                        error.code,
+                        error.fieldErrors,
+                        error.message,
+                    )
 
                 setErrors(mapped.fieldErrors)
                 setFormError(mapped.formError)
             } else {
                 setFormError(
-                    'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.'
+                    'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.',
                 )
             }
         } finally {
@@ -103,33 +135,75 @@ export default function RegistrationPage() {
     }
 
     return (
-        <main className={styles.page}>
-            <section className={styles.card}>
-                <p className={styles.eyebrow}>
-                    Benutzerkonto
+        <div className={styles.page}>
+            <section
+                className={styles.card}
+                aria-labelledby="registration-heading"
+            >
+                <header className={styles.header}>
+                    <span
+                        className={styles.accountIcon}
+                        aria-hidden="true"
+                    >
+                        +
+                    </span>
+
+                    <div>
+                        <p className={styles.eyebrow}>
+                            Benutzerkonto
+                        </p>
+
+                        <h1 id="registration-heading">
+                            Registrieren
+                        </h1>
+                    </div>
+                </header>
+
+                <p className={styles.description}>
+                    Erstelle ein Benutzerkonto, um
+                    wetteroptimierte Routen zu planen,
+                    zu speichern und später erneut
+                    aufzurufen.
                 </p>
 
-                <h1>Registrieren</h1>
-
                 {formError && (
-                    <p
+                    <div
                         className={styles.formError}
                         role="alert"
                     >
-                        {formError}
-                    </p>
+                        <span
+                            className={styles.messageIcon}
+                            aria-hidden="true"
+                        >
+                            !
+                        </span>
+
+                        <span>{formError}</span>
+                    </div>
                 )}
 
                 {successMessage && (
-                    <p
+                    <div
                         className={styles.successMessage}
                         role="status"
                     >
-                        {successMessage}
-                    </p>
+                        <span
+                            className={styles.successIcon}
+                            aria-hidden="true"
+                        >
+                            ✓
+                        </span>
+
+                        <span>{successMessage}</span>
+                    </div>
                 )}
 
-                <form onSubmit={handleSubmit} noValidate>
+                <form
+                    className={styles.form}
+                    onSubmit={handleSubmit}
+                    noValidate
+                    aria-busy={isSubmitting}
+                >
                     <div className={styles.field}>
                         <label htmlFor="registration-name">
                             Name
@@ -143,7 +217,7 @@ export default function RegistrationPage() {
                             value={values.name}
                             onChange={handleChange}
                             aria-invalid={Boolean(
-                                errors.name
+                                errors.name,
                             )}
                             aria-describedby={
                                 errors.name
@@ -172,10 +246,15 @@ export default function RegistrationPage() {
                             id="registration-email"
                             name="email"
                             type="email"
+                            inputMode="email"
                             autoComplete="email"
+                            autoCapitalize="none"
+                            spellCheck={false}
                             value={values.email}
                             onChange={handleChange}
-                            aria-invalid={Boolean(errors.email)}
+                            aria-invalid={Boolean(
+                                errors.email,
+                            )}
                             aria-describedby={
                                 errors.email
                                     ? 'registration-email-error'
@@ -207,7 +286,7 @@ export default function RegistrationPage() {
                             value={values.password}
                             onChange={handleChange}
                             aria-invalid={Boolean(
-                                errors.password
+                                errors.password,
                             )}
                             aria-describedby={
                                 errors.password
@@ -231,6 +310,7 @@ export default function RegistrationPage() {
                         type="submit"
                         className={styles.button}
                         disabled={isSubmitting}
+                        aria-busy={isSubmitting}
                     >
                         {isSubmitting
                             ? 'Registrierung läuft …'
@@ -238,13 +318,19 @@ export default function RegistrationPage() {
                     </button>
                 </form>
 
-                <p className={styles.loginPrompt}>
-                    Bereits einen Account?{' '}
-                    <Link to="/login">
+                <div className={styles.loginArea}>
+                    <p className={styles.loginPrompt}>
+                        Bereits einen Account?
+                    </p>
+
+                    <Link
+                        to="/login"
+                        className={styles.loginLink}
+                    >
                         Anmelden
                     </Link>
-                </p>
+                </div>
             </section>
-        </main>
+        </div>
     )
 }

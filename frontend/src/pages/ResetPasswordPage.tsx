@@ -2,7 +2,7 @@ import {
     type ChangeEvent,
     type FormEvent,
     useRef,
-    useState
+    useState,
 } from 'react'
 import {Link, useSearchParams} from 'react-router'
 import {confirmPasswordReset} from '../api/passwordResetApi'
@@ -12,13 +12,13 @@ import {
     RESET_PASSWORD_FIELD_ORDER,
     validateResetPassword,
     type ResetPasswordFieldErrors,
-    type ResetPasswordValues
+    type ResetPasswordValues,
 } from '../features/password-reset/passwordResetValidation'
 import styles from './ResetPasswordPage.module.css'
 
 const initialValues: ResetPasswordValues = {
     newPassword: '',
-    passwordConfirmation: ''
+    passwordConfirmation: '',
 }
 
 export default function ResetPasswordPage() {
@@ -49,46 +49,67 @@ export default function ResetPasswordPage() {
         useRef<HTMLInputElement>(null)
 
     function handleChange(
-        event: ChangeEvent<HTMLInputElement>
+        event: ChangeEvent<HTMLInputElement>,
     ): void {
         const {name, value} = event.target
 
-        setValues((current) => ({
-            ...current,
-            [name]: value
-        }))
+        if (name === 'newPassword') {
+            setValues((currentValues) => ({
+                ...currentValues,
+                newPassword: value,
+            }))
 
-        setErrors((current) => ({
-            ...current,
-            [name]: undefined
-        }))
+            setErrors((currentErrors) => ({
+                ...currentErrors,
+                newPassword: undefined,
+            }))
+        }
+
+        if (name === 'passwordConfirmation') {
+            setValues((currentValues) => ({
+                ...currentValues,
+                passwordConfirmation: value,
+            }))
+
+            setErrors((currentErrors) => ({
+                ...currentErrors,
+                passwordConfirmation: undefined,
+            }))
+        }
 
         setFormError(undefined)
     }
 
     function focusFirstInvalidField(
-        validationErrors: ResetPasswordFieldErrors
+        validationErrors: ResetPasswordFieldErrors,
     ): void {
         const firstInvalid =
             RESET_PASSWORD_FIELD_ORDER.find(
-                (field) => validationErrors[field]
+                (field) => validationErrors[field],
             )
 
         if (firstInvalid === 'newPassword') {
             newPasswordRef.current?.focus()
-        } else if (
-            firstInvalid === 'passwordConfirmation'
+            return
+        }
+
+        if (
+            firstInvalid ===
+            'passwordConfirmation'
         ) {
             passwordConfirmationRef.current?.focus()
         }
     }
 
     async function handleSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ): Promise<void> {
         event.preventDefault()
 
-        if (isSubmittingRef.current || !token) {
+        if (
+            isSubmittingRef.current ||
+            !token
+        ) {
             return
         }
 
@@ -98,18 +119,24 @@ export default function ResetPasswordPage() {
         setErrors(validationErrors)
         setFormError(undefined)
 
-        if (Object.keys(validationErrors).length > 0) {
-            focusFirstInvalidField(validationErrors)
+        if (
+            Object.keys(validationErrors).length > 0
+        ) {
+            focusFirstInvalidField(
+                validationErrors,
+            )
             return
         }
 
         isSubmittingRef.current = true
         setIsSubmitting(true)
 
+        let shouldFocusPassword = false
+
         try {
             await confirmPasswordReset(
                 token,
-                values.newPassword
+                values.newPassword,
             )
 
             setValues(initialValues)
@@ -120,47 +147,56 @@ export default function ResetPasswordPage() {
                     mapPasswordResetConfirmError(
                         error.status,
                         error.code,
-                        error.message
-                    )
+                        error.message,
+                    ),
                 )
             } else {
                 setFormError(
-                    'Das Passwort konnte nicht zurückgesetzt '
-                    + 'werden. Bitte versuche es erneut.'
+                    'Das Passwort konnte nicht zurückgesetzt werden. Bitte versuche es erneut.',
                 )
             }
 
-            setValues((current) => ({
-                ...current,
+            setValues({
                 newPassword: '',
-                passwordConfirmation: ''
-            }))
+                passwordConfirmation: '',
+            })
 
-            newPasswordRef.current?.focus()
+            shouldFocusPassword = true
         } finally {
             isSubmittingRef.current = false
             setIsSubmitting(false)
+
+            if (shouldFocusPassword) {
+                window.setTimeout(() => {
+                    newPasswordRef.current?.focus()
+                }, 0)
+            }
         }
     }
 
     if (!token) {
         return (
-            <main className={styles.page}>
+            <div className={styles.page}>
                 <section className={styles.card}>
                     <p className={styles.eyebrow}>
                         Passwort-Rücksetzung
                     </p>
 
-                    <h1>Rücksetzungslink unvollständig</h1>
+                    <h1>
+                        Rücksetzungslink unvollständig
+                    </h1>
 
-                    <p
+                    <div
                         className={styles.formError}
                         role="alert"
                     >
-                        Es wurde kein Rücksetzungstoken
-                        übergeben. Bitte verwende den
-                        vollständigen Link aus deiner E-Mail.
-                    </p>
+                        <span>
+                            Es wurde kein Rücksetzungstoken
+                            übergeben. Bitte verwende den
+                            vollständigen Link aus deiner
+                            E-Mail.
+                        </span>
+                    </div>
 
                     <div className={styles.footerLinks}>
                         <Link to="/forgot-password">
@@ -172,27 +208,32 @@ export default function ResetPasswordPage() {
                         </Link>
                     </div>
                 </section>
-            </main>
+            </div>
         )
     }
 
     if (isSuccessful) {
         return (
-            <main className={styles.page}>
+            <div className={styles.page}>
                 <section className={styles.card}>
                     <p className={styles.eyebrow}>
                         Passwort-Rücksetzung
                     </p>
 
-                    <h1>Passwort erfolgreich geändert</h1>
+                    <h1>
+                        Passwort erfolgreich geändert
+                    </h1>
 
-                    <p
+                    <div
                         className={styles.successMessage}
                         role="status"
                     >
-                        Dein neues Passwort wurde gespeichert.
-                        Du kannst dich jetzt damit anmelden.
-                    </p>
+                        <span>
+                            Dein neues Passwort wurde
+                            gespeichert. Du kannst dich
+                            jetzt damit anmelden.
+                        </span>
+                    </div>
 
                     <Link
                         to="/login"
@@ -201,18 +242,20 @@ export default function ResetPasswordPage() {
                         Zum Login
                     </Link>
                 </section>
-            </main>
+            </div>
         )
     }
 
     return (
-        <main className={styles.page}>
+        <div className={styles.page}>
             <section className={styles.card}>
                 <p className={styles.eyebrow}>
                     Passwort-Rücksetzung
                 </p>
 
-                <h1>Neues Passwort vergeben</h1>
+                <h1>
+                    Neues Passwort vergeben
+                </h1>
 
                 <p className={styles.description}>
                     Das neue Passwort muss mindestens zwölf
@@ -221,9 +264,7 @@ export default function ResetPasswordPage() {
                 </p>
 
                 <form
-                    onSubmit={(event) =>
-                        void handleSubmit(event)
-                    }
+                    onSubmit={handleSubmit}
                     noValidate
                     aria-busy={isSubmitting}
                 >
@@ -240,9 +281,9 @@ export default function ResetPasswordPage() {
                             autoComplete="new-password"
                             value={values.newPassword}
                             onChange={handleChange}
-                            aria-invalid={
-                                Boolean(errors.newPassword)
-                            }
+                            aria-invalid={Boolean(
+                                errors.newPassword,
+                            )}
                             aria-describedby={
                                 errors.newPassword
                                     ? 'reset-new-password-error'
@@ -269,9 +310,7 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <div className={styles.field}>
-                        <label
-                            htmlFor="reset-password-confirmation"
-                        >
+                        <label htmlFor="reset-password-confirmation">
                             Neues Passwort wiederholen
                         </label>
 
@@ -281,10 +320,12 @@ export default function ResetPasswordPage() {
                             name="passwordConfirmation"
                             type="password"
                             autoComplete="new-password"
-                            value={values.passwordConfirmation}
+                            value={
+                                values.passwordConfirmation
+                            }
                             onChange={handleChange}
                             aria-invalid={Boolean(
-                                errors.passwordConfirmation
+                                errors.passwordConfirmation,
                             )}
                             aria-describedby={
                                 errors.passwordConfirmation
@@ -299,18 +340,20 @@ export default function ResetPasswordPage() {
                                 className={styles.fieldError}
                                 role="alert"
                             >
-                                {errors.passwordConfirmation}
+                                {
+                                    errors.passwordConfirmation
+                                }
                             </p>
                         )}
                     </div>
 
                     {formError && (
-                        <p
+                        <div
                             className={styles.formError}
                             role="alert"
                         >
-                            {formError}
-                        </p>
+                            <span>{formError}</span>
+                        </div>
                     )}
 
                     <button
@@ -331,6 +374,6 @@ export default function ResetPasswordPage() {
                     </Link>
                 </div>
             </section>
-        </main>
+        </div>
     )
 }

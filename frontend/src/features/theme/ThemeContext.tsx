@@ -4,16 +4,19 @@ import {
     useCallback,
     useEffect,
     useMemo,
-    useState
+    useState,
 } from 'react'
 import {
     resolveColorMode,
     type ColorModePreference,
     type ColorProfileId,
     type ResolvedColorMode,
-    type ThemePreferences
+    type ThemePreferences,
 } from './themeConfig'
-import {loadThemePreferences, saveThemePreferences} from './themeStorage'
+import {
+    loadThemePreferences,
+    saveThemePreferences,
+} from './themeStorage'
 
 export interface ThemeContextValue {
     profile: ColorProfileId
@@ -23,7 +26,8 @@ export interface ThemeContextValue {
     setMode: (mode: ColorModePreference) => void
 }
 
-export const ThemeContext = createContext<ThemeContextValue | null>(null)
+export const ThemeContext =
+    createContext<ThemeContextValue | null>(null)
 
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)'
 
@@ -34,9 +38,12 @@ function readSystemPrefersDark(): boolean {
     )
 }
 
-export function ThemeProvider({children}: PropsWithChildren) {
+export function ThemeProvider({
+                                  children,
+                              }: PropsWithChildren) {
     const [preferences, setPreferences] =
         useState<ThemePreferences>(loadThemePreferences)
+
     const [systemPrefersDark, setSystemPrefersDark] =
         useState<boolean>(readSystemPrefersDark)
 
@@ -46,17 +53,23 @@ export function ThemeProvider({children}: PropsWithChildren) {
         }
 
         const query = window.matchMedia(DARK_MEDIA_QUERY)
-        const handleChange = (event: MediaQueryListEvent): void =>
+
+        const handleChange = (
+            event: MediaQueryListEvent,
+        ): void => {
             setSystemPrefersDark(event.matches)
+        }
 
         query.addEventListener('change', handleChange)
 
-        return () => query.removeEventListener('change', handleChange)
+        return () => {
+            query.removeEventListener('change', handleChange)
+        }
     }, [])
 
     const resolvedMode = resolveColorMode(
         preferences.mode,
-        systemPrefersDark
+        systemPrefersDark,
     )
 
     useEffect(() => {
@@ -66,19 +79,36 @@ export function ThemeProvider({children}: PropsWithChildren) {
         root.dataset.colorMode = resolvedMode
     }, [preferences.profile, resolvedMode])
 
-    const update = useCallback((next: ThemePreferences): void => {
-        setPreferences(next)
-        saveThemePreferences(next)
-    }, [])
-
     const setProfile = useCallback(
-        (profile: ColorProfileId): void => update({...preferences, profile}),
-        [preferences, update]
+        (profile: ColorProfileId): void => {
+            setPreferences((currentPreferences) => {
+                const nextPreferences: ThemePreferences = {
+                    ...currentPreferences,
+                    profile,
+                }
+
+                saveThemePreferences(nextPreferences)
+
+                return nextPreferences
+            })
+        },
+        [],
     )
 
     const setMode = useCallback(
-        (mode: ColorModePreference): void => update({...preferences, mode}),
-        [preferences, update]
+        (mode: ColorModePreference): void => {
+            setPreferences((currentPreferences) => {
+                const nextPreferences: ThemePreferences = {
+                    ...currentPreferences,
+                    mode,
+                }
+
+                saveThemePreferences(nextPreferences)
+
+                return nextPreferences
+            })
+        },
+        [],
     )
 
     const value = useMemo<ThemeContextValue>(
@@ -87,9 +117,15 @@ export function ThemeProvider({children}: PropsWithChildren) {
             mode: preferences.mode,
             resolvedMode,
             setProfile,
-            setMode
+            setMode,
         }),
-        [preferences, resolvedMode, setProfile, setMode]
+        [
+            preferences.profile,
+            preferences.mode,
+            resolvedMode,
+            setProfile,
+            setMode,
+        ],
     )
 
     return (

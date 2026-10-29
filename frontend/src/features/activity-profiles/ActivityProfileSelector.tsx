@@ -1,26 +1,20 @@
 import {useQuery} from '@apollo/client/react'
+import {ACTIVITY_PROFILES_QUERY} from '../../api/activityProfilesQuery'
 import Loader from '../../components/ui/Loader/Loader'
 import MessageCard from '../../components/ui/MessageCard/MessageCard'
-import {ACTIVITY_PROFILES_QUERY} from '../../api/activityProfilesQuery'
 import type {ActivityProfileCode} from '../../types/activityProfile'
 import styles from './ActivityProfileSelector.module.css'
-
-const SELECTED_PROFILE_STORAGE_KEY =
-    'warp-selected-activity-profile'
 
 const PROFILE_ICONS: Record<ActivityProfileCode, string> = {
     BICYCLE: '🚲',
     MOTORCYCLE: '🏍️',
-    HIKING: '🥾'
+    HIKING: '🥾',
 }
 
-const PROFILE_DESCRIPTIONS: Record<
-    ActivityProfileCode,
-    string
-> = {
-    BICYCLE: 'Für Fahrradfahrten',
-    MOTORCYCLE: 'Für Motorradfahrten',
-    HIKING: 'Für Wanderungen'
+const PROFILE_DESCRIPTIONS: Record<ActivityProfileCode, string> = {
+    BICYCLE: 'Für alltägliche und sportliche Fahrradfahrten',
+    MOTORCYCLE: 'Für wetterbewusste Touren mit dem Motorrad',
+    HIKING: 'Für Wanderungen und längere Wege zu Fuß',
 }
 
 interface ActivityProfileSelectorProps {
@@ -30,20 +24,25 @@ interface ActivityProfileSelectorProps {
 
 export default function ActivityProfileSelector({
                                                     selectedProfile,
-                                                    onSelect
+                                                    onSelect,
                                                 }: ActivityProfileSelectorProps) {
-    const {data, loading, error} = useQuery(
-        ACTIVITY_PROFILES_QUERY,
-        {
-            fetchPolicy: 'cache-first'
-        }
-    )
+    const {
+        data,
+        loading,
+        error,
+        refetch,
+    } = useQuery(ACTIVITY_PROFILES_QUERY, {
+        fetchPolicy: 'cache-first',
+    })
 
     if (loading) {
         return (
             <MessageCard>
-                <Loader/>
-                <p>Aktivitätsprofile werden geladen ...</p>
+                <Loader />
+
+                <p role="status">
+                    Aktivitätsprofile werden geladen …
+                </p>
             </MessageCard>
         )
     }
@@ -51,85 +50,170 @@ export default function ActivityProfileSelector({
     if (error) {
         return (
             <MessageCard error>
-                <p>
-                    Die Aktivitätsprofile konnten nicht geladen werden.
-                </p>
+                <div className={styles.loadError}>
+                    <div>
+                        <h2>
+                            Aktivitätsprofile nicht verfügbar
+                        </h2>
+
+                        <p>
+                            Die Aktivitätsprofile konnten nicht geladen
+                            werden. Prüfe die Verbindung und versuche es
+                            erneut.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        className={styles.retryButton}
+                        onClick={() => {
+                            void refetch()
+                        }}
+                    >
+                        Erneut versuchen
+                    </button>
+                </div>
             </MessageCard>
         )
     }
 
     const profiles = data?.activityProfiles ?? []
 
-    function handleSelect(
-        profileCode: ActivityProfileCode
-    ): void {
-        localStorage.setItem(
-            SELECTED_PROFILE_STORAGE_KEY,
-            profileCode
-        )
-
-        onSelect(profileCode)
-    }
-
     return (
         <section
             className={styles.section}
             aria-labelledby="activity-profile-heading"
         >
-            <div>
-                <p className={styles.heading}>
-                    Aktivitätsprofil
-                </p>
+            <div className={styles.sectionHeading}>
+                <div>
+                    <p className={styles.heading}>
+                        Aktivitätsprofil
+                    </p>
 
-                <h2 id="activity-profile-heading">
-                    Wie möchtest du unterwegs sein?
-                </h2>
+                    <h2 id="activity-profile-heading">
+                        Wie möchtest du unterwegs sein?
+                    </h2>
+                </div>
+
+                {selectedProfile && (
+                    <span
+                        className={styles.selectionStatus}
+                        role="status"
+                    >
+                        Profil ausgewählt
+                    </span>
+                )}
             </div>
 
-            {profiles.length === 0 && (
-                <div className={styles.error}>
-                    Es sind keine Aktivitätsprofile verfügbar.
+            <p className={styles.introduction}>
+                Das Aktivitätsprofil beeinflusst die Streckenführung
+                und die Bewertung der Wetterbedingungen.
+            </p>
+
+            {profiles.length === 0 ? (
+                <div
+                    className={styles.emptyState}
+                    role="status"
+                >
+                    <span
+                        className={styles.emptyStateIcon}
+                        aria-hidden="true"
+                    >
+                        !
+                    </span>
+
+                    <div>
+                        <h3>
+                            Keine Aktivitätsprofile verfügbar
+                        </h3>
+
+                        <p>
+                            Der Server hat derzeit keine auswählbaren
+                            Profile zurückgegeben.
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div
+                    className={styles.grid}
+                    role="group"
+                    aria-label="Aktivitätsprofil auswählen"
+                >
+                    {profiles.map((profile) => {
+                        const isSelected =
+                            profile.code === selectedProfile
+
+                        return (
+                            <button
+                                key={profile.code}
+                                type="button"
+                                className={[
+                                    styles.card,
+                                    isSelected
+                                        ? styles.cardSelected
+                                        : '',
+                                ]
+                                    .filter(Boolean)
+                                    .join(' ')}
+                                aria-label={`${profile.displayName}, ${PROFILE_DESCRIPTIONS[profile.code]}`}
+                                aria-pressed={isSelected}
+                                onClick={() => {
+                                    onSelect(profile.code)
+                                }}
+                            >
+                                <span className={styles.cardHeader}>
+                                    <span
+                                        className={styles.icon}
+                                        aria-hidden="true"
+                                    >
+                                        <span
+                                            className={styles.iconGlyph}
+                                        >
+                                            {
+                                                PROFILE_ICONS[
+                                                    profile.code
+                                                    ]
+                                            }
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        className={styles.selectionMark}
+                                        aria-hidden="true"
+                                    >
+                                        {isSelected ? '✓' : ''}
+                                    </span>
+                                </span>
+
+                                <span className={styles.cardContent}>
+                                    <span className={styles.cardTitle}>
+                                        {profile.displayName}
+                                    </span>
+
+                                    <span
+                                        className={styles.description}
+                                    >
+                                        {
+                                            PROFILE_DESCRIPTIONS[
+                                                profile.code
+                                                ]
+                                        }
+                                    </span>
+                                </span>
+
+                                <span
+                                    className={styles.cardAction}
+                                    aria-hidden="true"
+                                >
+                                    {isSelected
+                                        ? 'Ausgewählt'
+                                        : 'Auswählen'}
+                                </span>
+                            </button>
+                        )
+                    })}
                 </div>
             )}
-
-            <div className={styles.grid}>
-                {profiles.map(profile => {
-                    const isSelected =
-                        profile.code === selectedProfile
-
-                    return (
-                        <button
-                            key={profile.code}
-                            type="button"
-                            className={[
-                                styles.card,
-                                isSelected
-                                    ? styles.cardSelected
-                                    : null
-                            ]
-                                .filter(Boolean)
-                                .join(' ')}
-                            aria-label={`${profile.displayName}, ${PROFILE_DESCRIPTIONS[profile.code]}`}
-                            aria-pressed={isSelected}
-                            onClick={() => handleSelect(profile.code)}
-                        >
-                            <span className={styles.icon} aria-hidden="true">
-                                <span className={styles.iconGlyph}>
-                                    {PROFILE_ICONS[profile.code]}
-                                </span>
-                            </span>
-
-                            <span className={styles.cardTitle}>
-                                {profile.displayName}
-                            </span>
-
-                            <span className={styles.description}>
-                                {PROFILE_DESCRIPTIONS[profile.code]}
-                            </span>
-                        </button>
-                    )
-                })}
-            </div>
         </section>
     )
 }
