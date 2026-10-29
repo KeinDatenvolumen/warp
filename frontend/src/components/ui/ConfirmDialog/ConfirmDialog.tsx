@@ -20,7 +20,7 @@ export default function ConfirmDialog({
                                           cancelLabel = 'Abbrechen',
                                           icon = '⎋',
                                           onConfirm,
-                                          onCancel
+                                          onCancel,
                                       }: ConfirmDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null)
     const cancelButtonRef = useRef<HTMLButtonElement>(null)
@@ -34,24 +34,44 @@ export default function ConfirmDialog({
             return
         }
 
-        if (open && !dialog.open) {
-            // Fallback für Umgebungen ohne showModal (z. B. Tests).
+        if (!open) {
+            if (dialog.open) {
+                if (typeof dialog.close === 'function') {
+                    dialog.close()
+                } else {
+                    dialog.removeAttribute('open')
+                }
+            }
+
+            return
+        }
+
+        if (!dialog.open) {
+            /*
+             * Fallback für Umgebungen ohne showModal,
+             * beispielsweise jsdom in den Tests.
+             */
             if (typeof dialog.showModal === 'function') {
                 dialog.showModal()
             } else {
                 dialog.setAttribute('open', '')
             }
-
-            // Fokus auf die ungefährliche Option, nicht auf "Bestätigen".
-            cancelButtonRef.current?.focus()
         }
 
-        if (!open && dialog.open) {
-            if (typeof dialog.close === 'function') {
-                dialog.close()
-            } else {
-                dialog.removeAttribute('open')
+        /*
+         * Die mobile Navigation wird beim Öffnen des Dialogs ebenfalls
+         * geschlossen und stellt ihren Fokus auf den Menübutton zurück.
+         * Die verzögerte Fokussetzung sorgt dafür, dass anschließend
+         * zuverlässig die ungefährliche Dialogoption fokussiert ist.
+         */
+        const focusTimer = window.setTimeout(() => {
+            if (dialog.open) {
+                cancelButtonRef.current?.focus()
             }
+        }, 0)
+
+        return () => {
+            window.clearTimeout(focusTimer)
         }
     }, [open])
 
@@ -61,13 +81,10 @@ export default function ConfirmDialog({
             className={styles.dialog}
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
-            // Esc: Der Browser schließt den Dialog selbst, wir
-            // übernehmen das über den State.
             onCancel={(event) => {
                 event.preventDefault()
                 onCancel()
             }}
-            // Klick auf den abgedunkelten Hintergrund
             onClick={(event) => {
                 if (event.target === event.currentTarget) {
                     onCancel()
@@ -75,13 +92,24 @@ export default function ConfirmDialog({
             }}
         >
             <div className={styles.content}>
-                <span className={styles.icon} aria-hidden="true">{icon}</span>
+                <span
+                    className={styles.icon}
+                    aria-hidden="true"
+                >
+                    {icon}
+                </span>
 
-                <h2 id={titleId} className={styles.title}>
+                <h2
+                    id={titleId}
+                    className={styles.title}
+                >
                     {title}
                 </h2>
 
-                <p id={descriptionId} className={styles.description}>
+                <p
+                    id={descriptionId}
+                    className={styles.description}
+                >
                     {description}
                 </p>
 

@@ -49,3 +49,7 @@ tasks.named('test') {
             'test-internal-service-token'
     )
 }
+
+springBoot {
+    mainClass = 'de.warp.bff.BffServiceApplication'
+}

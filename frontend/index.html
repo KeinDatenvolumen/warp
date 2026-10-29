@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html
+		lang="de"
+		data-color-profile="profile-1"
+		data-color-mode="light"
+>
 <head>
 	<meta charset="UTF-8" />
 	<meta
@@ -10,25 +14,62 @@
 			name="description"
 			content="WaRP Entwicklungsdashboard"
 	/>
+
 	<title>WaRP Service Status</title>
+
 	<script>
 		(function () {
+			var profile = 'profile-1';
+			var mode = 'system';
+
 			try {
-				var prefs = JSON.parse(localStorage.getItem('warp.theme') || '{}');
-				var profile = ['profile-1', 'profile-2', 'profile-3'].indexOf(prefs.profile) >= 0
-						? prefs.profile : 'profile-1';
-				var mode = ['light', 'dark', 'system'].indexOf(prefs.mode) >= 0
-						? prefs.mode : 'system';
-				var dark = mode === 'dark' ||
-						(mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-				document.documentElement.dataset.colorProfile = profile;
-				document.documentElement.dataset.colorMode = dark ? 'dark' : 'light';
-			} catch (e) { /* Standard-Theme bleibt */ }
+				var storedTheme = localStorage.getItem('warp.theme');
+				var preferences = storedTheme
+						? JSON.parse(storedTheme)
+						: {};
+
+				if (
+						['profile-1', 'profile-2', 'profile-3'].indexOf(
+								preferences.profile
+						) >= 0
+				) {
+					profile = preferences.profile;
+				}
+
+				if (
+						['light', 'dark', 'system'].indexOf(
+								preferences.mode
+						) >= 0
+				) {
+					mode = preferences.mode;
+				}
+			} catch {
+				/*
+                 * localStorage ist nicht verfügbar oder enthält ungültige Daten.
+                 * In diesem Fall werden die Standardwerte verwendet.
+                 */
+			}
+
+			var systemPrefersDark =
+					typeof window.matchMedia === 'function' &&
+					window.matchMedia(
+							'(prefers-color-scheme: dark)'
+					).matches;
+
+			var resolvedMode =
+					mode === 'dark' ||
+					(mode === 'system' && systemPrefersDark)
+							? 'dark'
+							: 'light';
+
+			document.documentElement.dataset.colorProfile = profile;
+			document.documentElement.dataset.colorMode = resolvedMode;
 		})();
 	</script>
 </head>
+
 <body>
 <div id="root"></div>
-<script type="module" src="src/app/main.tsx"></script>
+<script type="module" src="/src/app/main.tsx"></script>
 </body>
 </html>

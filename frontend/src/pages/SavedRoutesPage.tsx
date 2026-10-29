@@ -1,11 +1,12 @@
 import {useEffect, useState} from 'react'
-import {Link} from 'react-router'
 import {useMutation, useQuery} from '@apollo/client/react'
+import {Link} from 'react-router'
+
+import {extractGraphQlErrorCodes} from '../api/graphqlErrors'
 import {
     DELETE_SAVED_ROUTE_MUTATION,
-    SAVED_ROUTES_QUERY
+    SAVED_ROUTES_QUERY,
 } from '../api/savedRoutesApi'
-import {extractGraphQlErrorCodes} from '../api/graphqlErrors'
 import ConfirmDialog from '../components/ui/ConfirmDialog/ConfirmDialog'
 import Loader from '../components/ui/Loader/Loader'
 import MessageCard from '../components/ui/MessageCard/MessageCard'
@@ -25,56 +26,96 @@ interface RouteToDelete {
 
 export default function SavedRoutesPage() {
     const [page, setPage] = useState(0)
+
     const [routeToDelete, setRouteToDelete] =
         useState<RouteToDelete | null>(null)
-    const [deleteError, setDeleteError] = useState<string>()
 
-    const {data, loading, error, refetch} = useQuery(SAVED_ROUTES_QUERY, {
-        variables: {page: {page, size: PAGE_SIZE}},
-        fetchPolicy: 'cache-and-network'
+    const [deleteError, setDeleteError] =
+        useState<string>()
+
+    const {
+        data,
+        loading,
+        error,
+        refetch,
+    } = useQuery(SAVED_ROUTES_QUERY, {
+        variables: {
+            page: {
+                page,
+                size: PAGE_SIZE,
+            },
+        },
+        fetchPolicy: 'cache-and-network',
     })
 
-    const [deleteSavedRoute, {loading: deleting}] = useMutation(
-        DELETE_SAVED_ROUTE_MUTATION
-    )
+    const [
+        deleteSavedRoute,
+        {loading: deleting},
+    ] = useMutation(DELETE_SAVED_ROUTE_MUTATION)
 
-    // Wurde die letzte Route einer Seite gelöscht, eine Seite zurückgehen.
+    const items = data?.savedRoutes.items ?? []
+
+    const totalPages =
+        data?.savedRoutes.pageInfo.totalPages ?? 0
+
     useEffect(() => {
-        if (data && data.savedRoutes.items.length === 0 && page > 0) {
-            setPage(page - 1)
+        if (
+            data &&
+            data.savedRoutes.items.length === 0 &&
+            page > 0
+        ) {
+            setPage((currentPage) =>
+                Math.max(0, currentPage - 1),
+            )
         }
     }, [data, page])
 
     async function handleConfirmDelete(): Promise<void> {
-        if (!routeToDelete) {
+        if (!routeToDelete || deleting) {
             return
         }
 
         const target = routeToDelete
+
         setRouteToDelete(null)
         setDeleteError(undefined)
 
         try {
             const result = await deleteSavedRoute({
-                variables: {id: target.id},
+                variables: {
+                    id: target.id,
+                },
                 update: (cache) => {
-                    cache.evict({fieldName: 'savedRoutes'})
+                    cache.evict({
+                        fieldName: 'savedRoutes',
+                    })
                     cache.gc()
-                }
+                },
             })
 
-            const errors = result.data?.deleteSavedRoute.errors ?? []
+            const errors =
+                result.data?.deleteSavedRoute.errors ?? []
 
             if (errors.length > 0) {
-                setDeleteError(errors[0]?.message ?? DELETE_FAILED_MESSAGE)
+                setDeleteError(
+                    errors[0]?.message ??
+                    DELETE_FAILED_MESSAGE,
+                )
+
+                return
             }
+
+            await refetch()
         } catch (caught) {
             if (
-                extractGraphQlErrorCodes(caught).includes(
-                    'SAVED_ROUTE_NOT_FOUND'
-                )
+                extractGraphQlErrorCodes(
+                    caught,
+                ).includes('SAVED_ROUTE_NOT_FOUND')
             ) {
-                setDeleteError('Die Route existiert nicht mehr.')
+                setDeleteError(
+                    'Die Route existiert nicht mehr.',
+                )
+
                 void refetch()
                 return
             }
@@ -83,48 +124,99 @@ export default function SavedRoutesPage() {
         }
     }
 
-    const items = data?.savedRoutes.items ?? []
-    const totalPages = data?.savedRoutes.pageInfo.totalPages ?? 0
-
     return (
-        <main className={styles.page}>
+        <div className={styles.page}>
             <section className={styles.card}>
-                <p className={styles.eyebrow}>Routenarchiv</p>
+                <p className={styles.eyebrow}>
+                    Routenarchiv
+                </p>
+
                 <h1>Gespeicherte Routen</h1>
+
                 <p className={styles.description}>
-                    Öffne eine gespeicherte Route, um sie erneut auf der
-                    Karte zu sehen, oder lösche Routen, die du nicht mehr
+                    Öffne eine gespeicherte Route, um sie
+                    erneut auf der Karte zu sehen, oder
+                    lösche Routen, die du nicht mehr
                     brauchst.
                 </p>
             </section>
 
-            <div className={listStyles.section}>
+            <section
+                className={listStyles.section}
+                aria-labelledby="saved-routes-heading"
+            >
+                <div className={listStyles.sectionHeader}>
+                    <div>
+                        <p className={listStyles.sectionEyebrow}>
+                            Deine Sammlung
+                        </p>
+
+                        <h2 id="saved-routes-heading">
+                            Routenübersicht
+                        </h2>
+                    </div>
+
+                    {data && (
+                        <span
+                            className={listStyles.routeCount}
+                            aria-label={`${items.length} Routen auf dieser Seite`}
+                        >
+                            {items.length}{' '}
+                            {items.length === 1
+                                ? 'Route'
+                                : 'Routen'}
+                        </span>
+                    )}
+                </div>
+
                 {deleteError && (
-                    <p className={listStyles.notice} role="alert">
-                        {deleteError}
-                    </p>
+                    <div
+                        className={listStyles.notice}
+                        role="alert"
+                    >
+                        <span
+                            className={listStyles.noticeIcon}
+                            aria-hidden="true"
+                        >
+                            !
+                        </span>
+
+                        <span>{deleteError}</span>
+                    </div>
                 )}
 
                 {loading && !data && (
                     <MessageCard>
-                        <Loader/>
+                        <Loader />
+
                         <p role="status">
-                            Gespeicherte Routen werden geladen …
+                            Gespeicherte Routen werden
+                            geladen …
                         </p>
                     </MessageCard>
                 )}
 
                 {error && !data && (
                     <MessageCard error>
-                        <div>
-                            <p>
-                                Die gespeicherten Routen konnten nicht
-                                geladen werden.
-                            </p>
+                        <div className={listStyles.loadError}>
+                            <div>
+                                <h2>
+                                    Routen nicht verfügbar
+                                </h2>
+
+                                <p>
+                                    Die gespeicherten Routen
+                                    konnten nicht geladen
+                                    werden.
+                                </p>
+                            </div>
+
                             <button
                                 type="button"
                                 className={listStyles.button}
-                                onClick={() => void refetch()}
+                                onClick={() => {
+                                    void refetch()
+                                }}
                             >
                                 Erneut versuchen
                             </button>
@@ -132,53 +224,176 @@ export default function SavedRoutesPage() {
                     </MessageCard>
                 )}
 
-                {data && items.length === 0 && page === 0 && (
-                    <MessageCard>
-                        <p>
-                            Du hast noch keine Route gespeichert. Plane eine
-                            Route im <Link to="/route-planner">Routenplaner</Link>.
-                        </p>
-                    </MessageCard>
-                )}
+                {data &&
+                    items.length === 0 &&
+                    page === 0 && (
+                        <div
+                            className={listStyles.emptyState}
+                            role="status"
+                        >
+                            <span
+                                className={
+                                    listStyles.emptyStateIcon
+                                }
+                                aria-hidden="true"
+                            >
+                                ↗
+                            </span>
+
+                            <div>
+                                <h3>
+                                    Du hast noch keine Route gespeichert.
+                                </h3>
+
+                                <p>
+                                    Plane zuerst eine Route und speichere sie
+                                    anschließend in deinem Routenarchiv.
+                                </p>
+                                <Link
+                                    to="/route-planner"
+                                    className={
+                                        listStyles.primaryLink
+                                    }
+                                >
+                                    Zum Routenplaner
+                                </Link>
+                            </div>
+                        </div>
+                    )}
 
                 {items.length > 0 && (
                     <ul
                         className={listStyles.list}
                         aria-label="Gespeicherte Routen"
+                        aria-busy={loading}
                     >
                         {items.map((route) => (
-                            <li key={route.id} className={listStyles.item}>
+                            <li
+                                key={route.id}
+                                className={listStyles.item}
+                            >
                                 <Link
                                     to={`/saved-routes/${route.id}`}
-                                    className={listStyles.itemLink}
+                                    className={
+                                        listStyles.itemLink
+                                    }
+                                    aria-label={`Route ${route.name} öffnen`}
                                 >
-                                    <span className={listStyles.itemName}>
-                                        {route.name}
+                                    <span
+                                        className={
+                                            listStyles.itemHeader
+                                        }
+                                    >
+                                        <span
+                                            className={
+                                                listStyles.itemName
+                                            }
+                                        >
+                                            {route.name}
+                                        </span>
+
+                                        <span
+                                            className={
+                                                listStyles.openHint
+                                            }
+                                            aria-hidden="true"
+                                        >
+                                            Öffnen
+                                        </span>
                                     </span>
-                                    <span className={listStyles.itemRoute}>
-                                        {route.start.label} →{' '}
-                                        {route.destination.label}
+
+                                    <span
+                                        className={
+                                            listStyles.itemRoute
+                                        }
+                                    >
+                                        <span>
+                                            {route.start.label}
+                                        </span>
+
+                                        <span
+                                            className={
+                                                listStyles.routeArrow
+                                            }
+                                            aria-hidden="true"
+                                        >
+                                            →
+                                        </span>
+
+                                        <span>
+                                            {
+                                                route
+                                                    .destination
+                                                    .label
+                                            }
+                                        </span>
                                     </span>
-                                    <span className={listStyles.itemMeta}>
-                                        {route.activityProfile.displayName} ·
-                                        Wetterscore {route.weatherScore} ·{' '}
-                                        {formatDate(route.createdAt)}
+
+                                    <span
+                                        className={
+                                            listStyles.itemMeta
+                                        }
+                                    >
+                                        <span
+                                            className={
+                                                listStyles.metaItem
+                                            }
+                                        >
+                                            {
+                                                route
+                                                    .activityProfile
+                                                    .displayName
+                                            }
+                                        </span>
+
+                                        <span
+                                            className={
+                                                listStyles.metaItem
+                                            }
+                                        >
+                                            Wetterscore{' '}
+                                            {
+                                                route.weatherScore
+                                            }
+                                        </span>
+
+                                        <time
+                                            className={
+                                                listStyles.metaItem
+                                            }
+                                            dateTime={
+                                                route.createdAt
+                                            }
+                                        >
+                                            {formatDate(
+                                                route.createdAt,
+                                            )}
+                                        </time>
                                     </span>
                                 </Link>
 
                                 <button
                                     type="button"
-                                    className={listStyles.deleteButton}
+                                    className={
+                                        listStyles.deleteButton
+                                    }
                                     aria-label={`Route ${route.name} löschen`}
                                     disabled={deleting}
-                                    onClick={() =>
+                                    aria-busy={deleting}
+                                    onClick={() => {
+                                        setDeleteError(undefined)
+
                                         setRouteToDelete({
                                             id: route.id,
-                                            name: route.name
+                                            name: route.name,
                                         })
-                                    }
+                                    }}
                                 >
-                                    Löschen
+                                    <span aria-hidden="true">
+                                        🗑
+                                    </span>
+
+                                    <span>Löschen</span>
                                 </button>
                             </li>
                         ))}
@@ -193,25 +408,50 @@ export default function SavedRoutesPage() {
                         <button
                             type="button"
                             className={listStyles.button}
-                            disabled={page === 0}
-                            onClick={() => setPage(page - 1)}
+                            disabled={
+                                page === 0 || loading
+                            }
+                            onClick={() => {
+                                setPage((currentPage) =>
+                                    Math.max(
+                                        0,
+                                        currentPage - 1,
+                                    ),
+                                )
+                            }}
                         >
                             Zurück
                         </button>
-                        <span>
-                            Seite {page + 1} von {totalPages}
+
+                        <span
+                            className={
+                                listStyles.paginationStatus
+                            }
+                            aria-live="polite"
+                        >
+                            Seite {page + 1} von{' '}
+                            {totalPages}
                         </span>
+
                         <button
                             type="button"
                             className={listStyles.button}
-                            disabled={page + 1 >= totalPages}
-                            onClick={() => setPage(page + 1)}
+                            disabled={
+                                page + 1 >= totalPages ||
+                                loading
+                            }
+                            onClick={() => {
+                                setPage(
+                                    (currentPage) =>
+                                        currentPage + 1,
+                                )
+                            }}
                         >
                             Weiter
                         </button>
                     </nav>
                 )}
-            </div>
+            </section>
 
             <ConfirmDialog
                 open={routeToDelete !== null}
@@ -219,9 +459,14 @@ export default function SavedRoutesPage() {
                 title="Route wirklich löschen?"
                 description={`Die Route „${routeToDelete?.name ?? ''}“ wird endgültig gelöscht. Das kann nicht rückgängig gemacht werden.`}
                 confirmLabel="Endgültig löschen"
-                onConfirm={() => void handleConfirmDelete()}
-                onCancel={() => setRouteToDelete(null)}
+                cancelLabel="Abbrechen"
+                onConfirm={() => {
+                    void handleConfirmDelete()
+                }}
+                onCancel={() => {
+                    setRouteToDelete(null)
+                }}
             />
-        </main>
+        </div>
     )
 }

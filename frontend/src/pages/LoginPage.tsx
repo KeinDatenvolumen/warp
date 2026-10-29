@@ -2,18 +2,23 @@ import {
     type ChangeEvent,
     type FormEvent,
     useRef,
-    useState
+    useState,
 } from 'react'
-import {Link, Navigate, useLocation} from 'react-router'
-import {resolveRedirectTarget} from '../features/auth/authRedirect'
 import {
-    mapLoginError
-} from '../features/auth/loginErrorMapping'
+    Link,
+    Navigate,
+    useLocation,
+} from 'react-router'
+
+import {
+    resolveRedirectTarget,
+} from '../features/auth/authRedirect'
+import {mapLoginError} from '../features/auth/loginErrorMapping'
 import {
     LOGIN_FIELD_ORDER,
     validateLogin,
     type LoginFieldErrors,
-    type LoginValues
+    type LoginValues,
 } from '../features/auth/loginValidation'
 import {useAuth} from '../features/auth/useAuth'
 import {useCountdown} from '../features/auth/useCountdown'
@@ -21,18 +26,29 @@ import styles from './LoginPage.module.css'
 
 const initialValues: LoginValues = {
     email: '',
-    password: ''
+    password: '',
 }
 
 export default function LoginPage() {
     const {isAuthenticated, login} = useAuth()
     const location = useLocation()
-    const {remainingSeconds, start: startCooldown} = useCountdown()
 
-    const [values, setValues] = useState(initialValues)
-    const [errors, setErrors] = useState<LoginFieldErrors>({})
-    const [formError, setFormError] = useState<string>()
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const {
+        remainingSeconds,
+        start: startCooldown,
+    } = useCountdown()
+
+    const [values, setValues] =
+        useState<LoginValues>(initialValues)
+
+    const [errors, setErrors] =
+        useState<LoginFieldErrors>({})
+
+    const [formError, setFormError] =
+        useState<string>()
+
+    const [isSubmitting, setIsSubmitting] =
+        useState(false)
 
     const isSubmittingRef = useRef(false)
     const emailRef = useRef<HTMLInputElement>(null)
@@ -50,44 +66,61 @@ export default function LoginPage() {
     const isCoolingDown = remainingSeconds > 0
 
     function handleChange(
-        event: ChangeEvent<HTMLInputElement>
+        event: ChangeEvent<HTMLInputElement>,
     ): void {
         const {name, value} = event.target
 
-        setValues((current) => ({...current, [name]: value}))
-        setErrors((current) => ({...current, [name]: undefined}))
+        setValues((currentValues) => ({
+            ...currentValues,
+            [name]: value,
+        }))
+
+        setErrors((currentErrors) => ({
+            ...currentErrors,
+            [name]: undefined,
+        }))
+
         setFormError(undefined)
     }
 
     function focusFirstInvalidField(
-        validationErrors: LoginFieldErrors
+        validationErrors: LoginFieldErrors,
     ): void {
         const firstInvalid = LOGIN_FIELD_ORDER.find(
-            (field) => validationErrors[field]
+            (field) => validationErrors[field],
         )
 
         if (firstInvalid === 'email') {
             emailRef.current?.focus()
-        } else if (firstInvalid === 'password') {
+            return
+        }
+
+        if (firstInvalid === 'password') {
             passwordRef.current?.focus()
         }
     }
 
     async function handleSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ): Promise<void> {
         event.preventDefault()
 
-        if (isSubmittingRef.current || isCoolingDown) {
+        if (
+            isSubmittingRef.current ||
+            isCoolingDown
+        ) {
             return
         }
 
-        const validationErrors = validateLogin(values)
+        const validationErrors =
+            validateLogin(values)
 
         setErrors(validationErrors)
         setFormError(undefined)
 
-        if (Object.keys(validationErrors).length > 0) {
+        if (
+            Object.keys(validationErrors).length > 0
+        ) {
             focusFirstInvalidField(validationErrors)
             return
         }
@@ -98,16 +131,21 @@ export default function LoginPage() {
         try {
             await login({
                 email: values.email.trim(),
-                password: values.password
+                password: values.password,
             })
         } catch (error) {
             const mapped = mapLoginError(error)
 
             setFormError(mapped.message)
-            setValues((current) => ({...current, password: ''}))
+
+            setValues((currentValues) => ({
+                ...currentValues,  password: '',
+            }))
 
             if (mapped.retryAfterSeconds) {
-                startCooldown(mapped.retryAfterSeconds)
+                startCooldown(
+                    mapped.retryAfterSeconds,
+                )
             }
 
             passwordRef.current?.focus()
@@ -130,19 +168,54 @@ export default function LoginPage() {
     }
 
     return (
-        <main className={styles.page}>
-            <section className={styles.card}>
-                <p className={styles.eyebrow}>Benutzerkonto</p>
+        <div className={styles.page}>
+            <section
+                className={styles.card}
+                aria-labelledby="login-heading"
+            >
+                <header className={styles.header}>
+                    <span
+                        className={styles.accountIcon}
+                        aria-hidden="true"
+                    >
+                        ↪
+                    </span>
 
-                <h1>Anmelden</h1>
+                    <div>
+                        <p className={styles.eyebrow}>
+                            Benutzerkonto
+                        </p>
+
+                        <h1 id="login-heading">
+                            Anmelden
+                        </h1>
+                    </div>
+                </header>
+
+                <p className={styles.description}>
+                    Melde dich an, um Routen zu planen,
+                    zu speichern und später erneut
+                    aufzurufen.
+                </p>
 
                 {formError && (
-                    <p className={styles.formError} role="alert">
-                        {formError}
-                    </p>
+                    <div
+                        className={styles.formError}
+                        role="alert"
+                    >
+                        <span
+                            className={styles.formErrorIcon}
+                            aria-hidden="true"
+                        >
+                            !
+                        </span>
+
+                        <span>{formError}</span>
+                    </div>
                 )}
 
                 <form
+                    className={styles.form}
                     onSubmit={handleSubmit}
                     noValidate
                     aria-busy={isSubmitting}
@@ -163,7 +236,9 @@ export default function LoginPage() {
                             spellCheck={false}
                             value={values.email}
                             onChange={handleChange}
-                            aria-invalid={Boolean(errors.email)}
+                            aria-invalid={Boolean(
+                                errors.email,
+                            )}
                             aria-describedby={
                                 errors.email
                                     ? 'login-email-error'
@@ -195,7 +270,9 @@ export default function LoginPage() {
                             autoComplete="current-password"
                             value={values.password}
                             onChange={handleChange}
-                            aria-invalid={Boolean(errors.password)}
+                            aria-invalid={Boolean(
+                                errors.password,
+                            )}
                             aria-describedby={
                                 errors.password
                                     ? 'login-password-error'
@@ -214,27 +291,72 @@ export default function LoginPage() {
                         )}
                     </div>
 
-                    <div className={styles.forgotPasswordLink}>
-                        <Link to="/forgot-password">
+                    <div
+                        className={
+                            styles.forgotPasswordArea
+                        }
+                    >
+                        <Link
+                            to="/forgot-password"
+                            className={
+                                styles.forgotPasswordLink
+                            }
+                        >
                             Passwort vergessen?
                         </Link>
                     </div>
 
+                    {isCoolingDown && (
+                        <div
+                            className={
+                                styles.cooldownNotice
+                            }
+                            role="status"
+                            aria-live="polite"
+                        >
+                            <span
+                                className={
+                                    styles.cooldownIcon
+                                }
+                                aria-hidden="true"
+                            >
+                                ⏱
+                            </span>
+
+                            <span>
+                                Ein neuer Anmeldeversuch
+                                ist in {remainingSeconds}{' '}
+                                Sekunden möglich.
+                            </span>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         className={styles.button}
-                        disabled={isSubmitting || isCoolingDown}
+                        disabled={
+                            isSubmitting ||
+                            isCoolingDown
+                        }
                         aria-busy={isSubmitting}
                     >
                         {submitLabel()}
                     </button>
                 </form>
 
-                <p className={styles.registrationPrompt}>
-                    Noch keinen Account?{' '}
-                    <Link to="/register">Registrieren</Link>
-                </p>
+                <div className={styles.registrationArea}>
+                    <p className={styles.registrationPrompt}>
+                        Noch keinen Account?
+                    </p>
+
+                    <Link
+                        to="/register"
+                        className={styles.registrationLink}
+                    >
+                        Registrieren
+                    </Link>
+                </div>
             </section>
-        </main>
+        </div>
     )
 }

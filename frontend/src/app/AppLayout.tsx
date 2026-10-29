@@ -1,17 +1,22 @@
-import {useState} from 'react'
-import {NavLink, Outlet, useNavigate} from 'react-router'
+import {useEffect, useRef, useState} from 'react'
+import {
+    NavLink,
+    Outlet,
+    useLocation,
+    useNavigate
+} from 'react-router'
+import type {NavLinkRenderProps} from 'react-router'
 import ConfirmDialog from '../components/ui/ConfirmDialog/ConfirmDialog'
 import {LOGOUT_REDIRECT_PATH} from '../features/auth/authRedirect'
 import {useAuth} from '../features/auth/useAuth'
 import styles from './AppLayout.module.css'
-import type {NavLinkRenderProps} from 'react-router'
 
 function navigationClassName({
                                  isActive
                              }: NavLinkRenderProps): string {
     return [
         styles.navigationLink,
-        isActive ? styles.navigationLinkActive : null
+        isActive ? styles.navigationLinkActive : ''
     ]
         .filter(Boolean)
         .join(' ')
@@ -20,12 +25,109 @@ function navigationClassName({
 export default function AppLayout() {
     const {status, isAuthenticated, logout} = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
+
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const [logoutError, setLogoutError] = useState<string>()
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+    const [isNavigationOpen, setIsNavigationOpen] = useState(false)
+
+    const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const navigationPanelRef = useRef<HTMLDivElement>(null)
+    const navigationWasOpenRef = useRef(false)
+
+    useEffect(() => {
+        setIsNavigationOpen(false)
+    }, [location.pathname])
+
+    useEffect(() => {
+        const navigationWasOpen = navigationWasOpenRef.current
+        navigationWasOpenRef.current = isNavigationOpen
+
+        if (!isNavigationOpen) {
+            document.body.style.removeProperty('overflow')
+
+            if (navigationWasOpen) {
+                menuButtonRef.current?.focus()
+            }
+
+            return
+        }
+
+        document.body.style.overflow = 'hidden'
+
+        const navigationPanel = navigationPanelRef.current
+
+        if (!navigationPanel) {
+            return
+        }
+
+        const selector = [
+            'a[href]',
+            'button:not([disabled])',
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'textarea:not([disabled])',
+            '[tabindex]:not([tabindex="-1"])'
+        ].join(',')
+
+        const focusableElements = Array.from(
+            navigationPanel.querySelectorAll<HTMLElement>(selector)
+        )
+
+        focusableElements[0]?.focus()
+
+        function handleKeyDown(event: KeyboardEvent): void {
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                setIsNavigationOpen(false)
+                return
+            }
+
+            if (
+                event.key !== 'Tab' ||
+                focusableElements.length === 0
+            ) {
+                return
+            }
+
+            const firstElement = focusableElements[0]
+            const lastElement =
+                focusableElements[focusableElements.length - 1]
+
+            if (!firstElement || !lastElement) {
+                return
+            }
+
+            if (
+                event.shiftKey &&
+                document.activeElement === firstElement
+            ) {
+                event.preventDefault()
+                lastElement.focus()
+                return
+            }
+
+            if (
+                !event.shiftKey &&
+                document.activeElement === lastElement
+            ) {
+                event.preventDefault()
+                firstElement.focus()
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            document.body.style.removeProperty('overflow')
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [isNavigationOpen])
 
     async function handleLogout(): Promise<void> {
         setIsConfirmOpen(false)
+        setIsNavigationOpen(false)
 
         if (isLoggingOut) {
             return
@@ -46,59 +148,200 @@ export default function AppLayout() {
         }
     }
 
+    function openLogoutDialog(): void {
+        setIsNavigationOpen(false)
+        setIsConfirmOpen(true)
+    }
+
     return (
         <div className={styles.shell}>
             <header className={styles.header}>
                 <div className={styles.headerContent}>
-                    <NavLink to="/" className={styles.brand} end>
-                        <span className={styles.brandMark}>W</span>
+                    <NavLink
+                        to="/route-planner"
+                        className={styles.brand}
+                        aria-label="WaRP Routenplaner"
+                    >
+                        <span
+                            className={styles.brandMark}
+                            aria-hidden="true"
+                        >
+                            W
+                        </span>
+
                         <span className={styles.brandText}>
                             <strong>WaRP</strong>
-                            <small>Weather-aware Route Planning</small>
+                            <small>
+                                Weather-aware Route Planning
+                            </small>
                         </span>
                     </NavLink>
-                    <nav className={styles.navigation} aria-label="Hauptnavigation">
-                        <NavLink to="/" className={navigationClassName} end>Startseite</NavLink>
-                        <NavLink to="/system-status" className={navigationClassName}>Systemstatus</NavLink>
-                        <NavLink to="/route-planner" className={navigationClassName}>Routenplaner</NavLink>
-                        {isAuthenticated && <>
-                            <NavLink to="/profile" className={navigationClassName}>Profil</NavLink>
-                            <NavLink to="/saved-routes" className={navigationClassName}>Gespeicherte Routen</NavLink>
-                        </>}
-                        {status === 'unauthenticated' && (
-                            <NavLink to="/login" className={navigationClassName}>Anmelden</NavLink>
-                        )}
-                        {isAuthenticated && (
+
+                    <button
+                        ref={menuButtonRef}
+                        type="button"
+                        className={styles.menuButton}
+                        aria-label={
+                            isNavigationOpen
+                                ? 'Navigation schließen'
+                                : 'Navigation öffnen'
+                        }
+                        aria-expanded={isNavigationOpen}
+                        aria-controls="main-navigation-panel"
+                        onClick={() => {
+                            setIsNavigationOpen(
+                                (currentValue) => !currentValue
+                            )
+                        }}
+                    >
+                        <span
+                            className={styles.menuIcon}
+                            aria-hidden="true"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </button>
+
+                    <div
+                        className={[
+                            styles.navigationOverlay,
+                            isNavigationOpen
+                                ? styles.navigationOverlayOpen
+                                : ''
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                        aria-hidden="true"
+                        onClick={() => {
+                            setIsNavigationOpen(false)
+                        }}
+                    ></div>
+
+                    <div
+                        ref={navigationPanelRef}
+                        id="main-navigation-panel"
+                        className={[
+                            styles.navigationPanel,
+                            isNavigationOpen
+                                ? styles.navigationPanelOpen
+                                : ''
+                        ]
+                            .filter(Boolean)
+                            .join(' ')}
+                    >
+                        <div className={styles.mobileNavigationHeader}>
+                            <span
+                                className={styles.mobileNavigationTitle}
+                            >
+                                Navigation
+                            </span>
+
                             <button
                                 type="button"
-                                className={`${styles.navigationLink} ${styles.navigationButton} ${styles.logoutButton}`}
-                                onClick={() => setIsConfirmOpen(true)}
-                                disabled={isLoggingOut}
-                                aria-busy={isLoggingOut}
+                                className={styles.closeButton}
+                                aria-label="Navigation schließen"
+                                onClick={() => {
+                                    setIsNavigationOpen(false)
+                                }}
                             >
-                                {isLoggingOut ? 'Abmeldung läuft …' : 'Abmelden'}
+                                <span aria-hidden="true">×</span>
                             </button>
-                        )}
-                    </nav>
+                        </div>
+
+                        <nav
+                            className={styles.navigation}
+                            aria-label="Hauptnavigation"
+                        >
+                            <NavLink
+                                to="/route-planner"
+                                className={navigationClassName}
+                            >
+                                Routenplaner
+                            </NavLink>
+
+                            {isAuthenticated && (
+                                <>
+                                    <NavLink
+                                        to="/saved-routes"
+                                        className={navigationClassName}
+                                    >
+                                        Gespeicherte Routen
+                                    </NavLink>
+
+                                    <NavLink
+                                        to="/profile"
+                                        className={navigationClassName}
+                                    >
+                                        Profil
+                                    </NavLink>
+                                </>
+                            )}
+
+                            {status === 'unauthenticated' && (
+                                <NavLink
+                                    to="/login"
+                                    className={navigationClassName}
+                                >
+                                    Anmelden
+                                </NavLink>
+                            )}
+
+                            {isAuthenticated && (
+                                <button
+                                    type="button"
+                                    className={[
+                                        styles.navigationLink,
+                                        styles.navigationButton,
+                                        styles.logoutButton,
+                                    ].join(' ')}
+                                    disabled={isLoggingOut}
+                                    aria-busy={isLoggingOut}
+                                    onClick={openLogoutDialog}
+                                >
+                                    {isLoggingOut
+                                        ? 'Abmeldung läuft …'
+                                        : 'Abmelden'}
+                                </button>
+                            )}
+                        </nav>
+                    </div>
                 </div>
             </header>
+
             {logoutError && (
-                <p className={styles.logoutError} role="alert">
+                <p
+                    className={styles.logoutError}
+                    role="alert"
+                >
                     {logoutError}
                 </p>
             )}
-            <div className={styles.content}><Outlet/></div>
+
+            <main className={styles.content}>
+                <Outlet />
+            </main>
+
+            <footer className={styles.footer}>
+                <div className={styles.footerContent}>
+                    <span>WaRP</span>
+                    <span>Weather-aware Route Planning</span>
+                </div>
+            </footer>
+
             <ConfirmDialog
                 open={isConfirmOpen}
                 title="Wirklich abmelden?"
                 description="Du musst dich danach erneut anmelden, um Routen zu planen und zu speichern."
                 confirmLabel="Abmelden"
+                cancelLabel="Abbrechen"
+                icon="⎋"
                 onConfirm={handleLogout}
-                onCancel={() => setIsConfirmOpen(false)}
+                onCancel={() => {
+                    setIsConfirmOpen(false)
+                }}
             />
-            <footer className={styles.footer}>
-                <div className={styles.footerContent}><span>WaRP</span><span>Weather-aware Route Planning</span></div>
-            </footer>
         </div>
     )
 }
