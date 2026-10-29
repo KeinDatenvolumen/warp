@@ -137,4 +137,62 @@ describe('SavedRoutesPage', () => {
 
         expect(deleteMock).not.toHaveBeenCalled()
     })
+
+    it('hebt Favoriten hervor', () => {
+        useQueryMock.mockReturnValue(
+            queryResult([
+                {...route, favorite: true},
+                {...route, id: 'route_2', name: 'Wanderung', favorite: false}
+            ])
+        )
+
+        renderPage()
+
+        expect(
+            screen.getByRole('button', {
+                name: 'Route Fahrradtour als Favorit markieren'
+            })
+        ).toHaveAttribute('aria-pressed', 'true')
+        expect(
+            screen.getByRole('button', {
+                name: 'Route Wanderung als Favorit markieren'
+            })
+        ).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('filtert auf Favoriten und springt auf Seite 1', async () => {
+        useQueryMock.mockReturnValue(queryResult([route]))
+        const user = userEvent.setup()
+
+        renderPage()
+
+        await user.click(
+            screen.getByRole('button', {name: '★ Nur Favoriten'})
+        )
+
+        expect(useQueryMock).toHaveBeenLastCalledWith(
+            expect.anything(),
+            expect.objectContaining({
+                variables: {
+                    filter: {favorite: true},
+                    page: {page: 0, size: 20}
+                }
+            })
+        )
+    })
+
+    it('zeigt einen eigenen Leerzustand für Favoriten', async () => {
+        useQueryMock.mockReturnValue(queryResult([], 0))
+        const user = userEvent.setup()
+
+        renderPage()
+
+        await user.click(
+            screen.getByRole('button', {name: '★ Nur Favoriten'})
+        )
+
+        expect(
+            screen.getByText(/noch keine Route als Favorit markiert/)
+        ).toBeInTheDocument()
+    })
 })

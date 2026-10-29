@@ -26,7 +26,7 @@ export interface SavedRouteSummary {
     destination: Pick<RoutePlace, 'label'>
     activityProfile: ActivityProfile
     weatherScore: number
-    favorite?: boolean
+    favorite: boolean
     createdAt: string
 }
 
@@ -52,7 +52,7 @@ export interface SavedRoute {
     weatherScoreVersion?: string
     thunderstormCapApplied?: boolean
     weatherSegments: SavedRouteWeatherSegment[]
-    favorite?: boolean
+    favorite: boolean
     createdAt: string
     updatedAt?: string
 }

@@ -14,6 +14,7 @@ export interface SavedRoutesQueryData {
 }
 
 export interface SavedRoutesQueryVariables {
+    filter?: { favorite: boolean }
     page?: { page: number; size: number }
 }
 
@@ -21,8 +22,8 @@ export const SAVED_ROUTES_QUERY: TypedDocumentNode<
     SavedRoutesQueryData,
     SavedRoutesQueryVariables
 > = gql`
-    query SavedRoutes($page: PageInput) {
-        savedRoutes(page: $page) {
+    query SavedRoutes($filter: SavedRouteFilter, $page: PageInput) {
+        savedRoutes(filter: $filter, page: $page) {
             items {
                 id
                 name
@@ -37,6 +38,7 @@ export const SAVED_ROUTES_QUERY: TypedDocumentNode<
                     displayName
                 }
                 weatherScore
+                favorite
                 createdAt
             }
             pageInfo {
@@ -97,6 +99,7 @@ export const SAVED_ROUTE_QUERY: TypedDocumentNode<
                     coordinates
                 }
             }
+            favorite
             createdAt
         }
     }
@@ -154,6 +157,37 @@ export const SAVE_ROUTE_MUTATION: TypedDocumentNode<
                 name
                 favorite
                 createdAt
+            }
+            errors {
+                field
+                code
+                message
+            }
+        }
+    }
+`
+
+export interface UpdateSavedRouteMutationData {
+    updateSavedRoute: {
+        route: {
+            id: string
+            favorite: boolean
+            updatedAt: string
+        } | null
+        errors: UserError[]
+    }
+}
+
+export const UPDATE_SAVED_ROUTE_MUTATION: TypedDocumentNode<
+    UpdateSavedRouteMutationData,
+    { id: string; input: { name?: string; favorite?: boolean } }
+> = gql`
+    mutation UpdateSavedRoute($id: ID!, $input: UpdateSavedRouteInput!) {
+        updateSavedRoute(id: $id, input: $input) {
+            route {
+                id
+                favorite
+                updatedAt
             }
             errors {
                 field

@@ -131,7 +131,8 @@ public class SavedRouteService {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
+                Sort.by(Sort.Direction.DESC, "favorite")
+                        .and(Sort.by(Sort.Direction.DESC, "createdAt"))
                         .and(Sort.by(Sort.Direction.DESC, "id"))
         );
 

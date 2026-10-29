@@ -109,6 +109,9 @@ paths:
 
     get:
       summary: Gespeicherte Routen des Benutzers paginiert auflisten
+      description: >
+        Favoriten stehen zuerst, danach folgen die übrigen Routen.
+        Innerhalb beider Gruppen werden die neuesten Routen zuerst geliefert.
       operationId: listSavedRoutes
       parameters:
         - $ref: '#/components/parameters/UserIdPath'

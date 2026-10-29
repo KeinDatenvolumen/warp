@@ -20,6 +20,7 @@ import listStyles from '../features/saved-routes/SavedRoutes.module.css'
 import type {RoutePlace} from '../types/savedRoute'
 import type {Place} from '../types/searchPlaces'
 import styles from './PagePlaceholder.module.css'
+import FavoriteButton from '../features/saved-routes/FavoriteButton'
 
 function toPlace(id: string, place: RoutePlace): Place {
     return {
@@ -35,6 +36,7 @@ export default function SavedRouteDetailPage() {
     const navigate = useNavigate()
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [deleteError, setDeleteError] = useState<string>()
+    const [favoriteError, setFavoriteError] = useState<string>()
 
     const {data, loading, error} = useQuery(SAVED_ROUTE_QUERY, {
         variables: {id: routeId ?? ''},
@@ -187,7 +189,20 @@ export default function SavedRouteDetailPage() {
                             </p>
                         )}
 
+                        {favoriteError && (
+                            <p className={listStyles.notice} role="alert">
+                                {favoriteError}
+                            </p>
+                        )}
+
                         <div className={listStyles.actions}>
+                            <FavoriteButton
+                                routeId={route.id}
+                                routeName={route.name}
+                                favorite={route.favorite}
+                                withLabel
+                                onError={setFavoriteError}
+                            />
                             <button
                                 type="button"
                                 className={listStyles.deleteButton}
