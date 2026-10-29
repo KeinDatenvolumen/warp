@@ -167,7 +167,8 @@ class SessionAuthenticationFilterTest {
                         new ValidatedSession(
                                 "user-123",
                                 createdAt,
-                                expiresAt
+                                expiresAt,
+                                true
                         )
                 );
 

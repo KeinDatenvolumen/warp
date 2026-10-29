@@ -27,6 +27,7 @@ import listStyles from '../features/saved-routes/SavedRoutes.module.css'
 import type {RoutePlace} from '../types/savedRoute'
 import type {Place} from '../types/searchPlaces'
 import styles from './PagePlaceholder.module.css'
+import FavoriteButton from '../features/saved-routes/FavoriteButton'
 
 const DELETE_FAILED_MESSAGE =
     'Die Route konnte nicht gelöscht werden. Bitte versuche es erneut.'
@@ -46,6 +47,9 @@ function toPlace(
 export default function SavedRouteDetailPage() {
     const {routeId} = useParams()
     const navigate = useNavigate()
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [deleteError, setDeleteError] = useState<string>()
+    const [favoriteError, setFavoriteError] = useState<string>()
 
     const [confirmOpen, setConfirmOpen] =
         useState(false)
@@ -434,11 +438,20 @@ export default function SavedRouteDetailPage() {
                             </div>
                         )}
 
-                        <div
-                            className={
-                                listStyles.actions
-                            }
-                        >
+                        {favoriteError && (
+                            <p className={listStyles.notice} role="alert">
+                                {favoriteError}
+                            </p>
+                        )}
+
+                        <div className={listStyles.actions}>
+                            <FavoriteButton
+                                routeId={route.id}
+                                routeName={route.name}
+                                favorite={route.favorite}
+                                withLabel
+                                onError={setFavoriteError}
+                            />
                             <button
                                 type="button"
                                 className={

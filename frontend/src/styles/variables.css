@@ -85,6 +85,14 @@
   --color-selected-border: #b93600;
 
   /*
+   * Favoriten
+   */
+
+  --color-favorite: #c67c00;
+  --color-favorite-dark: #8f5900;
+  --color-favorite-soft: #fff4d6;
+
+  /*
    * Deaktivierte Zustände
    */
 

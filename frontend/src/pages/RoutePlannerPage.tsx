@@ -45,6 +45,10 @@ import type {
 } from '../types/routeCalculation'
 import type {RouteMapSegment} from '../types/routeMap'
 import {isLatestRequest} from '../utils/latestRequest'
+import {
+    canExportRouteAsGpx,
+    downloadRouteAsGpx,
+} from '../features/route-planner/gpxExport'
 
 import styles from './RoutePlannerPage.module.css'
 
@@ -252,13 +256,16 @@ export default function RoutePlannerPage() {
             ? routeCalculation
             : null
 
-    const coloredMapSegments =
-        useMemo<RouteMapSegment[]>(() => {
-            if (
-                !completedRouteCalculation?.weatherSegments
-            ) {
-                return []
-            }
+    const routeCanBeExportedAsGpx =
+        completedRouteCalculation !== null &&
+        canExportRouteAsGpx(
+            completedRouteCalculation.geometry,
+        )
+
+    const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
+        if (!completedRouteCalculation?.weatherSegments) {
+            return []
+        }
 
             return [
                 ...completedRouteCalculation.weatherSegments,
@@ -534,12 +541,26 @@ export default function RoutePlannerPage() {
         )
     }
 
-    async function handleRouteCalculation(): Promise<void> {
+    function handleGpxExport() {
         if (
-            !canCalculateRoute ||
-            !routeCoordinates ||
-            !selectedProfile
+            !completedRouteCalculation?.geometry ||
+            !routeCanBeExportedAsGpx
         ) {
+            return
+        }
+
+        downloadRouteAsGpx({
+            startLabel:
+                completedRouteCalculation.start.label,
+            destinationLabel:
+                completedRouteCalculation.destination.label,
+            geometry:
+                completedRouteCalculation.geometry,
+        })
+    }
+
+    async function handleRouteCalculation() {
+        if (!canCalculateRoute || !routeCoordinates || !selectedProfile) {
             return
         }
 
@@ -1195,12 +1216,17 @@ export default function RoutePlannerPage() {
                     className={styles.card}
                     aria-labelledby="route-result-heading"
                 >
-                    <div
-                        className={styles.resultsHeader}
-                    >
-                        <h2 id="route-result-heading">
-                            Routenergebnis
-                        </h2>
+                    <div className={styles.resultsHeader}>
+                        <h2 id="route-result-heading">Routenergebnis</h2>
+
+                        <button
+                            type="button"
+                            className={styles.exportButton}
+                            disabled={!routeCanBeExportedAsGpx}
+                            onClick={handleGpxExport}
+                        >
+                            Als GPX exportieren
+                        </button>
                     </div>
 
                     <dl className={styles.statsGrid}>

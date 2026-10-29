@@ -181,6 +181,15 @@
     overflow-wrap: anywhere;
 }
 
+.itemLink:focus-visible,
+.button:focus-visible,
+.deleteButton:focus-visible,
+.favoriteButton:focus-visible,
+.filterButton:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
 .deleteButton {
     display: inline-flex;
     width: calc(100% - (2 * var(--spacing-default)));
@@ -514,11 +523,15 @@
         width: auto;
         min-width: 8rem;
         margin:
-                var(--spacing-default)
-                var(--spacing-default)
-                var(--spacing-default)
-                0;
+            var(--spacing-default)
+            var(--spacing-default)
+            var(--spacing-default)
+            0;
         align-self: center;
+    }
+
+    .itemActions .deleteButton {
+        margin: 0;
     }
 }
 
@@ -533,4 +546,75 @@
     .item:hover {
         transform: none;
     }
+}
+
+.itemFavorite {
+    border-color: var(--color-favorite);
+    background: var(--color-favorite-soft);
+}
+
+.itemActions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--spacing-small);
+    margin-right: var(--spacing-medium);
+}
+
+.itemActions .deleteButton {
+    align-self: auto;
+    margin-right: 0;
+}
+
+.favoriteButton {
+    min-height: var(--control-min-height);
+    min-width: var(--control-min-height);
+    padding-inline: var(--spacing-default);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--border-radius-medium);
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.favoriteButton:hover:not(:disabled) {
+    border-color: var(--color-favorite);
+    color: var(--color-favorite-dark);
+}
+
+.favoriteButtonActive {
+    border-color: var(--color-favorite);
+    color: var(--color-favorite-dark);
+    background: var(--color-favorite-soft);
+}
+
+.favoriteButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-small);
+}
+
+.filterButton {
+    min-height: var(--control-min-height);
+    padding-inline: var(--spacing-default);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--border-radius-round);
+    color: var(--color-text-strong);
+    background: var(--color-surface);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.filterButtonActive {
+    border-color: var(--color-primary);
+    color: var(--color-primary-dark);
+    background: var(--color-primary-soft);
 }

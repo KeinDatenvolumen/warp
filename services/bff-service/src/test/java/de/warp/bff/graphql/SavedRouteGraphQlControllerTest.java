@@ -45,7 +45,8 @@ class SavedRouteGraphQlControllerTest {
             new AuthenticatedSessionPrincipal(
                     "usr_123",
                     Instant.parse("2026-10-23T08:00:00Z"),
-                    Instant.parse("2026-10-23T20:00:00Z")
+                    Instant.parse("2026-10-23T20:00:00Z"),
+                    true
             );
 
     @Mock

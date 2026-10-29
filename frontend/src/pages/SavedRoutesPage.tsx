@@ -13,6 +13,7 @@ import MessageCard from '../components/ui/MessageCard/MessageCard'
 import {formatDate} from '../features/saved-routes/format'
 import listStyles from '../features/saved-routes/SavedRoutes.module.css'
 import styles from './PagePlaceholder.module.css'
+import FavoriteButton from '../features/saved-routes/FavoriteButton'
 
 const PAGE_SIZE = 20
 
@@ -29,23 +30,16 @@ export default function SavedRoutesPage() {
 
     const [routeToDelete, setRouteToDelete] =
         useState<RouteToDelete | null>(null)
+    const [deleteError, setDeleteError] = useState<string>()
+    const [favoriteError, setFavoriteError] = useState<string>()
+    const [onlyFavorites, setOnlyFavorites] = useState(false)
 
-    const [deleteError, setDeleteError] =
-        useState<string>()
-
-    const {
-        data,
-        loading,
-        error,
-        refetch,
-    } = useQuery(SAVED_ROUTES_QUERY, {
+    const {data, loading, error, refetch} = useQuery(SAVED_ROUTES_QUERY, {
         variables: {
-            page: {
-                page,
-                size: PAGE_SIZE,
-            },
+            filter: onlyFavorites ? {favorite: true} : undefined,
+            page: {page, size: PAGE_SIZE}
         },
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-and-network'
     })
 
     const [
@@ -69,6 +63,12 @@ export default function SavedRoutesPage() {
             )
         }
     }, [data, page])
+
+    function changeFilter(favoritesOnly: boolean): void {
+        setOnlyFavorites(favoritesOnly)
+        setPage(0)
+        setFavoriteError(undefined)
+    }
 
     async function handleConfirmDelete(): Promise<void> {
         if (!routeToDelete || deleting) {
@@ -141,32 +141,66 @@ export default function SavedRoutesPage() {
                 </p>
             </section>
 
-            <section
-                className={listStyles.section}
-                aria-labelledby="saved-routes-heading"
+<section
+    className={listStyles.section}
+    aria-labelledby="saved-routes-heading"
+>
+    <div className={listStyles.sectionHeader}>
+        <div>
+            <p className={listStyles.sectionEyebrow}>
+                Deine Sammlung
+            </p>
+
+            <h2 id="saved-routes-heading">
+                Routenübersicht
+            </h2>
+        </div>
+
+        {data && (
+            <span
+                className={listStyles.routeCount}
+                aria-label={`${items.length} Routen auf dieser Seite`}
             >
-                <div className={listStyles.sectionHeader}>
-                    <div>
-                        <p className={listStyles.sectionEyebrow}>
-                            Deine Sammlung
-                        </p>
+                {items.length}{' '}
+                {items.length === 1
+                    ? 'Route'
+                    : 'Routen'}
+            </span>
+        )}
+    </div>
 
-                        <h2 id="saved-routes-heading">
-                            Routenübersicht
-                        </h2>
-                    </div>
+    <div
+        className={listStyles.filter}
+        role="group"
+        aria-label="Routen filtern"
+    >
+        <button
+            type="button"
+            className={
+                onlyFavorites
+                    ? listStyles.filterButton
+                    : `${listStyles.filterButton} ${listStyles.filterButtonActive}`
+            }
+            aria-pressed={!onlyFavorites}
+            onClick={() => changeFilter(false)}
+        >
+            Alle
+        </button>
 
-                    {data && (
-                        <span
-                            className={listStyles.routeCount}
-                            aria-label={`${items.length} Routen auf dieser Seite`}
-                        >
-                            {items.length}{' '}
-                            {items.length === 1
-                                ? 'Route'
-                                : 'Routen'}
-                        </span>
-                    )}
+        <button
+            type="button"
+            className={
+                onlyFavorites
+                    ? `${listStyles.filterButton} ${listStyles.filterButtonActive}`
+                    : listStyles.filterButton
+            }
+            aria-pressed={onlyFavorites}
+            onClick={() => changeFilter(true)}
+        >
+            <span aria-hidden="true">★</span>{' '}
+            Nur Favoriten
+        </button>
+    </div>
                 </div>
 
                 {deleteError && (
@@ -183,6 +217,12 @@ export default function SavedRoutesPage() {
 
                         <span>{deleteError}</span>
                     </div>
+                )}
+
+                {favoriteError && (
+                    <p className={listStyles.notice} role="alert">
+                        {favoriteError}
+                    </p>
                 )}
 
                 {loading && !data && (
@@ -224,42 +264,52 @@ export default function SavedRoutesPage() {
                     </MessageCard>
                 )}
 
-                {data &&
-                    items.length === 0 &&
-                    page === 0 && (
-                        <div
-                            className={listStyles.emptyState}
-                            role="status"
-                        >
-                            <span
-                                className={
-                                    listStyles.emptyStateIcon
-                                }
-                                aria-hidden="true"
-                            >
-                                ↗
-                            </span>
+{data && items.length === 0 && page === 0 && (
+    <div
+        className={listStyles.emptyState}
+        role="status"
+    >
+        <span
+            className={listStyles.emptyStateIcon}
+            aria-hidden="true"
+        >
+            {onlyFavorites ? '★' : '↗'}
+        </span>
 
-                            <div>
-                                <h3>
-                                    Du hast noch keine Route gespeichert.
-                                </h3>
+        <div>
+            {onlyFavorites ? (
+                <>
+                    <h3>
+                        Du hast noch keine Route als Favorit markiert.
+                    </h3>
 
-                                <p>
-                                    Plane zuerst eine Route und speichere sie
-                                    anschließend in deinem Routenarchiv.
-                                </p>
-                                <Link
-                                    to="/route-planner"
-                                    className={
-                                        listStyles.primaryLink
-                                    }
-                                >
-                                    Zum Routenplaner
-                                </Link>
-                            </div>
-                        </div>
-                    )}
+                    <p>
+                        Markiere eine gespeicherte Route mit dem Stern,
+                        damit sie hier angezeigt wird.
+                    </p>
+                </>
+            ) : (
+                <>
+                    <h3>
+                        Du hast noch keine Route gespeichert.
+                    </h3>
+
+                    <p>
+                        Plane zuerst eine Route und speichere sie
+                        anschließend in deinem Routenarchiv.
+                    </p>
+
+                    <Link
+                        to="/route-planner"
+                        className={listStyles.primaryLink}
+                    >
+                        Zum Routenplaner
+                    </Link>
+                </>
+            )}
+        </div>
+    </div>
+)}
 
                 {items.length > 0 && (
                     <ul
@@ -270,7 +320,11 @@ export default function SavedRoutesPage() {
                         {items.map((route) => (
                             <li
                                 key={route.id}
-                                className={listStyles.item}
+                                className={
+                                    route.favorite
+                                        ? `${listStyles.item} ${listStyles.itemFavorite}`
+                                        : listStyles.item
+                                }
                             >
                                 <Link
                                     to={`/saved-routes/${route.id}`}
@@ -372,29 +426,34 @@ export default function SavedRoutesPage() {
                                     </span>
                                 </Link>
 
-                                <button
-                                    type="button"
-                                    className={
-                                        listStyles.deleteButton
-                                    }
-                                    aria-label={`Route ${route.name} löschen`}
-                                    disabled={deleting}
-                                    aria-busy={deleting}
-                                    onClick={() => {
-                                        setDeleteError(undefined)
+                          <div className={listStyles.itemActions}>
+                              <FavoriteButton
+                                  routeId={route.id}
+                                  routeName={route.name}
+                                  favorite={route.favorite}
+                                  onError={setFavoriteError}
+                                  onChanged={() => void refetch()}
+                              />
 
-                                        setRouteToDelete({
-                                            id: route.id,
-                                            name: route.name,
-                                        })
-                                    }}
-                                >
-                                    <span aria-hidden="true">
-                                        🗑
-                                    </span>
+                              <button
+                                  type="button"
+                                  className={listStyles.deleteButton}
+                                  aria-label={`Route ${route.name} löschen`}
+                                  disabled={deleting}
+                                  aria-busy={deleting}
+                                  onClick={() => {
+                                      setDeleteError(undefined)
 
-                                    <span>Löschen</span>
-                                </button>
+                                      setRouteToDelete({
+                                          id: route.id,
+                                          name: route.name,
+                                      })
+                                  }}
+                              >
+                                  <span aria-hidden="true">🗑</span>
+                                  <span>Löschen</span>
+                              </button>
+                          </div>  
                             </li>
                         ))}
                     </ul>

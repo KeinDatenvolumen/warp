@@ -5,6 +5,7 @@ import java.time.Instant;
 public record ValidatedSession(
         String userId,
         Instant createdAt,
-        Instant expiresAt
+        Instant expiresAt,
+        boolean emailVerified
 ) {
 }
