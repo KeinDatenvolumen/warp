@@ -54,9 +54,6 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v5
 
-      - name: Docker Buildx einrichten
-        uses: docker/setup-buildx-action@v3
-
       - name: Heroku CLI installieren
         shell: bash
         run: |
@@ -81,35 +78,47 @@ jobs:
           IMAGE_NAME: ${{ inputs.image_name }}
           BUILD_ARGS: ${{ inputs.build_args }}
           MAPTILER_PUBLIC_API_KEY: ${{ secrets.MAPTILER_PUBLIC_API_KEY }}
+          BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
         run: |
           if [ -n "$MAPTILER_PUBLIC_API_KEY" ]; then
-            docker buildx build \
+            docker build \
               --platform linux/amd64 \
               --provenance=false \
-              --load \
               --file "$DOCKERFILE" \
               --tag "$IMAGE_NAME:${GITHUB_SHA}" \
               $BUILD_ARGS \
               --build-arg "VITE_MAPTILER_PUBLIC_API_KEY=$MAPTILER_PUBLIC_API_KEY" \
               .
           elif [ -n "$BUILD_ARGS" ]; then
-            docker buildx build \
+            docker build \
               --platform linux/amd64 \
               --provenance=false \
-              --load \
               --file "$DOCKERFILE" \
               --tag "$IMAGE_NAME:${GITHUB_SHA}" \
               $BUILD_ARGS \
               .
           else
-            docker buildx build \
+            docker build \
               --platform linux/amd64 \
               --provenance=false \
-              --load \
               --file "$DOCKERFILE" \
               --tag "$IMAGE_NAME:${GITHUB_SHA}" \
               .
           fi
+
+      - name: Docker-Image prüfen
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ inputs.image_name }}
+        run: |
+          docker image inspect \
+            "$IMAGE_NAME:${GITHUB_SHA}" \
+            --format 'ID={{.Id}} OS={{.Os}} ARCH={{.Architecture}}'
+      
+          docker image history \
+            "$IMAGE_NAME:${GITHUB_SHA}" \
+            --no-trunc
+
 
       - name: Image für Heroku markieren
         shell: bash
@@ -126,7 +135,11 @@ jobs:
         env:
           APP_NAME: ${{ inputs.app_name }}
         run: |
-          docker push "registry.heroku.com/$APP_NAME/web"
+          set -o pipefail
+      
+          docker push \
+            "registry.heroku.com/$APP_NAME/web" \
+            2>&1 | tee /tmp/heroku-docker-push.log
 
       - name: Heroku Release durchführen
         shell: bash
