@@ -76,7 +76,8 @@ public class SessionAuthenticationFilter
                     new AuthenticatedSessionPrincipal(
                             session.userId(),
                             session.createdAt(),
-                            session.expiresAt()
+                            session.expiresAt(),
+                            session.emailVerified()
                     );
 
             UsernamePasswordAuthenticationToken authentication =

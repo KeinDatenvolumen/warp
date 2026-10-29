@@ -42,7 +42,8 @@ public class SessionService {
         return new ValidatedSession(
                 internalResponse.userId(),
                 internalResponse.createdAt(),
-                internalResponse.expiresAt()
+                internalResponse.expiresAt(),
+                internalResponse.emailVerified()
         );
     }
 
