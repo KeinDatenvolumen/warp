@@ -48,7 +48,7 @@ export interface ThemePreferences {
 }
 
 export const DEFAULT_THEME_PREFERENCES: ThemePreferences = {
-    profile: 'profile-1',
+    profile: 'profile-3',
     mode: 'system',
 }
 

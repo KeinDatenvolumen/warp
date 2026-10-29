@@ -162,19 +162,20 @@ export default function AppLayout() {
                         className={styles.brand}
                         aria-label="WaRP Routenplaner"
                     >
-                        <span
-                            className={styles.brandMark}
-                            aria-hidden="true"
-                        >
-                            W
-                        </span>
+    <span
+        className={styles.brandMark}
+        aria-hidden="true"
+    >
+        W
+    </span>
 
                         <span className={styles.brandText}>
-                            <strong>WaRP</strong>
-                            <small>
-                                Weather-aware Route Planning
-                            </small>
-                        </span>
+        <strong>WaRP</strong>
+
+        <small>
+            Weather-aware Route Planning
+        </small>
+    </span>
                     </NavLink>
 
                     <button
@@ -258,7 +259,14 @@ export default function AppLayout() {
                                 to="/route-planner"
                                 className={navigationClassName}
                             >
-                                Routenplaner
+    <span
+        className={styles.navigationIcon}
+        aria-hidden="true"
+    >
+        🗺️
+    </span>
+
+                                <span>Routenplaner</span>
                             </NavLink>
 
                             {isAuthenticated && (
@@ -267,14 +275,28 @@ export default function AppLayout() {
                                         to="/saved-routes"
                                         className={navigationClassName}
                                     >
-                                        Gespeicherte Routen
+    <span
+        className={styles.navigationIcon}
+        aria-hidden="true"
+    >
+        ✅
+    </span>
+
+                                        <span>Gespeicherte Routen</span>
                                     </NavLink>
 
                                     <NavLink
                                         to="/profile"
                                         className={navigationClassName}
                                     >
-                                        Profil
+    <span
+        className={styles.navigationIcon}
+        aria-hidden="true"
+    >
+        👤
+    </span>
+
+                                        <span>Profil</span>
                                     </NavLink>
                                 </>
                             )}
@@ -284,7 +306,14 @@ export default function AppLayout() {
                                     to="/login"
                                     className={navigationClassName}
                                 >
-                                    Anmelden
+            <span
+                className={styles.navigationIcon}
+                aria-hidden="true"
+            >
+                →
+            </span>
+
+                                    <span>Anmelden</span>
                                 </NavLink>
                             )}
 
@@ -300,9 +329,18 @@ export default function AppLayout() {
                                     aria-busy={isLoggingOut}
                                     onClick={openLogoutDialog}
                                 >
-                                    {isLoggingOut
-                                        ? 'Abmeldung läuft …'
-                                        : 'Abmelden'}
+            <span
+                className={styles.navigationIcon}
+                aria-hidden="true"
+            >
+                ←
+            </span>
+
+                                    <span>
+                {isLoggingOut
+                    ? 'Abmeldung läuft …'
+                    : 'Abmelden'}
+            </span>
                                 </button>
                             )}
                         </nav>
