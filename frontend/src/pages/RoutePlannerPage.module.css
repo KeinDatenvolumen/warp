@@ -452,6 +452,7 @@
  */
 
 .mapWrapper {
+    position: relative;
     min-width: 0;
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-extra-large);

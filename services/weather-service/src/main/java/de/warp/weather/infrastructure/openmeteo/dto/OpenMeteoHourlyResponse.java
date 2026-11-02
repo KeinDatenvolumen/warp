@@ -73,6 +73,9 @@ public record OpenMeteoHourlyResponse(
         @JsonProperty("shortwave_radiation")
         List<Double> shortwaveRadiation,
 
+        @JsonProperty("shortwave_radiation_instant")
+        List<Double> shortwaveRadiationInstant,
+
         @JsonProperty("direct_radiation")
         List<Double> directRadiation,
 
@@ -103,6 +106,9 @@ public record OpenMeteoHourlyResponse(
 
         @JsonProperty("soil_temperature_0cm")
         List<Double> soilTemperature0cm,
+
+        @JsonProperty("soil_temperature_0_to_7cm")
+        List<Double> soilTemperature0To7cm,
 
         @JsonProperty("weather_code")
         List<Double> weatherCode

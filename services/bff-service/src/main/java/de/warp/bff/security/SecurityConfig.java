@@ -3,6 +3,7 @@ package de.warp.bff.security;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
@@ -10,6 +11,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final SessionAuthenticationFilter
@@ -54,7 +56,9 @@ public class SecurityConfig {
                         )
                         .ignoringRequestMatchers(
                                 "/api/v1/sessions",
-                                "/api/v1/users"
+                                "/api/v1/users",
+                                "/api/v1/routes/weather-optimization",
+                                "/api/v1/routes/weather-ai-analysis"
                         )
                         .ignoringRequestMatchers(
                                 request -> Boolean.TRUE.equals(

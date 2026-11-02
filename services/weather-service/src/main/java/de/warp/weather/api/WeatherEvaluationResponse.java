@@ -48,6 +48,8 @@ public record WeatherEvaluationResponse(
             Instant expectedArrivalTime,
             int score,
             String color,
+            String limitingFactor,
+            String reasonLabel,
             WeatherConditionResponse weather,
             GeoJsonLineStringResponse geometry
     ) {
@@ -66,6 +68,8 @@ public record WeatherEvaluationResponse(
                     segment.expectedArrivalTime(),
                     segment.score(),
                     segment.color(),
+                    segment.limitingFactor(),
+                    segment.reasonLabel(),
                     WeatherConditionResponse.from(segment.condition()),
                     geo
             );
@@ -75,10 +79,21 @@ public record WeatherEvaluationResponse(
     public record WeatherConditionResponse(
             Double windSpeedKmh,
             Double windDirectionDegrees,
+            Double windGustsKmh,
             Double precipitationProbabilityPercent,
             Double precipitationMm,
+            Double wetRoadIndex,
+            Double snowfallCm,
             Double thunderstormProbabilityPercent,
             Double temperatureCelsius,
+            Double apparentTemperatureCelsius,
+            Double relativeHumidityPercent,
+            Double dewPointCelsius,
+            Double shortwaveRadiationWm2,
+            Double soilTemperatureCelsius,
+            Double visibilityMeters,
+            Double capeJkg,
+            Double uvIndex,
             Integer weatherCode
     ) {
         public static WeatherConditionResponse from(WeatherCondition condition) {
@@ -88,10 +103,21 @@ public record WeatherEvaluationResponse(
             return new WeatherConditionResponse(
                     condition.windSpeedKmh(),
                     condition.windDirectionDegrees(),
+                    condition.windGustsKmh(),
                     condition.precipitationProbabilityPercent(),
                     condition.precipitationMm(),
+                    condition.wetRoadIndex(),
+                    condition.snowfallCm(),
                     condition.thunderstormProbabilityPercent(),
                     condition.temperatureCelsius(),
+                    condition.apparentTemperatureCelsius(),
+                    condition.relativeHumidityPercent(),
+                    condition.dewPointCelsius(),
+                    condition.shortwaveRadiationWm2(),
+                    condition.soilTemperatureCelsius(),
+                    condition.visibilityMeters(),
+                    condition.capeJkg(),
+                    condition.uvIndex(),
                     condition.weatherCode()
             );
         }

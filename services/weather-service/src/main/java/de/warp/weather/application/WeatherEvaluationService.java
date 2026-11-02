@@ -81,17 +81,26 @@ public class WeatherEvaluationService {
         List<CachedForecast> cachedForecasts =
                 weatherCacheService.getForecastsForSegments(plannedSegments);
 
+        String profileCode = routeSnapshot.activityProfile().code();
+        double fallbackSpeedKmh = routeSnapshot.activityProfile().averageSpeedKmh();
+
         List<WeatherSegment> evaluatedSegments = new ArrayList<>(plannedSegments.size());
+        List<Double> segmentDurationsSeconds = new ArrayList<>(plannedSegments.size());
 
         for (int i = 0; i < plannedSegments.size(); i++) {
             RouteSegmenter.PlannedRouteSegment planned = plannedSegments.get(i);
             CachedForecast forecast = cachedForecasts.get(i);
             WeatherCondition condition = forecast.condition();
 
-            int segmentScore = weatherScoringService.calculateSegmentScore(
-                    condition,
-                    planned.movementBearingDegrees()
-            );
+            double segmentSpeedKmh = planned.segmentSpeedKmh(fallbackSpeedKmh);
+            WeatherScoringService.SegmentScoreBreakdown breakdown =
+                    weatherScoringService.evaluateSegmentBreakdown(
+                            condition,
+                            planned.movementBearingDegrees(),
+                            WeatherScoringService.ScoringActivityProfile.fromCode(profileCode),
+                            segmentSpeedKmh
+                    );
+            int segmentScore = breakdown.score();
             String color = weatherScoringService.resolveScoreColor(segmentScore);
 
             evaluatedSegments.add(new WeatherSegment(
@@ -101,12 +110,19 @@ public class WeatherEvaluationService {
                     color,
                     planned.distanceFromStartMeters(),
                     condition,
-                    planned.geometryCoordinates()
+                    planned.geometryCoordinates(),
+                    breakdown.limitingFactor(),
+                    breakdown.reasonLabel()
             ));
+            segmentDurationsSeconds.add(planned.segmentDurationSeconds());
         }
 
         WeatherScoringService.OverallScoreResult overallResult =
-                weatherScoringService.calculateOverallScore(evaluatedSegments);
+                weatherScoringService.calculateOverallScore(
+                        evaluatedSegments,
+                        profileCode,
+                        segmentDurationsSeconds
+                );
 
         Instant generatedAt = cachedForecasts.stream()
                 .map(CachedForecast::cachedAt)
@@ -135,21 +151,16 @@ public class WeatherEvaluationService {
         );
 
         for (WeatherSegment seg : evaluatedSegments) {
-            WeatherCondition cond = seg.condition();
             entity.addSegment(new WeatherSegmentEntity(
                     seg.segmentIndex(),
                     seg.distanceFromStartMeters(),
                     seg.expectedArrivalTime(),
                     seg.score(),
                     seg.color(),
-                    cond.windSpeedKmh(),
-                    cond.windDirectionDegrees(),
-                    cond.precipitationProbabilityPercent(),
-                    cond.precipitationMm(),
-                    cond.thunderstormProbabilityPercent(),
-                    cond.temperatureCelsius(),
-                    cond.weatherCode(),
-                    serializeGeometry(seg.geometryCoordinates())
+                    seg.condition(),
+                    serializeGeometry(seg.geometryCoordinates()),
+                    seg.limitingFactor(),
+                    seg.reasonLabel()
             ));
         }
 
@@ -192,16 +203,10 @@ public class WeatherEvaluationService {
                         seg.getScore(),
                         seg.getColorHex(),
                         seg.getDistanceFromStartMeters(),
-                        new WeatherCondition(
-                                seg.getWindSpeedKmh(),
-                                seg.getWindDirectionDegrees(),
-                                seg.getPrecipitationProbabilityPercent(),
-                                seg.getPrecipitationMm(),
-                                seg.getThunderstormProbabilityPercent(),
-                                seg.getTemperatureCelsius(),
-                                seg.getWeatherCode()
-                        ),
-                        deserializeGeometry(seg.getGeometryGeojson())
+                        seg.toCondition(),
+                        deserializeGeometry(seg.getGeometryGeojson()),
+                        seg.getLimitingFactor(),
+                        seg.getReasonLabel()
                 ))
                 .toList();
 

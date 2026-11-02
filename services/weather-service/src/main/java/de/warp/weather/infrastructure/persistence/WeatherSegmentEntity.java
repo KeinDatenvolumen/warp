@@ -1,5 +1,6 @@
 package de.warp.weather.infrastructure.persistence;
 
+import de.warp.weather.domain.model.WeatherCondition;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -46,11 +47,20 @@ public class WeatherSegmentEntity {
     @Column(name = "wind_direction_degrees")
     private Double windDirectionDegrees;
 
+    @Column(name = "wind_gusts_kmh")
+    private Double windGustsKmh;
+
     @Column(name = "precipitation_probability")
     private Double precipitationProbabilityPercent;
 
     @Column(name = "precipitation_mm")
     private Double precipitationMm;
+
+    @Column(name = "wet_road_index")
+    private Double wetRoadIndex;
+
+    @Column(name = "snowfall_cm")
+    private Double snowfallCm;
 
     @Column(name = "thunderstorm_probability")
     private Double thunderstormProbabilityPercent;
@@ -58,8 +68,38 @@ public class WeatherSegmentEntity {
     @Column(name = "temperature_celsius")
     private Double temperatureCelsius;
 
+    @Column(name = "apparent_temperature_celsius")
+    private Double apparentTemperatureCelsius;
+
+    @Column(name = "relative_humidity_percent")
+    private Double relativeHumidityPercent;
+
+    @Column(name = "dew_point_celsius")
+    private Double dewPointCelsius;
+
+    @Column(name = "shortwave_radiation_wm2")
+    private Double shortwaveRadiationWm2;
+
+    @Column(name = "soil_temperature_celsius")
+    private Double soilTemperatureCelsius;
+
+    @Column(name = "visibility_meters")
+    private Double visibilityMeters;
+
+    @Column(name = "cape_jkg")
+    private Double capeJkg;
+
+    @Column(name = "uv_index")
+    private Double uvIndex;
+
     @Column(name = "weather_code")
     private Integer weatherCode;
+
+    @Column(name = "limiting_factor", length = 32)
+    private String limitingFactor;
+
+    @Column(name = "reason_label", length = 120)
+    private String reasonLabel;
 
     @Column(name = "geometry_geojson", columnDefinition = "TEXT")
     private String geometryGeojson;
@@ -73,32 +113,88 @@ public class WeatherSegmentEntity {
             Instant expectedArrivalTime,
             int score,
             String colorHex,
-            Double windSpeedKmh,
-            Double windDirectionDegrees,
-            Double precipitationProbabilityPercent,
-            Double precipitationMm,
-            Double thunderstormProbabilityPercent,
-            Double temperatureCelsius,
-            Integer weatherCode,
-            String geometryGeojson
+            WeatherCondition condition,
+            String geometryGeojson,
+            String limitingFactor,
+            String reasonLabel
     ) {
         this.segmentIndex = segmentIndex;
         this.distanceFromStartMeters = distanceFromStartMeters;
         this.expectedArrivalTime = expectedArrivalTime;
         this.score = score;
         this.colorHex = colorHex;
-        this.windSpeedKmh = windSpeedKmh;
-        this.windDirectionDegrees = windDirectionDegrees;
-        this.precipitationProbabilityPercent = precipitationProbabilityPercent;
-        this.precipitationMm = precipitationMm;
-        this.thunderstormProbabilityPercent = thunderstormProbabilityPercent;
-        this.temperatureCelsius = temperatureCelsius;
-        this.weatherCode = weatherCode;
+        this.limitingFactor = limitingFactor;
+        this.reasonLabel = reasonLabel;
+        if (condition != null) {
+            this.windSpeedKmh = condition.windSpeedKmh();
+            this.windDirectionDegrees = condition.windDirectionDegrees();
+            this.windGustsKmh = condition.windGustsKmh();
+            this.precipitationProbabilityPercent = condition.precipitationProbabilityPercent();
+            this.precipitationMm = condition.precipitationMm();
+            this.wetRoadIndex = condition.wetRoadIndex();
+            this.snowfallCm = condition.snowfallCm();
+            this.thunderstormProbabilityPercent = condition.thunderstormProbabilityPercent();
+            this.temperatureCelsius = condition.temperatureCelsius();
+            this.apparentTemperatureCelsius = condition.apparentTemperatureCelsius();
+            this.relativeHumidityPercent = condition.relativeHumidityPercent();
+            this.dewPointCelsius = condition.dewPointCelsius();
+            this.shortwaveRadiationWm2 = condition.shortwaveRadiationWm2();
+            this.soilTemperatureCelsius = condition.soilTemperatureCelsius();
+            this.visibilityMeters = condition.visibilityMeters();
+            this.capeJkg = condition.capeJkg();
+            this.uvIndex = condition.uvIndex();
+            this.weatherCode = condition.weatherCode();
+        }
         this.geometryGeojson = geometryGeojson;
+    }
+
+    public WeatherSegmentEntity(
+            int segmentIndex,
+            int distanceFromStartMeters,
+            Instant expectedArrivalTime,
+            int score,
+            String colorHex,
+            WeatherCondition condition,
+            String geometryGeojson
+    ) {
+        this(
+                segmentIndex,
+                distanceFromStartMeters,
+                expectedArrivalTime,
+                score,
+                colorHex,
+                condition,
+                geometryGeojson,
+                null,
+                null
+        );
     }
 
     void setEvaluation(WeatherEvaluationEntity evaluation) {
         this.evaluation = evaluation;
+    }
+
+    public WeatherCondition toCondition() {
+        return new WeatherCondition(
+                windSpeedKmh,
+                windDirectionDegrees,
+                windGustsKmh,
+                precipitationProbabilityPercent,
+                precipitationMm,
+                wetRoadIndex,
+                snowfallCm,
+                thunderstormProbabilityPercent,
+                temperatureCelsius,
+                apparentTemperatureCelsius,
+                relativeHumidityPercent,
+                dewPointCelsius,
+                shortwaveRadiationWm2,
+                soilTemperatureCelsius,
+                visibilityMeters,
+                capeJkg,
+                uvIndex,
+                weatherCode
+        );
     }
 
     public Long getSegmentId() {
@@ -151,6 +247,14 @@ public class WeatherSegmentEntity {
 
     public Integer getWeatherCode() {
         return weatherCode;
+    }
+
+    public String getLimitingFactor() {
+        return limitingFactor;
+    }
+
+    public String getReasonLabel() {
+        return reasonLabel;
     }
 
     public String getGeometryGeojson() {

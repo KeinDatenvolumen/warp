@@ -38,7 +38,7 @@ describe('ThemeSettings', () => {
 
         expect(
             screen.getByRole('radio', {
-                name: 'Lebendig und warm',
+                name: 'Natürlich und minimalistisch',
             }),
         ).toBeChecked()
 

@@ -109,68 +109,99 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
             WeatherModel model
     ) {
         OpenMeteoHourlyResponse hourly = response.hourly();
-        List<WeatherForecastTimeStep> timeSteps =
-                new ArrayList<>(hourly.time().size());
+        List<WeatherForecastTimeStep> hourlySteps = mapTimeSteps(hourly);
 
-        for (int index = 0; index < hourly.time().size(); index++) {
-            timeSteps.add(new WeatherForecastTimeStep(
-                    Instant.ofEpochSecond(hourly.time().get(index)),
-                    mapValues(hourly, index)
-            ));
-        }
+        OpenMeteoHourlyResponse minutely15 = response.minutely15();
+        List<WeatherForecastTimeStep> minutely15Steps = minutely15 != null && minutely15.time() != null
+                ? mapTimeSteps(minutely15)
+                : List.of();
 
         return new WeatherForecastSeries(
                 model,
                 response.latitude(),
                 response.longitude(),
                 response.elevation(),
-                timeSteps
+                hourlySteps,
+                minutely15Steps
         );
     }
 
+    private List<WeatherForecastTimeStep> mapTimeSteps(
+            OpenMeteoHourlyResponse series
+    ) {
+        if (series == null || series.time() == null || series.time().isEmpty()) {
+            return List.of();
+        }
+
+        List<WeatherForecastTimeStep> timeSteps =
+                new ArrayList<>(series.time().size());
+
+        for (int index = 0; index < series.time().size(); index++) {
+            Long epochSecond = series.time().get(index);
+            if (epochSecond != null) {
+                timeSteps.add(new WeatherForecastTimeStep(
+                        Instant.ofEpochSecond(epochSecond),
+                        mapValues(series, index)
+                ));
+            }
+        }
+
+        return List.copyOf(timeSteps);
+    }
+
     private WeatherValues mapValues(
-            OpenMeteoHourlyResponse hourly,
+            OpenMeteoHourlyResponse series,
             int index
     ) {
-        Double isDay = valueAt(hourly.isDay(), index);
-        Double weatherCode = valueAt(hourly.weatherCode(), index);
+        Double isDay = valueAt(series.isDay(), index);
+        Double weatherCode = valueAt(series.weatherCode(), index);
+
+        Double shortwave = valueAt(series.shortwaveRadiationInstant(), index);
+        if (shortwave == null) {
+            shortwave = valueAt(series.shortwaveRadiation(), index);
+        }
+
+        Double soilTemp = valueAt(series.soilTemperature0To7cm(), index);
+        if (soilTemp == null) {
+            soilTemp = valueAt(series.soilTemperature0cm(), index);
+        }
 
         return new WeatherValues(
-                valueAt(hourly.temperature2m(), index),
-                valueAt(hourly.apparentTemperature(), index),
-                valueAt(hourly.relativeHumidity2m(), index),
-                valueAt(hourly.dewPoint2m(), index),
-                valueAt(hourly.wetBulbTemperature2m(), index),
-                valueAt(hourly.precipitationProbability(), index),
-                valueAt(hourly.precipitation(), index),
-                valueAt(hourly.rain(), index),
-                valueAt(hourly.showers(), index),
-                valueAt(hourly.snowfall(), index),
-                valueAt(hourly.snowDepth(), index),
-                valueAt(hourly.windSpeed10m(), index),
-                valueAt(hourly.windDirection10m(), index),
-                valueAt(hourly.windGusts10m(), index),
-                valueAt(hourly.pressureMsl(), index),
-                valueAt(hourly.surfacePressure(), index),
-                valueAt(hourly.cloudCover(), index),
-                valueAt(hourly.cloudCoverLow(), index),
-                valueAt(hourly.cloudCoverMid(), index),
-                valueAt(hourly.cloudCoverHigh(), index),
-                valueAt(hourly.visibility(), index),
-                valueAt(hourly.uvIndex(), index),
-                valueAt(hourly.uvIndexClearSky(), index),
-                valueAt(hourly.shortwaveRadiation(), index),
-                valueAt(hourly.directRadiation(), index),
-                valueAt(hourly.diffuseRadiation(), index),
-                valueAt(hourly.sunshineDuration(), index),
+                valueAt(series.temperature2m(), index),
+                valueAt(series.apparentTemperature(), index),
+                valueAt(series.relativeHumidity2m(), index),
+                valueAt(series.dewPoint2m(), index),
+                valueAt(series.wetBulbTemperature2m(), index),
+                valueAt(series.precipitationProbability(), index),
+                valueAt(series.precipitation(), index),
+                valueAt(series.rain(), index),
+                valueAt(series.showers(), index),
+                valueAt(series.snowfall(), index),
+                valueAt(series.snowDepth(), index),
+                valueAt(series.windSpeed10m(), index),
+                valueAt(series.windDirection10m(), index),
+                valueAt(series.windGusts10m(), index),
+                valueAt(series.pressureMsl(), index),
+                valueAt(series.surfacePressure(), index),
+                valueAt(series.cloudCover(), index),
+                valueAt(series.cloudCoverLow(), index),
+                valueAt(series.cloudCoverMid(), index),
+                valueAt(series.cloudCoverHigh(), index),
+                valueAt(series.visibility(), index),
+                valueAt(series.uvIndex(), index),
+                valueAt(series.uvIndexClearSky(), index),
+                shortwave,
+                valueAt(series.directRadiation(), index),
+                valueAt(series.diffuseRadiation(), index),
+                valueAt(series.sunshineDuration(), index),
                 isDay == null ? null : isDay >= 0.5,
-                valueAt(hourly.cape(), index),
-                valueAt(hourly.liftedIndex(), index),
-                valueAt(hourly.convectiveInhibition(), index),
-                valueAt(hourly.freezingLevelHeight(), index),
-                valueAt(hourly.vapourPressureDeficit(), index),
-                valueAt(hourly.evapotranspiration(), index),
-                valueAt(hourly.soilTemperature0cm(), index),
+                valueAt(series.cape(), index),
+                valueAt(series.liftedIndex(), index),
+                valueAt(series.convectiveInhibition(), index),
+                valueAt(series.freezingLevelHeight(), index),
+                valueAt(series.vapourPressureDeficit(), index),
+                valueAt(series.evapotranspiration(), index),
+                soilTemp,
                 weatherCode == null ? null : weatherCode.intValue()
         );
     }

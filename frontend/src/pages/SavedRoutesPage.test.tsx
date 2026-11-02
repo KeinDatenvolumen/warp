@@ -167,7 +167,7 @@ describe('SavedRoutesPage', () => {
         renderPage()
 
         await user.click(
-            screen.getByRole('button', {name: '★ Nur Favoriten'})
+            screen.getByRole('button', {name: 'Nur Favoriten'})
         )
 
         expect(useQueryMock).toHaveBeenLastCalledWith(
@@ -188,7 +188,7 @@ describe('SavedRoutesPage', () => {
         renderPage()
 
         await user.click(
-            screen.getByRole('button', {name: '★ Nur Favoriten'})
+            screen.getByRole('button', {name: 'Nur Favoriten'})
         )
 
         expect(

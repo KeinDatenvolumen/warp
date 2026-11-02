@@ -227,16 +227,21 @@ public class RouteCalculationService {
                                 seg.expectedArrivalTime(),
                                 seg.score(),
                                 seg.color(),
+                                seg.limitingFactor(),
+                                seg.reasonLabel(),
                                 seg.weather() == null
                                         ? null
                                         : new RouteCalculationResult
                                         .WeatherConditionSnapshot(
                                         seg.weather().windSpeedKmh(),
                                         seg.weather().windDirectionDegrees(),
+                                        seg.weather().windGustsKmh(),
                                         seg.weather().precipitationProbabilityPercent(),
                                         seg.weather().precipitationMm(),
+                                        seg.weather().wetRoadIndex(),
                                         seg.weather().thunderstormProbabilityPercent(),
                                         seg.weather().temperatureCelsius(),
+                                        seg.weather().apparentTemperatureCelsius(),
                                         seg.weather().weatherCode()
                                 ),
                                 seg.geometry() == null

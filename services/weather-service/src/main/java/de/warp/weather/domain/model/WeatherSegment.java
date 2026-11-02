@@ -11,7 +11,9 @@ public record WeatherSegment(
         String color,
         int distanceFromStartMeters,
         WeatherCondition condition,
-        List<List<Double>> geometryCoordinates
+        List<List<Double>> geometryCoordinates,
+        String limitingFactor,
+        String reasonLabel
 ) {
 
     public WeatherSegment {
@@ -35,5 +37,27 @@ public record WeatherSegment(
                 : geometryCoordinates.stream()
                 .map(List::copyOf)
                 .toList();
+    }
+
+    public WeatherSegment(
+            int segmentIndex,
+            Instant expectedArrivalTime,
+            int score,
+            String color,
+            int distanceFromStartMeters,
+            WeatherCondition condition,
+            List<List<Double>> geometryCoordinates
+    ) {
+        this(
+                segmentIndex,
+                expectedArrivalTime,
+                score,
+                color,
+                distanceFromStartMeters,
+                condition,
+                geometryCoordinates,
+                null,
+                null
+        );
     }
 }

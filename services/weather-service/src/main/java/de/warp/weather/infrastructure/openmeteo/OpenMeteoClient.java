@@ -65,6 +65,10 @@ public class OpenMeteoClient {
                                         OpenMeteoConstants.HOURLY_PARAMETER
                                 )
                                 .queryParam(
+                                        "minutely_15",
+                                        OpenMeteoConstants.MINUTELY_15_PARAMETER
+                                )
+                                .queryParam(
                                         "temperature_unit",
                                         "celsius"
                                 )
@@ -90,6 +94,14 @@ public class OpenMeteoClient {
                                 )
                                 .queryParam(
                                         "end_hour",
+                                        formatHour(period.end())
+                                )
+                                .queryParam(
+                                        "start_minutely_15",
+                                        formatHour(period.start())
+                                )
+                                .queryParam(
+                                        "end_minutely_15",
                                         formatHour(period.end())
                                 )
                                 .queryParam(

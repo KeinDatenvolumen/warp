@@ -355,6 +355,8 @@ public class RouteCalculationGraphQlController {
             OffsetDateTime expectedArrivalTime,
             int score,
             String color,
+            String limitingFactor,
+            String reasonLabel,
             SegmentWeatherPayload weather,
             RouteGeometryPayload geometry
     ) {
@@ -379,7 +381,9 @@ public class RouteCalculationGraphQlController {
                     ),
                     segment.score(),
                     segment.color(),
-                    SegmentWeatherPayload.from(segment.weather()),
+                    segment.limitingFactor(),
+                    segment.reasonLabel(),
+                    SegmentWeatherPayload.from(segment.weather(), segment.limitingFactor(), segment.reasonLabel()),
                     geometry
             );
         }
@@ -388,15 +392,22 @@ public class RouteCalculationGraphQlController {
     public record SegmentWeatherPayload(
             Double windSpeedKmh,
             Double windDirectionDegrees,
+            Double windGustsKmh,
             Double precipitationProbabilityPercent,
             Double precipitationMm,
+            Double wetRoadIndex,
             Double thunderstormProbabilityPercent,
             Double temperatureCelsius,
-            Integer weatherCode
+            Double apparentTemperatureCelsius,
+            Integer weatherCode,
+            String limitingFactor,
+            String reasonLabel
     ) {
 
         private static SegmentWeatherPayload from(
-                RouteCalculationResult.WeatherConditionSnapshot weather
+                RouteCalculationResult.WeatherConditionSnapshot weather,
+                String limitingFactor,
+                String reasonLabel
         ) {
             if (weather == null) {
                 return null;
@@ -404,11 +415,16 @@ public class RouteCalculationGraphQlController {
             return new SegmentWeatherPayload(
                     weather.windSpeedKmh(),
                     weather.windDirectionDegrees(),
+                    weather.windGustsKmh(),
                     weather.precipitationProbabilityPercent(),
                     weather.precipitationMm(),
+                    weather.wetRoadIndex(),
                     weather.thunderstormProbabilityPercent(),
                     weather.temperatureCelsius(),
-                    weather.weatherCode()
+                    weather.apparentTemperatureCelsius(),
+                    weather.weatherCode(),
+                    limitingFactor,
+                    reasonLabel
             );
         }
     }
