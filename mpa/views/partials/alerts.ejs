@@ -1,0 +1,26 @@
+<% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+  <div class="alert alert-error" role="alert">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-content">
+      <strong>Fehler:</strong> <%= errorMessage %>
+    </div>
+  </div>
+<% } %>
+
+<% if (typeof successMessage !== 'undefined' && successMessage) { %>
+  <div class="alert alert-success" role="status">
+    <div class="alert-icon">✅</div>
+    <div class="alert-content">
+      <%= successMessage %>
+    </div>
+  </div>
+<% } %>
+
+<% if (typeof infoMessage !== 'undefined' && infoMessage) { %>
+  <div class="alert alert-info" role="status">
+    <div class="alert-icon">ℹ️</div>
+    <div class="alert-content">
+      <%= infoMessage %>
+    </div>
+  </div>
+<% } %>

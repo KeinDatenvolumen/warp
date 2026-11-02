@@ -1,0 +1,102 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<main class="main-content">
+  <div class="container container-sm">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <span class="auth-badge">Registrierung</span>
+        <h1 class="auth-title">Konto erstellen</h1>
+        <p class="auth-subtitle">Erstelle ein kostenloses Konto für WaRP.</p>
+      </div>
+
+      <%- include('partials/alerts') %>
+
+      <form action="/register" method="POST" class="auth-form" novalidate>
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.name ? 'has-error' : '' %>">
+          <label for="name" class="form-label">Vollständiger Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="<%= values.name %>"
+            class="form-control"
+            placeholder="Max Mustermann"
+            required
+            autocomplete="name"
+            autofocus
+          >
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.name) { %>
+            <div class="field-error"><%= fieldErrors.name %></div>
+          <% } %>
+        </div>
+
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.email ? 'has-error' : '' %>">
+          <label for="email" class="form-label">E-Mail-Adresse</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= values.email %>"
+            class="form-control"
+            placeholder="name@beispiel.de"
+            required
+            autocomplete="email"
+          >
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.email) { %>
+            <div class="field-error"><%= fieldErrors.email %></div>
+          <% } %>
+        </div>
+
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.password ? 'has-error' : '' %>">
+          <label for="password" class="form-label">Passwort</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="Mindestens 12 Zeichen"
+            required
+            autocomplete="new-password"
+          >
+          <p class="form-hint">Das Passwort muss mindestens 12 Zeichen lang sein.</p>
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.password) { %>
+            <div class="field-error"><%= fieldErrors.password %></div>
+          <% } %>
+        </div>
+
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.passwordConfirm ? 'has-error' : '' %>">
+          <label for="passwordConfirm" class="form-label">Passwort bestätigen</label>
+          <input
+            type="password"
+            id="passwordConfirm"
+            name="passwordConfirm"
+            class="form-control"
+            placeholder="Passwort wiederholen"
+            required
+            autocomplete="new-password"
+          >
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.passwordConfirm) { %>
+            <div class="field-error"><%= fieldErrors.passwordConfirm %></div>
+          <% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Konto registrieren
+        </button>
+      </form>
+
+      <div class="auth-card-footer">
+        <p class="auth-switch-text">
+          Bereits ein Konto?
+          <a href="/login" class="auth-link">Jetzt anmelden</a>
+        </p>
+        <div class="auth-back-link">
+          <a href="/">← Zurück zur Übersicht</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

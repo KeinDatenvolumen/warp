@@ -1,0 +1,47 @@
+<header class="site-header">
+  <div class="container header-container">
+    <a href="/" class="brand-logo">
+      <span class="logo-icon">⛅</span>
+      <span class="logo-text">WaRP <span class="badge-mpa">MPA</span></span>
+    </a>
+
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <ul class="nav-list">
+        <li>
+          <a href="/" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'active' : '' %>">
+            Übersicht
+          </a>
+        </li>
+        <li>
+          <a href="<%= routePlannerUrl %>" class="nav-link nav-link-external" target="_blank" rel="noopener noreferrer" title="Öffnet den interaktiven Routenplaner (SPA)">
+            Routenplaner (SPA) <span class="external-icon">↗</span>
+          </a>
+        </li>
+
+        <% if (locals.isAuthenticated && locals.currentUser) { %>
+          <li>
+            <a href="/profile" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/profile' ? 'active' : '' %>">
+              Profil (<%= locals.currentUser.name.split(' ')[0] %>)
+            </a>
+          </li>
+          <li>
+            <form action="/logout" method="POST" class="inline-form">
+              <button type="submit" class="btn btn-outline btn-sm">Abmelden</button>
+            </form>
+          </li>
+        <% } else { %>
+          <li>
+            <a href="/login" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/login' ? 'active' : '' %>">
+              Anmelden
+            </a>
+          </li>
+          <li>
+            <a href="/register" class="btn btn-primary btn-sm">
+              Registrieren
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  </div>
+</header>

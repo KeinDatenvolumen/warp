@@ -49,7 +49,8 @@ Das Frontend kommuniziert ausschließlich mit dem BFF. Interne Services werden n
 | `routing-service` | Routenberechnung | `8082` | `warp_routing` |
 | `weather-service` | Wetterdaten und Auswertung | `8083` | `warp_weather` |
 | `storage-service` | gespeicherte Routen und persistente Fachdaten | `8084` | `warp_storage` |
-| Frontend | Weboberfläche | `5173` | keine |
+| Frontend (SPA) | Weboberfläche (React & Vite) | `5173` | keine |
+| MPA | Multi-Page Application (Express, EJS & GraphQL) | `8085` | keine |
 | Mailpit UI | lokale E-Mail-Ansicht | `8025` | lokales Volume |
 | Mailpit SMTP | lokaler SMTP-Eingang | `1025` | lokales Volume |
 
@@ -88,7 +89,8 @@ warp/
 │   ├── examples/                   # Beispielantworten externer APIs
 │   ├── graphql/                    # öffentlicher GraphQL-Vertrag
 │   └── openapi/                    # REST-Verträge
-├── frontend/                       # React-/TypeScript-Anwendung
+├── frontend/                       # React-/TypeScript-Anwendung (SPA)
+├── mpa/                            # Multi-Page Application (Express, EJS, GraphQL)
 ├── infrastructure/
 │   ├── docker/dev/                 # Docker-Hot-Reload für Spring
 │   ├── docker/production/          # Produktions-Entrypoints

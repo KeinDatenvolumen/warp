@@ -1,0 +1,72 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<main class="main-content">
+  <div class="container container-sm">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <span class="auth-badge">Anmeldung</span>
+        <h1 class="auth-title">Willkommen zurück</h1>
+        <p class="auth-subtitle">Melde dich an, um dein Profil und deine Routen zu verwalten.</p>
+      </div>
+
+      <%- include('partials/alerts') %>
+
+      <form action="/login" method="POST" class="auth-form" novalidate>
+        <input type="hidden" name="redirect" value="<%= redirect %>">
+
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.email ? 'has-error' : '' %>">
+          <label for="email" class="form-label">E-Mail-Adresse</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= email %>"
+            class="form-control"
+            placeholder="name@beispiel.de"
+            required
+            autocomplete="email"
+            autofocus
+          >
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.email) { %>
+            <div class="field-error"><%= fieldErrors.email %></div>
+          <% } %>
+        </div>
+
+        <div class="form-group <%= typeof fieldErrors !== 'undefined' && fieldErrors.password ? 'has-error' : '' %>">
+          <div class="form-label-row">
+            <label for="password" class="form-label">Passwort</label>
+          </div>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="••••••••••••"
+            required
+            autocomplete="current-password"
+          >
+          <% if (typeof fieldErrors !== 'undefined' && fieldErrors.password) { %>
+            <div class="field-error"><%= fieldErrors.password %></div>
+          <% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Anmelden
+        </button>
+      </form>
+
+      <div class="auth-card-footer">
+        <p class="auth-switch-text">
+          Noch kein Konto?
+          <a href="/register" class="auth-link">Jetzt registrieren</a>
+        </p>
+        <div class="auth-back-link">
+          <a href="/">← Zurück zur Übersicht</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

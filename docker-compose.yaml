@@ -81,3 +81,18 @@ services:
     depends_on:
       - bff-service
     restart: unless-stopped
+
+  mpa:
+    build:
+      context: .
+      dockerfile: mpa/Dockerfile
+    environment:
+      PORT: "8085"
+      BFF_URL: "http://bff-service:8080"
+      ROUTE_PLANNER_URL: "http://localhost:5173/route-planner"
+    ports:
+      - "8085:8085"
+    depends_on:
+      - bff-service
+    restart: unless-stopped
+

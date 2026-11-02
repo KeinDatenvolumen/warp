@@ -71,6 +71,36 @@ jobs:
       - name: Frontend bauen
         run: npm run build
 
+  mpa:
+    name: MPA build and test
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: mpa
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v5
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.20.0"
+          cache: npm
+          cache-dependency-path: mpa/package-lock.json
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: MPA bauen
+        run: npm run build
+
+      - name: MPA Tests ausführen
+        run: npm test
+
   docker:
     name: Dockerfiles prüfen
     if: github.event.pull_request.draft == false
@@ -79,6 +109,7 @@ jobs:
     needs:
       - backend
       - frontend
+      - mpa
 
     strategy:
       fail-fast: false
@@ -96,6 +127,8 @@ jobs:
             dockerfile: services/storage-service/Dockerfile
           - name: frontend
             dockerfile: frontend/Dockerfile
+          - name: mpa
+            dockerfile: mpa/Dockerfile
 
     steps:
       - name: Repository auschecken

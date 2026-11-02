@@ -12,6 +12,10 @@ frontend/node_modules
 frontend/dist
 frontend/coverage
 
+mpa/node_modules
+mpa/dist
+mpa/coverage
+
 dump.txt
 .env
 .env.*

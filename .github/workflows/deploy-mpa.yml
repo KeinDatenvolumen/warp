@@ -1,0 +1,25 @@
+name: Deploy MPA to Heroku
+
+on:
+  push:
+    branches:
+      - system/live
+    paths:
+      - "mpa/**"
+      - ".dockerignore"
+      - ".github/workflows/deploy-mpa.yml"
+      - ".github/workflows/reusable-heroku-container-deploy.yml"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-heroku-container-deploy.yml
+    with:
+      app_url: ${{ vars.HEROKU_MPA_URL }}
+      app_name: ${{ vars.HEROKU_MPA_APP }}
+      dockerfile: mpa/Dockerfile
+      image_name: warp-mpa
+      health_path: /health
+    secrets:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
