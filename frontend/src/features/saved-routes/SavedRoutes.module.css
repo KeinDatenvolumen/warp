@@ -549,8 +549,13 @@
 }
 
 .itemFavorite {
-    border-color: var(--color-favorite);
-    background: var(--color-favorite-soft);
+    .item:has(.favoriteButton[aria-pressed='true']) {
+        border-color: var(--color-warning-border);
+        background: var(--color-surface);
+        box-shadow:
+                inset 0.25rem 0 0 var(--color-warning),
+                var(--shadow-medium);
+    }
 }
 
 .itemActions {
