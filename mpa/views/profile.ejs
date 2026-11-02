@@ -1,0 +1,102 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<main class="main-content">
+  <div class="container container-md">
+    <div class="profile-header-card">
+      <div class="profile-avatar-large">👤</div>
+      <div class="profile-header-text">
+        <span class="profile-badge">Benutzerprofil (GraphQL)</span>
+        <h1 class="profile-name"><%= user.name %></h1>
+        <p class="profile-email"><%= user.email %></p>
+      </div>
+    </div>
+
+    <%- include('partials/alerts') %>
+
+    <div class="profile-grid">
+      <!-- Kontoinformationen -->
+      <section class="card profile-info-card">
+        <div class="card-header">
+          <h2>Kontodaten</h2>
+          <span class="badge badge-graphql">Geladen per GraphQL</span>
+        </div>
+        <div class="card-body">
+          <dl class="data-list">
+            <div class="data-item">
+              <dt>Vollständiger Name</dt>
+              <dd><strong><%= user.name %></strong></dd>
+            </div>
+            <div class="data-item">
+              <dt>E-Mail-Adresse</dt>
+              <dd>
+                <span><%= user.email %></span>
+                <% if (user.emailVerified) { %>
+                  <span class="badge badge-success">✓ Bestätigt</span>
+                <% } else { %>
+                  <span class="badge badge-warning">⏳ Nicht bestätigt</span>
+                <% } %>
+              </dd>
+            </div>
+            <div class="data-item">
+              <dt>Benutzer-ID</dt>
+              <dd><code><%= user.id %></code></dd>
+            </div>
+            <div class="data-item">
+              <dt>Mitglied seit</dt>
+              <dd><%= formattedCreatedAt %></dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- Sitzungsinformationen -->
+      <section class="card profile-session-card">
+        <div class="card-header">
+          <h2>Aktive Sitzung</h2>
+          <span class="badge badge-info">Sicher</span>
+        </div>
+        <div class="card-body">
+          <dl class="data-list">
+            <div class="data-item">
+              <dt>Sitzungs-Status</dt>
+              <dd><span class="badge badge-success">● Aktiv</span></dd>
+            </div>
+            <div class="data-item">
+              <dt>Angemeldet am</dt>
+              <dd><%= formattedSessionCreatedAt %></dd>
+            </div>
+            <div class="data-item">
+              <dt>Sitzung gültig bis</dt>
+              <dd><strong><%= formattedExpiresAt %></strong></dd>
+            </div>
+            <div class="data-item">
+              <dt>Sicherheitsmerkmale</dt>
+              <dd>HttpOnly Cookie, SameSite Lax</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <!-- Quick Links & Actions -->
+    <div class="profile-actions-card">
+      <h2>Aktionen</h2>
+      <div class="profile-actions-grid">
+        <a href="<%= routePlannerUrl %>" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+          🗺️ Zum Routenplaner (SPA) öffnen ↗
+        </a>
+        <a href="/" class="btn btn-outline btn-lg">
+          🏠 Zurück zur Übersicht
+        </a>
+        <form action="/logout" method="POST" class="inline-form">
+          <button type="submit" class="btn btn-danger btn-lg">
+            🚪 Jetzt Abmelden
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

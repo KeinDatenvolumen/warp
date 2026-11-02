@@ -1,0 +1,11 @@
+import { Router } from 'express'
+
+export const healthRouter = Router()
+
+healthRouter.get('/health', (_req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    service: 'warp-mpa',
+    timestamp: new Date().toISOString(),
+  })
+})

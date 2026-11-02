@@ -1,0 +1,152 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<main class="main-content">
+  <div class="container">
+    <%- include('partials/alerts') %>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-badge">WaRP Multi-Page Application</div>
+      <h1 class="hero-title">Weather-Aware Route Planner</h1>
+      <p class="hero-subtitle">
+        Plane und verwalte deine Routen abgestimmt auf das Wetter.
+        Schnell, sicher und direkt mit unserem Backend verbunden.
+      </p>
+
+      <% if (locals.isAuthenticated && user) { %>
+        <div class="user-greeting-card">
+          <div class="greeting-avatar">👤</div>
+          <div class="greeting-content">
+            <h2>Willkommen zurück, <%= user.name %>!</h2>
+            <p>Angemeldet mit <code><%= user.email %></code></p>
+          </div>
+          <div class="greeting-actions">
+            <a href="/profile" class="btn btn-primary">Mein Profil ansehen</a>
+            <a href="<%= routePlannerUrl %>" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+              Zum Routenplaner ↗
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="hero-cta-group">
+          <a href="/login" class="btn btn-primary btn-lg">Jetzt Anmelden</a>
+          <a href="/register" class="btn btn-outline btn-lg">Konto erstellen</a>
+          <a href="<%= routePlannerUrl %>" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
+            Routenplaner starten ↗
+          </a>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- Routenplaner Card -->
+    <section class="planner-feature-card">
+      <div class="planner-card-badge">Interaktive Anwendung</div>
+      <div class="planner-card-grid">
+        <div class="planner-card-text">
+          <h2>Interaktiver Routenplaner (SPA)</h2>
+          <p>
+            Der vollwertige Routenplaner läuft als Single-Page Application (SPA) mit interaktiver Karte,
+            Echtzeit-Wetteranalyse entlang deiner Route, Höhenprofilen und KI-gestützter Beratung.
+          </p>
+          <ul class="feature-bullets">
+            <li>🗺️ Interaktive Kartenansicht mit Wegpunkten und Geocoding</li>
+            <li>⛅ Dynamischer Wetter-Score auf Basis des DWD-Wettermodells</li>
+            <li>⏰ 30-Minuten-Abfahrtszeitfenster für optimale Reisezeiten</li>
+            <li>🤖 KI-Wetterberater mit kontextbezogenen Reiseempfehlungen</li>
+          </ul>
+          <a href="<%= routePlannerUrl %>" class="btn btn-accent btn-lg" target="_blank" rel="noopener noreferrer">
+            Zum interaktiven Routenplaner (SPA) öffnen ↗
+          </a>
+        </div>
+        <div class="planner-card-visual">
+          <div class="visual-mockup">
+            <div class="mockup-header">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+              <span class="mockup-title">WaRP Route Planner SPA</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-row">
+                <span class="badge badge-success">Wetter-Score: 88 / 100</span>
+                <span class="badge badge-info">Fahrrad-Profil</span>
+              </div>
+              <p class="mockup-text">Optimale Route berechnet • Keine Unwetterwarnungen</p>
+              <div class="mockup-progress"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Profiles Section (GraphQL-powered) -->
+    <section class="section-container">
+      <div class="section-header">
+        <span class="section-eyebrow">GraphQL Backend</span>
+        <h2>Verfügbare Aktivitätsprofile</h2>
+        <p class="section-desc">
+          Die folgenden Aktivitätsprofile werden dynamisch per <strong>GraphQL</strong> vom BFF geladen:
+        </p>
+      </div>
+
+      <div class="profiles-grid">
+        <% activityProfiles.forEach(function(profile) { %>
+          <div class="profile-card">
+            <div class="profile-card-icon">
+              <% if (profile.code === 'BICYCLE') { %>
+                🚲
+              <% } else if (profile.code === 'MOTORCYCLE') { %>
+                🏍️
+              <% } else if (profile.code === 'HIKING') { %>
+                🥾
+              <% } else { %>
+                🧭
+              <% } %>
+            </div>
+            <h3 class="profile-card-title"><%= profile.displayName %></h3>
+            <p class="profile-card-code">Code: <code><%= profile.code %></code></p>
+            <p class="profile-card-text">
+              <% if (profile.code === 'BICYCLE') { %>
+                Angepasste Wetterbewertung für Radfahrer mit besonderem Fokus auf Wind und Niederschlag.
+              <% } else if (profile.code === 'MOTORCYCLE') { %>
+                Berücksichtigt nasse Kurven, Sichtweiten und Sturmböen für sicheres Motorradfahren.
+              <% } else if (profile.code === 'HIKING') { %>
+                Optimiert für Fußgänger und Wanderer mit Schutz vor plötzlichen Wetterumschwüngen.
+              <% } else { %>
+                Zentral konfiguriertes Aktivitätsprofil im WaRP-System.
+              <% } %>
+            </p>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+
+    <!-- MPA Architecture Info Section -->
+    <section class="section-container info-section">
+      <div class="section-header">
+        <span class="section-eyebrow">Architektur</span>
+        <h2>WaRP Multi-Page Application (MPA)</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">⚡</div>
+          <h3>Server-Side Rendering</h3>
+          <p>Klassische Multi-Page Architektur mit Node.js und Express für blitzschnelle Ladezeiten und geringen Client-Overhead.</p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🔮</div>
+          <h3>GraphQL-Integration</h3>
+          <p>Effiziente Datenabfrage über den GraphQL-Vertrag des Backend-for-Frontend (BFF).</p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🔒</div>
+          <h3>Sichere Sitzungen</h3>
+          <p>Zentrale Authentifizierung über HttpOnly-Cookies mit SameSite- und HTTPS-Schutz.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

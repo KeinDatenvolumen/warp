@@ -1,0 +1,23 @@
+<footer class="site-footer">
+  <div class="container footer-container">
+    <div class="footer-info">
+      <p class="footer-title"><strong>WaRP</strong> – Weather-Aware Route Planner</p>
+      <p class="footer-text">Multi-Page Application (MPA) • DHBW Mosbach</p>
+    </div>
+    <div class="footer-links">
+      <a href="/">Übersicht</a>
+      <span class="sep">•</span>
+      <a href="<%= routePlannerUrl %>" target="_blank" rel="noopener noreferrer">Routenplaner (SPA) ↗</a>
+      <span class="sep">•</span>
+      <% if (locals.isAuthenticated) { %>
+        <a href="/profile">Profil</a>
+      <% } else { %>
+        <a href="/login">Anmelden</a>
+        <span class="sep">•</span>
+        <a href="/register">Registrieren</a>
+      <% } %>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
