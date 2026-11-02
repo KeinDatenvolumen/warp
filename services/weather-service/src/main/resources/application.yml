@@ -41,8 +41,8 @@ warp:
     gemini:
       base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
       api-key: ${GEMINI_API_KEY:}
-      model: ${GEMINI_MODEL:gemini-3.5-flash}
-      fallback-model: ${GEMINI_FALLBACK_MODEL:gemini-3.6-flash}
+      model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+      fallback-model: ${GEMINI_FALLBACK_MODEL:gemini-3.5-flash}
       connect-timeout: ${GEMINI_CONNECT_TIMEOUT:3s}
       read-timeout: ${GEMINI_READ_TIMEOUT:20s}
       temperature: ${GEMINI_TEMPERATURE:0.2}

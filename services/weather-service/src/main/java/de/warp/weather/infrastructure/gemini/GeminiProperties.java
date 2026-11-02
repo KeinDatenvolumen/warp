@@ -24,10 +24,10 @@ public record GeminiProperties(
             apiKey = "";
         }
         if (model == null || model.isBlank() || "gemini-2.5-flash".equals(model) || "gemini-2.0-flash".equals(model)) {
-            model = "gemini-3.5-flash";
+            model = "gemini-3.5-flash-lite";
         }
         if (fallbackModel == null || fallbackModel.isBlank() || "gemini-2.0-flash".equals(fallbackModel) || "gemini-2.5-flash".equals(fallbackModel)) {
-            fallbackModel = "gemini-3.6-flash";
+            fallbackModel = "gemini-3.5-flash";
         }
         if (connectTimeout == null) {
             connectTimeout = Duration.ofSeconds(3);

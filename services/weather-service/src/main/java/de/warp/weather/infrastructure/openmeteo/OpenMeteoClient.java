@@ -10,6 +10,8 @@ import de.warp.weather.infrastructure.openmeteo.exception.InvalidOpenMeteoRespon
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoRateLimitException;
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoTimeoutException;
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoUnavailableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -25,6 +27,10 @@ import java.util.stream.Collectors;
 
 @Component
 public class OpenMeteoClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenMeteoClient.class);
+    private static final int MAX_ATTEMPTS = 3;
+    private static final long INITIAL_BACKOFF_MS = 300L;
 
     private static final DateTimeFormatter HOUR_FORMATTER =
             DateTimeFormatter
@@ -47,8 +53,40 @@ public class OpenMeteoClient {
             ForecastPeriod period,
             WeatherModel model
     ) {
+        RuntimeException lastException = null;
+
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                JsonNode response = executeRequest(locations, period, model);
+                return mapResponse(response);
+            } catch (OpenMeteoRateLimitException | OpenMeteoUnavailableException | OpenMeteoTimeoutException ex) {
+                lastException = ex;
+                if (attempt < MAX_ATTEMPTS) {
+                    long backoff = INITIAL_BACKOFF_MS * (1L << (attempt - 1));
+                    LOGGER.warn("Open-Meteo request attempt {}/{} failed ({}), retrying in {}ms",
+                            attempt, MAX_ATTEMPTS, ex.getMessage(), backoff);
+                    try {
+                        Thread.sleep(backoff);
+                    } catch (InterruptedException interruptedException) {
+                        Thread.currentThread().interrupt();
+                        throw ex;
+                    }
+                }
+            } catch (Exception ex) {
+                throw new InvalidOpenMeteoResponseException("Could not process Open-Meteo response", ex);
+            }
+        }
+
+        throw lastException;
+    }
+
+    private JsonNode executeRequest(
+            List<ForecastLocation> locations,
+            ForecastPeriod period,
+            WeatherModel model
+    ) {
         try {
-            JsonNode response = restClient.get()
+            return restClient.get()
                     .uri(uriBuilder -> {
                         var builder = uriBuilder
                                 .path("/v1/forecast")
@@ -144,8 +182,6 @@ public class OpenMeteoClient {
                             }
                     )
                     .body(JsonNode.class);
-
-            return mapResponse(response);
         } catch (OpenMeteoRateLimitException
                  | OpenMeteoUnavailableException exception) {
             throw exception;

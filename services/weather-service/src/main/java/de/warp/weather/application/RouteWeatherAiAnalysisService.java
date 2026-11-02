@@ -181,7 +181,7 @@ public class RouteWeatherAiAnalysisService {
                         deterministicHiddenInsights,
                         deterministicCriticalSections,
                         now,
-                        "warp-mcp-physics-engine (Fallback)"
+                        "warp-physics-engine"
                 );
             }
         } else {
@@ -196,7 +196,7 @@ public class RouteWeatherAiAnalysisService {
                     deterministicHiddenInsights,
                     deterministicCriticalSections,
                     now,
-                    "warp-mcp-physics-engine"
+                    "warp-physics-engine"
             );
         }
 
@@ -476,7 +476,7 @@ public class RouteWeatherAiAnalysisService {
                 criticalSections,
                 recommendations,
                 MCP_TOOLS_USED,
-                geminiOutput.modelName() + " (MCP)",
+                geminiOutput.modelName(),
                 now
         );
     }

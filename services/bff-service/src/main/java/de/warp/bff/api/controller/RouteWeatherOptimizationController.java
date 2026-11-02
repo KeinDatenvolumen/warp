@@ -19,10 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpStatusCodeException;
 import tools.jackson.databind.JsonNode;
 
 import java.net.URI;
@@ -270,5 +272,24 @@ public class RouteWeatherOptimizationController {
             }
         }
         return List.copyOf(coords);
+    }
+
+    @ExceptionHandler(HttpStatusCodeException.class)
+    public ResponseEntity<ApiErrorResponse> handleDownstreamException(HttpStatusCodeException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null || !status.is5xxServerError()) {
+            status = HttpStatus.BAD_GATEWAY;
+        }
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(new ApiErrorResponse(
+                        URI.create("https://warp.local/problems/weather-service-unavailable"),
+                        "Wetterdienst nicht verfügbar",
+                        status.value(),
+                        "WEATHER_PROVIDER_UNAVAILABLE",
+                        "Der Wetterdienst ist vorübergehend nicht erreichbar. Bitte versuche es in Kürze erneut.",
+                        "/api/v1/routes/weather-ai-analysis",
+                        List.of()
+                ));
     }
 }

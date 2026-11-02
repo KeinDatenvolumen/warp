@@ -5,6 +5,8 @@ import de.warp.weather.infrastructure.openmeteo.exception.InvalidOpenMeteoRespon
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoRateLimitException;
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoTimeoutException;
 import de.warp.weather.infrastructure.openmeteo.exception.OpenMeteoUnavailableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class WeatherExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WeatherExceptionHandler.class);
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException exception) {
@@ -42,6 +46,7 @@ public class WeatherExceptionHandler {
             OpenMeteoRateLimitException.class
     })
     public ProblemDetail handleOpenMeteoFailure(RuntimeException exception) {
+        LOGGER.warn("External weather provider failed: {}", exception.getMessage(), exception);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_GATEWAY,
                 "Der externe Wetterdienst hat keine gültigen Daten geliefert."

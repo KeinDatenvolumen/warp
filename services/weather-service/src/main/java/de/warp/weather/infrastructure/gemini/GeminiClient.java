@@ -109,6 +109,7 @@ public class GeminiClient {
         if (properties.fallbackModel() != null && !properties.fallbackModel().isBlank()) {
             models.add(properties.fallbackModel().trim());
         }
+        models.add("gemini-3.5-flash-lite");
         models.add("gemini-3.5-flash");
         models.add("gemini-3.6-flash");
         models.add("gemini-3.8-flash");

@@ -212,7 +212,7 @@ class RouteWeatherAiAnalysisAndMcpTest {
         assertThat(response.riskLevel()).isEqualTo("HIGH");
         assertThat(response.activityProfileCode()).isEqualTo("MOTORCYCLE");
         assertThat(response.headline()).contains("Motorradfahrer");
-        assertThat(response.modelName()).isEqualTo("gemini-3.5-flash (MCP)");
+        assertThat(response.modelName()).isEqualTo("gemini-3.5-flash");
         assertThat(response.mcpToolsUsed()).containsExactly(
                 "get_route_weather_telemetry",
                 "detect_hidden_meteorological_anomalies",

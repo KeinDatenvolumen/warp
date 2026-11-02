@@ -12,7 +12,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
         jdbc:postgresql://*)
             # Bereits eine JDBC-URL, beispielsweise lokal oder manuell gesetzt.
             export DB_URL="$DATABASE_URL"
-            exec java -jar /app/application.jar
+            exec java ${JAVA_OPTS:-"-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"} -jar /app/application.jar
             ;;
         *)
             echo "Nicht unterstütztes DATABASE_URL-Format." >&2
@@ -60,4 +60,4 @@ else
     echo "DATABASE_URL ist nicht gesetzt. Verwende vorhandene lokale Datenbankkonfiguration."
 fi
 
-exec java -jar /app/application.jar
+exec java ${JAVA_OPTS:-"-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"} -jar /app/application.jar
