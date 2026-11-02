@@ -70,7 +70,6 @@ const destinationIcon = divIcon({
 interface BottleneckBadge {
     segmentIndex: number
     position: LatLng
-    icon: string
     label: string
     color: string
 }
@@ -134,7 +133,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '⛈️',
             label: reason || 'MAX 50 · Gewitterrisiko',
         }
     }
@@ -146,7 +144,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '🧊',
             label: reason || 'MAX 30 · Glättegefahr',
         }
     }
@@ -157,7 +154,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '🌪️',
             label: reason || 'MAX 40 · Sturm',
         }
     }
@@ -171,7 +167,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '🏍️',
             label:
                 reason ||
                 `Score ${score} · Nasse Fahrbahn (${Math.round(wetRoadIndex * 100)}%)`,
@@ -186,7 +181,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '🌧️',
             label:
                 reason ||
                 `Score ${score} · Schauer ${rain.toFixed(1)} mm/h`,
@@ -199,7 +193,6 @@ function resolveBottleneckBadge(
     ) {
         return {
             ...common,
-            icon: '💨',
             label:
                 reason ||
                 `Score ${score} · Gegenwind ${Math.round(wind)} km/h`,
@@ -208,7 +201,6 @@ function resolveBottleneckBadge(
 
     return {
         ...common,
-        icon: '⚠️',
         label: reason || `Score ${score}`,
     }
 }
@@ -235,7 +227,6 @@ function createHoverMarkerIcon(score: number) {
 
 function createBottleneckIcon(badge: BottleneckBadge) {
     const label = escapeHtml(badge.label)
-    const icon = escapeHtml(badge.icon)
 
     return divIcon({
         className: 'route-map__bottleneck-wrapper',
@@ -245,10 +236,6 @@ function createBottleneckIcon(badge: BottleneckBadge) {
                 style="--pill-color: ${badge.color};"
                 title="${label}"
             >
-                <span
-                    class="route-map__bottleneck-icon"
-                    aria-hidden="true"
-                >${icon}</span>
                 <span class="route-map__bottleneck-text">${label}</span>
             </div>
         `,
@@ -770,7 +757,6 @@ export default function RouteMap({
 
                                     {activeHoveredSegment.reasonLabel && (
                                         <div className="route-map__tooltip-reason">
-                                            ⚠️{' '}
                                             {
                                                 activeHoveredSegment.reasonLabel
                                             }

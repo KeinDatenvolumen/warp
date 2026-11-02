@@ -159,7 +159,7 @@ public class HttpClientConfiguration {
             String weatherServiceUrl,
             @Value("${warp.weather.connect-timeout:2s}")
             Duration connectTimeout,
-            @Value("${warp.weather.read-timeout:10s}")
+            @Value("${warp.weather.read-timeout:25s}")
             Duration readTimeout,
             CorrelationIdClientHttpRequestInterceptor
                     correlationIdInterceptor,

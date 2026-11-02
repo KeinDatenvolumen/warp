@@ -1,5 +1,11 @@
 package de.warp.weather.api;
 
+import de.warp.weather.api.dto.RouteWeatherAiAnalysisRequest;
+import de.warp.weather.api.dto.RouteWeatherAiAnalysisResponse;
+import de.warp.weather.api.dto.RouteWeatherOptimizationRequest;
+import de.warp.weather.api.dto.RouteWeatherOptimizationResponse;
+import de.warp.weather.application.RouteWeatherAiAnalysisService;
+import de.warp.weather.application.RouteWeatherOptimizationService;
 import de.warp.weather.application.WeatherEvaluationService;
 import de.warp.weather.application.WeatherForecastService;
 import de.warp.weather.domain.model.ForecastLocation;
@@ -25,21 +31,42 @@ public class InternalWeatherForecastController {
 
     private final WeatherForecastService weatherForecastService;
     private final WeatherEvaluationService weatherEvaluationService;
+    private final RouteWeatherOptimizationService routeWeatherOptimizationService;
+    private final RouteWeatherAiAnalysisService routeWeatherAiAnalysisService;
 
     @Autowired
     public InternalWeatherForecastController(
             WeatherForecastService weatherForecastService,
             @Autowired(required = false)
-            WeatherEvaluationService weatherEvaluationService
+            WeatherEvaluationService weatherEvaluationService,
+            @Autowired(required = false)
+            RouteWeatherOptimizationService routeWeatherOptimizationService,
+            @Autowired(required = false)
+            RouteWeatherAiAnalysisService routeWeatherAiAnalysisService
     ) {
         this.weatherForecastService = weatherForecastService;
         this.weatherEvaluationService = weatherEvaluationService;
+        this.routeWeatherOptimizationService = routeWeatherOptimizationService;
+        this.routeWeatherAiAnalysisService = routeWeatherAiAnalysisService;
     }
 
     public InternalWeatherForecastController(
             WeatherForecastService weatherForecastService
     ) {
-        this(weatherForecastService, null);
+        this(weatherForecastService, null, null, null);
+    }
+
+    public InternalWeatherForecastController(
+            WeatherForecastService weatherForecastService,
+            WeatherEvaluationService weatherEvaluationService,
+            RouteWeatherOptimizationService routeWeatherOptimizationService
+    ) {
+        this(
+                weatherForecastService,
+                weatherEvaluationService,
+                routeWeatherOptimizationService,
+                null
+        );
     }
 
     @GetMapping("/forecast")
@@ -105,5 +132,31 @@ public class InternalWeatherForecastController {
                         routeCalculationId
                 );
         return WeatherEvaluationResponse.from(evaluation);
+    }
+
+    @PostMapping("/optimization")
+    public RouteWeatherOptimizationResponse optimizeDeparture(
+            @RequestBody RouteWeatherOptimizationRequest request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body must not be null");
+        }
+        if (routeWeatherOptimizationService == null) {
+            throw new IllegalStateException("Route weather optimization service is not configured");
+        }
+        return routeWeatherOptimizationService.optimizeDeparture(request);
+    }
+
+    @PostMapping("/ai-analysis")
+    public RouteWeatherAiAnalysisResponse analyzeRouteWeatherAi(
+            @RequestBody RouteWeatherAiAnalysisRequest request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body must not be null");
+        }
+        if (routeWeatherAiAnalysisService == null) {
+            throw new IllegalStateException("Route weather AI analysis service is not configured");
+        }
+        return routeWeatherAiAnalysisService.analyzeRouteWeather(request);
     }
 }

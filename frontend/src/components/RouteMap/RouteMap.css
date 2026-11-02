@@ -249,7 +249,7 @@
     margin: var(--spacing-medium);
     overflow-wrap: anywhere;
     color: var(--color-text);
-    font-family: var(--font-family-base);
+    font-family: var(--font-family-base), serif;
     font-size: var(--font-size-small);
     line-height: var(--line-height-default);
 }
@@ -350,6 +350,7 @@
 
 .route-map__bottleneck-text {
     letter-spacing: 0.01em;
+    color:white;
 }
 
 /* Pulsierender Hover-Marker / Crosshair beim Hover-Scrubbing */

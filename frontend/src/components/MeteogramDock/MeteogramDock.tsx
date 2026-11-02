@@ -28,12 +28,6 @@ function formatTime(isoString: string): string {
     }
 }
 
-/**
- * Ermittelt aus Windrichtung und relativer Fahrtrichtung das aerodynamische Symbol.
- * Pfeil nach unten = Gegenwind (rot/orange)
- * Pfeil quer       = Seitenwind (gelb/orange)
- * Pfeil nach oben  = Rückenwind (grün/cyan)
- */
 function resolveWindOrientation(
     reasonLabel?: string | null,
     limitingFactor?: string | null,
@@ -41,15 +35,15 @@ function resolveWindOrientation(
     const text = (reasonLabel ?? '').toLowerCase()
 
     if (text.includes('rückenwind') || limitingFactor === 'TAILWIND_BOOST') {
-        return { arrow: '↑', label: 'Rückenwind', color: '#00b4d8' }
+        return { arrow: '↑', label: 'Rückenwind', color: '#0284c7' }
     }
     if (text.includes('gegenwind')) {
-        return { arrow: '↓', label: 'Gegenwind', color: '#ef4444' }
+        return { arrow: '↓', label: 'Gegenwind', color: '#dc2626' }
     }
     if (text.includes('seitenwind')) {
-        return { arrow: '↔', label: 'Seitenwind', color: '#f59e0b' }
+        return { arrow: '↔', label: 'Seitenwind', color: '#d97706' }
     }
-    return { arrow: '↗', label: 'Wind', color: '#94a3b8' }
+    return { arrow: '↗', label: 'Wind', color: 'var(--color-text-muted)' }
 }
 
 export default function MeteogramDock({
@@ -60,6 +54,7 @@ export default function MeteogramDock({
     onSelectSegment,
 }: MeteogramDockProps) {
     const [isExpanded, setIsExpanded] = useState(true)
+    const [pinnedSegmentIndex, setPinnedSegmentIndex] = useState<number | null>(null)
 
     const sortedSegments = useMemo(() => {
         return [...segments].sort((a, b) => a.segmentIndex - b.segmentIndex)
@@ -76,42 +71,52 @@ export default function MeteogramDock({
         return 10000
     }, [totalDistanceMeters, sortedSegments])
 
+    const effectiveSegmentIndex = hoveredSegmentIndex ?? pinnedSegmentIndex
+
     const activeSegment = useMemo(() => {
-        if (hoveredSegmentIndex === null) {
+        if (effectiveSegmentIndex === null) {
             return null
         }
-        return sortedSegments.find((s) => s.segmentIndex === hoveredSegmentIndex) ?? null
-    }, [hoveredSegmentIndex, sortedSegments])
+        return sortedSegments.find((s) => s.segmentIndex === effectiveSegmentIndex) ?? null
+    }, [effectiveSegmentIndex, sortedSegments])
 
-    // Punkte für das SVG Chart (Spur 1: Score 0-100)
+    // Gleichmäßig auf die N Segment-Spalten zentrierte Punkte, damit Kurve, Klickspots und Spuren exakt fluchten
     const chartPoints = useMemo(() => {
-        if (sortedSegments.length === 0) return []
+        const count = sortedSegments.length
+        if (count === 0) return []
 
         const width = 1000
         const height = 80
-        const paddingBottom = 6
-        const paddingTop = 6
+        const paddingBottom = 8
+        const paddingTop = 8
         const usableHeight = height - paddingBottom - paddingTop
 
         return sortedSegments.map((seg, idx) => {
-            const dist = seg.distanceFromStartMeters ?? idx * (totalDistance / sortedSegments.length)
-            const x = Math.max(0, Math.min(width, (dist / totalDistance) * width))
-            const clampedScore = Math.max(0, Math.min(100, seg.score))
+            const xRatio = (idx + 0.5) / count
+            const x = xRatio * width
+            const rawScore = Number.isFinite(seg.score)
+                ? seg.score
+                : Number.isFinite((seg as unknown as { segmentScore?: number }).segmentScore)
+                  ? (seg as unknown as { segmentScore?: number }).segmentScore!
+                  : 50
+            const clampedScore = Math.max(0, Math.min(100, rawScore))
             const y = height - paddingBottom - (clampedScore / 100) * usableHeight
+            const yPercent = (y / height) * 100
             return {
                 x,
                 y,
+                yPercent,
                 score: clampedScore,
                 color: getScoreColor(clampedScore),
                 segmentIndex: seg.segmentIndex,
+                segment: seg,
             }
         })
-    }, [sortedSegments, totalDistance])
+    }, [sortedSegments])
 
     const svgPaths = useMemo(() => {
         if (chartPoints.length === 0) return { linePath: '', areaPath: '', gradientStops: [] }
 
-        // Start und Endpunkte an Kanten angleichen
         const first = chartPoints[0]
         const last = chartPoints[chartPoints.length - 1]
         if (!first || !last) return { linePath: '', areaPath: '', gradientStops: [] }
@@ -128,7 +133,6 @@ export default function MeteogramDock({
 
         const areaD = `${lineD} L 1000,80 L 0,80 Z`
 
-        // Gradient Stops entlang der X-Achse
         const gradientStops = chartPoints.map((pt) => ({
             offset: `${(pt.x / 10).toFixed(1)}%`,
             color: pt.color,
@@ -141,26 +145,43 @@ export default function MeteogramDock({
         return null
     }
 
+    function handleSegmentHover(segmentIndex: number | null) {
+        if (segmentIndex !== null) {
+            onHoverSegment(segmentIndex)
+        } else {
+            onHoverSegment(pinnedSegmentIndex)
+        }
+    }
+
+    function handleSegmentClick(segmentIndex: number) {
+        onSelectSegment?.(segmentIndex)
+        if (pinnedSegmentIndex === segmentIndex) {
+            setPinnedSegmentIndex(null)
+            onHoverSegment(null)
+        } else {
+            setPinnedSegmentIndex(segmentIndex)
+            onHoverSegment(segmentIndex)
+        }
+    }
+
     return (
         <section
-            className={`${styles.dockContainer} ${isExpanded ? styles.dockExpanded : styles.dockCollapsed}`}
-            aria-label="Wetter Meteogramm Dock"
+            className={styles.dockContainer}
+            aria-label="Wetterverlauf entlang der Route"
         >
             <header className={styles.dockHeader}>
                 <div className={styles.dockTitleGroup}>
-                    <span>🌤️ WARP Meteogramm</span>
-                    <span className={styles.badgeLive}>
-                        <span className={styles.pulseDot} />
-                        101-Stufen Oklch
-                    </span>
+                    <span className={styles.dockTitle}>Wetterverlauf entlang der Route</span>
                 </div>
 
                 {activeSegment ? (
                     <div className={styles.hoverInfoBadge} role="status">
-                        <span>Segment {activeSegment.segmentIndex + 1}</span>
+                        <strong>Abschnitt {activeSegment.segmentIndex + 1}</strong>
                         <span>·</span>
-                        <span>{formatKm(activeSegment.distanceFromStartMeters ?? 0)}</span>
-                        <span>({formatTime(activeSegment.expectedArrivalTime)})</span>
+                        <span>ab {formatKm(activeSegment.distanceFromStartMeters ?? 0)}</span>
+                        {activeSegment.expectedArrivalTime && (
+                            <span>({formatTime(activeSegment.expectedArrivalTime)} Uhr)</span>
+                        )}
                         <span
                             className={styles.scorePill}
                             style={{
@@ -169,15 +190,30 @@ export default function MeteogramDock({
                         >
                             Score {activeSegment.score}
                         </span>
+                        {activeSegment.weather?.temperatureCelsius != null && (
+                            <span>{Math.round(activeSegment.weather.temperatureCelsius)} °C</span>
+                        )}
                         {activeSegment.reasonLabel && (
                             <span className={styles.reasonHighlight}>
-                                ⚠️ {activeSegment.reasonLabel}
+                                {activeSegment.reasonLabel}
                             </span>
+                        )}
+                        {pinnedSegmentIndex !== null && (
+                            <button
+                                type="button"
+                                className={styles.unpinButton}
+                                onClick={() => {
+                                    setPinnedSegmentIndex(null)
+                                    onHoverSegment(null)
+                                }}
+                            >
+                                Auswahl aufheben
+                            </button>
                         )}
                     </div>
                 ) : (
                     <div className={styles.hoverInfoBadge}>
-                        <span>Bewege die Maus über die Segmente für Details</span>
+                        <span>Abschnitt berühren oder anklicken, um ihn auf der Karte hervorzuheben</span>
                     </div>
                 )}
 
@@ -186,122 +222,133 @@ export default function MeteogramDock({
                     className={styles.toggleButton}
                     onClick={() => setIsExpanded((prev) => !prev)}
                     aria-expanded={isExpanded}
-                    aria-label={isExpanded ? 'Meteogramm einklappen' : 'Meteogramm ausklappen'}
                 >
-                    {isExpanded ? '▼ Minimieren' : '▲ Meteogramm'}
+                    {isExpanded ? 'Einklappen' : 'Ausklappen'}
                 </button>
             </header>
 
             {isExpanded && (
-                <div className={styles.dockBody}>
-                    {/* SPUR 1: Score-Gradient Kurve */}
-                    <div className={styles.chartWrapper}>
-                        <svg
-                            className={styles.svgChart}
-                            viewBox="0 0 1000 80"
-                            preserveAspectRatio="none"
-                        >
-                            <defs>
-                                <linearGradient id="scoreAreaGradient" x1="0" y1="0" x2="1" y2="0">
-                                    {svgPaths.gradientStops.map((stop, i) => (
-                                        <stop
-                                            key={i}
-                                            offset={stop.offset}
-                                            stopColor={stop.color}
-                                            stopOpacity="0.4"
-                                        />
-                                    ))}
-                                </linearGradient>
-                                <linearGradient id="scoreStrokeGradient" x1="0" y1="0" x2="1" y2="0">
-                                    {svgPaths.gradientStops.map((stop, i) => (
-                                        <stop
-                                            key={i}
-                                            offset={stop.offset}
-                                            stopColor={stop.color}
-                                        />
-                                    ))}
-                                </linearGradient>
-                            </defs>
+                <div
+                    className={styles.dockBody}
+                    onMouseLeave={() => handleSegmentHover(null)}
+                >
+                    {/* SPUR 1: Score-Kurve mit deckungsgleichen Klickspalten */}
+                    <div className={styles.trackRow}>
+                        <span className={styles.laneLabel}>Wetterscore</span>
+                        <div className={styles.chartWrapper}>
+                            <svg
+                                className={styles.svgChart}
+                                viewBox="0 0 1000 80"
+                                preserveAspectRatio="none"
+                                aria-hidden="true"
+                            >
+                                <defs>
+                                    <linearGradient id="scoreAreaGradient" x1="0" y1="0" x2="1" y2="0">
+                                        {svgPaths.gradientStops.map((stop, i) => (
+                                            <stop
+                                                key={i}
+                                                offset={stop.offset}
+                                                stopColor={stop.color}
+                                                stopOpacity="0.3"
+                                            />
+                                        ))}
+                                    </linearGradient>
+                                    <linearGradient id="scoreStrokeGradient" x1="0" y1="0" x2="1" y2="0">
+                                        {svgPaths.gradientStops.map((stop, i) => (
+                                            <stop
+                                                key={i}
+                                                offset={stop.offset}
+                                                stopColor={stop.color}
+                                            />
+                                        ))}
+                                    </linearGradient>
+                                </defs>
 
-                            {/* [FR-WETT-03] Horizontale 50-Punkte Schwelle */}
-                            <line
-                                x1="0"
-                                y1="43"
-                                x2="1000"
-                                y2="43"
-                                className={styles.thresholdLine}
-                            />
-                            <text x="996" y="40" className={styles.thresholdLabel}>
-                                [FR-WETT-03] Max 50
-                            </text>
-
-                            {/* Flächenkurve und Kontur */}
-                            <path d={svgPaths.areaPath} fill="url(#scoreAreaGradient)" />
-                            <path
-                                d={svgPaths.linePath}
-                                fill="none"
-                                stroke="url(#scoreStrokeGradient)"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                            />
-
-                            {/* Datenpunkte für Hover-Interaktion */}
-                            {chartPoints.map((pt) => (
-                                <circle
-                                    key={pt.segmentIndex}
-                                    cx={pt.x}
-                                    cy={pt.y}
-                                    r={hoveredSegmentIndex === pt.segmentIndex ? 6 : 3}
-                                    fill={pt.color}
-                                    stroke="#ffffff"
-                                    strokeWidth={hoveredSegmentIndex === pt.segmentIndex ? 2 : 1}
-                                    style={{ cursor: 'pointer', transition: 'r 0.15s' }}
-                                    onMouseEnter={() => onHoverSegment(pt.segmentIndex)}
-                                    onMouseLeave={() => onHoverSegment(null)}
-                                    onClick={() => onSelectSegment?.(pt.segmentIndex)}
+                                <line
+                                    x1="0"
+                                    y1="40"
+                                    x2="1000"
+                                    y2="40"
+                                    className={styles.thresholdLine}
                                 />
-                            ))}
-                        </svg>
+
+                                <path d={svgPaths.areaPath} fill="url(#scoreAreaGradient)" />
+                                <path
+                                    d={svgPaths.linePath}
+                                    fill="none"
+                                    stroke="url(#scoreStrokeGradient)"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+
+                            <div className={styles.chartHitColumns}>
+                                {chartPoints.map((pt) => {
+                                    const isCurrent = effectiveSegmentIndex === pt.segmentIndex
+                                    const isPinned = pinnedSegmentIndex === pt.segmentIndex
+                                    return (
+                                        <button
+                                            key={pt.segmentIndex}
+                                            type="button"
+                                            className={`${styles.chartHitCol} ${isCurrent ? styles.chartHitColActive : ''}`}
+                                            aria-label={`Abschnitt ${pt.segmentIndex + 1}, Score ${pt.score}`}
+                                            aria-pressed={isPinned}
+                                            onMouseEnter={() => handleSegmentHover(pt.segmentIndex)}
+                                            onFocus={() => handleSegmentHover(pt.segmentIndex)}
+                                            onClick={() => handleSegmentClick(pt.segmentIndex)}
+                                        >
+                                            <span
+                                                className={`${styles.chartPointDot} ${isCurrent ? styles.chartPointDotActive : ''}`}
+                                                style={{
+                                                    top: `${pt.yPercent}%`,
+                                                    backgroundColor: pt.color,
+                                                }}
+                                            />
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* SPUR 2: Hybride Niederschlagsbalken & Nasse Fahrbahn W_road */}
-                    <div className={styles.laneRainRoad}>
-                        <span className={styles.laneLabel}>🌧️ Regen / Nässe</span>
+                    {/* SPUR 2: Niederschlag & Fahrbahnnässe */}
+                    <div className={styles.trackRow}>
+                        <span className={styles.laneLabel}>Niederschlag</span>
                         <div className={styles.laneSegmentsRow}>
                             {sortedSegments.map((seg) => {
                                 const precipMm = seg.weather?.precipitationMm ?? 0
                                 const rainPercent = Math.min(100, Math.round((precipMm / 5.0) * 100))
                                 const wetRoad = seg.weather?.wetRoadIndex ?? 0
                                 const isWet = wetRoad > 0.25
-                                const isCurrent = hoveredSegmentIndex === seg.segmentIndex
+                                const isCurrent = effectiveSegmentIndex === seg.segmentIndex
 
                                 return (
-                                    <div
+                                    <button
                                         key={seg.segmentIndex}
-                                        className={`${styles.rainSegmentCol} ${isCurrent ? styles.rainSegmentColActive : ''}`}
-                                        title={`Regen: ${precipMm.toFixed(1)} mm/h | Fahrbahnnässe: ${(wetRoad * 100).toFixed(0)}%`}
-                                        onMouseEnter={() => onHoverSegment(seg.segmentIndex)}
-                                        onMouseLeave={() => onHoverSegment(null)}
-                                        onClick={() => onSelectSegment?.(seg.segmentIndex)}
+                                        type="button"
+                                        className={`${styles.rainSegmentCol} ${isCurrent ? styles.segmentColActive : ''}`}
+                                        title={`Niederschlag: ${precipMm.toFixed(1)} mm/h · Oberflächennässe: ${(wetRoad * 100).toFixed(0)} %`}
+                                        onMouseEnter={() => handleSegmentHover(seg.segmentIndex)}
+                                        onClick={() => handleSegmentClick(seg.segmentIndex)}
                                     >
                                         {precipMm > 0 && (
-                                            <div
+                                            <span
                                                 className={styles.rainBarFill}
-                                                style={{ height: `${Math.max(15, rainPercent * 0.7)}%` }}
+                                                style={{ height: `${Math.max(18, rainPercent * 0.75)}%` }}
                                             />
                                         )}
-                                        <div
+                                        <span
                                             className={`${styles.roadWetnessStrip} ${isWet ? styles.roadWetnessActive : ''}`}
                                         />
-                                    </div>
+                                    </button>
                                 )
                             })}
                         </div>
                     </div>
 
-                    {/* SPUR 3: Aerodynamik & Relative Windpfeile */}
-                    <div className={styles.laneWind}>
-                        <span className={styles.laneLabel}>💨 Wind / Böen</span>
+                    {/* SPUR 3: Wind & Böen */}
+                    <div className={styles.trackRow}>
+                        <span className={styles.laneLabel}>Wind (km/h)</span>
                         <div className={styles.laneSegmentsRow}>
                             {sortedSegments.map((seg) => {
                                 const windSpeed = Math.round(seg.weather?.windSpeedKmh ?? 0)
@@ -310,16 +357,16 @@ export default function MeteogramDock({
                                     seg.reasonLabel,
                                     seg.limitingFactor,
                                 )
-                                const isCurrent = hoveredSegmentIndex === seg.segmentIndex
+                                const isCurrent = effectiveSegmentIndex === seg.segmentIndex
 
                                 return (
-                                    <div
+                                    <button
                                         key={seg.segmentIndex}
-                                        className={`${styles.windCol} ${isCurrent ? styles.windColActive : ''}`}
-                                        title={`${orientation.label} · Mittel: ${windSpeed} km/h, Böen: ${windGust} km/h`}
-                                        onMouseEnter={() => onHoverSegment(seg.segmentIndex)}
-                                        onMouseLeave={() => onHoverSegment(null)}
-                                        onClick={() => onSelectSegment?.(seg.segmentIndex)}
+                                        type="button"
+                                        className={`${styles.windCol} ${isCurrent ? styles.segmentColActive : ''}`}
+                                        title={`${orientation.label} · Mittelwind: ${windSpeed} km/h, Böen: ${windGust} km/h`}
+                                        onMouseEnter={() => handleSegmentHover(seg.segmentIndex)}
+                                        onClick={() => handleSegmentClick(seg.segmentIndex)}
                                     >
                                         <span
                                             className={styles.windArrow}
@@ -330,42 +377,37 @@ export default function MeteogramDock({
                                         <span className={styles.windSpeedText}>
                                             {windSpeed}/{windGust}
                                         </span>
-                                    </div>
+                                    </button>
                                 )
                             })}
                         </div>
                     </div>
 
-                    {/* FOOTER / LEGENDE */}
+                    {/* FOOTER / DISTANZACHSE & LEGENDE */}
                     <footer className={styles.dockFooter}>
-                        <span>Start: 0.0 km</span>
-                        <div className={styles.legendList}>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#00B4D8' }} />
-                                <span>100 Traum</span>
+                        <span className={styles.footerSpacer} />
+                        <div className={styles.footerAxisRow}>
+                            <span>0,0 km (Start)</span>
+                            <div className={styles.legendList}>
+                                <div className={styles.legendItem}>
+                                    <span className={styles.legendDot} style={{ backgroundColor: '#52B788' }} />
+                                    <span>Gut (80+)</span>
+                                </div>
+                                <div className={styles.legendItem}>
+                                    <span className={styles.legendDot} style={{ backgroundColor: '#F6AE2D' }} />
+                                    <span>Mäßig (50–79)</span>
+                                </div>
+                                <div className={styles.legendItem}>
+                                    <span className={styles.legendDot} style={{ backgroundColor: '#C81D25' }} />
+                                    <span>Ungünstig (&lt;50)</span>
+                                </div>
+                                <div className={styles.legendItem}>
+                                    <span className={styles.legendWetBar} />
+                                    <span>Nasse Fahrbahn</span>
+                                </div>
                             </div>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#52B788' }} />
-                                <span>85 Gut</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#F6AE2D' }} />
-                                <span>68 Mäßig</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#F26419' }} />
-                                <span>50 Warnung</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#C81D25' }} />
-                                <span>30 Widrig</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: '#2A0845' }} />
-                                <span>0 Extrem</span>
-                            </div>
+                            <span>{formatKm(totalDistance)} (Ziel)</span>
                         </div>
-                        <span>Ziel: {formatKm(totalDistance)}</span>
                     </footer>
                 </div>
             )}

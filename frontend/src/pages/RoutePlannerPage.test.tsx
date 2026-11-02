@@ -122,6 +122,7 @@ describe('RoutePlannerPage', () => {
                                 [9.46, 49.42],
                             ],
                         },
+                        score: 82,
                         segmentScore: 82,
                         color: '#22c55e',
                         weather: {
@@ -146,6 +147,7 @@ describe('RoutePlannerPage', () => {
                                 [9.77, 49.49],
                             ],
                         },
+                        score: 35,
                         segmentScore: 35,
                         color: '#ef4444',
                         weather: {

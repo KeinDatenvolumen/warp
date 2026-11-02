@@ -66,7 +66,8 @@ final class OpenMeteoConstants {
             "wind_gusts_10m",
             "weather_code",
             "visibility",
-            "cape"
+            "cape",
+            "is_day"
     );
 
     static final String HOURLY_PARAMETER =

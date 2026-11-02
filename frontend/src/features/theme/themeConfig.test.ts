@@ -19,7 +19,7 @@ describe('parseThemePreferences', () => {
     it('ersetzt ungültige Werte einzeln durch Standardwerte', () => {
         expect(
             parseThemePreferences('{"profile":"gibt-es-nicht","mode":"dark"}')
-        ).toEqual({profile: 'profile-1', mode: 'dark'})
+        ).toEqual({profile: 'profile-3', mode: 'dark'})
     })
 
     it('fängt kaputtes JSON ab', () => {

@@ -1,0 +1,366 @@
+.container {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.titleGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--color-primary, #0284c7);
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    margin: 0;
+}
+
+.badgeOptimum {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+}
+
+.pulseDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.4);
+        opacity: 0.6;
+    }
+}
+
+.summaryCard {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summaryCol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.summaryLabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.summaryValue {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.advantageText {
+    font-size: 0.85rem;
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.quickActions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.actionButton {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.actionButton:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.actionButtonPrimary {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+}
+
+.actionButtonPrimary:hover {
+    background: #0369a1;
+    border-color: #0369a1;
+    color: #ffffff;
+}
+
+/* Bargraph / Slider Track */
+.bargraphContainer {
+    position: relative;
+    padding-top: 2rem;
+    padding-bottom: 1.5rem;
+}
+
+.bargraphScrollWrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bargraphTrack {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    min-width: 600px;
+    padding: 0 0.5rem;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.barSlot {
+    flex: 1;
+    min-width: 18px;
+    max-width: 32px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.barSlot:hover {
+    transform: translateY(-2px);
+}
+
+.barSlotActive .barFill {
+    outline: 2px solid #0f172a;
+    outline-offset: 1px;
+}
+
+.barFill {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.2s ease, background-color 0.2s ease;
+    position: relative;
+}
+
+.barNightfall {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 3px,
+        transparent 3px,
+        transparent 6px
+    );
+}
+
+.barMarkerPin {
+    position: absolute;
+    top: -24px;
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 2;
+    transform: translateX(-50%);
+    left: 50%;
+}
+
+.barMarkerPin::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px 4px 0 4px;
+    border-style: solid;
+    border-color: #0284c7 transparent transparent transparent;
+}
+
+.barIcon {
+    position: absolute;
+    top: 4px;
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+
+.slotTimeLabel {
+    font-size: 0.65rem;
+    color: #64748b;
+    margin-top: 0.35rem;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.slotTimeLabelActive {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+/* Scrub Range Slider */
+.sliderControlWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.scrubSlider {
+    width: 100%;
+    accent-color: #0284c7;
+    cursor: pointer;
+}
+
+.sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* Selected Details & Delta */
+.selectionDetails {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    gap: 0.75rem;
+}
+
+.selectionScoreBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.scorePill {
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.deltaText {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.deltaPositive {
+    color: #16a34a;
+}
+
+.deltaNegative {
+    color: #dc2626;
+}
+
+.deltaNeutral {
+    color: #64748b;
+}
+
+/* 2D Carpet Plot */
+.carpetPlotWrapper {
+    margin-top: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.carpetHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.carpetScrollArea {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.carpetGrid {
+    display: grid;
+    gap: 2px;
+}
+
+.carpetCell {
+    width: 14px;
+    height: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.carpetCell:hover {
+    outline: 1px solid #000;
+}

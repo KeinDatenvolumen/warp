@@ -45,7 +45,7 @@ describe('ThemeProvider', () => {
     it('setzt die Standardwerte auf das html-Element', () => {
         renderProbe()
 
-        expect(document.documentElement.dataset.colorProfile).toBe('profile-1')
+        expect(document.documentElement.dataset.colorProfile).toBe('profile-3')
         expect(document.documentElement.dataset.colorMode).toBe('light')
     })
 

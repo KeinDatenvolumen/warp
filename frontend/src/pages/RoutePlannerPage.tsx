@@ -1,4 +1,5 @@
 import {
+    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -8,11 +9,18 @@ import {
 import { useLazyQuery, useMutation } from '@apollo/client/react'
 import { Link } from 'react-router'
 
+import type { WeatherOptimizationResponse } from '../types/weatherOptimization'
+import type { RouteWeatherAiAnalysisResponse } from '../types/weatherAiAnalysis'
+import { fetchWeatherOptimization } from '../api/weatherOptimizationApi'
+import { fetchRouteWeatherAiAnalysis } from '../api/weatherAiAnalysisApi'
+import { ApiRequestError } from '../api/restClient'
+import { getScoreColor } from '../utils/weatherColorScale'
 import { SEARCH_PLACES_QUERY } from '../api/searchPlacesQuery'
 import {
     ROUTE_CALCULATION_QUERY,
     START_ROUTE_CALCULATION_MUTATION,
 } from '../api/routeCalculationApi'
+import AiWeatherAdvisorPanel from '../components/AiWeatherAdvisor/AiWeatherAdvisorPanel'
 import MeteogramDock from '../components/MeteogramDock/MeteogramDock'
 import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
@@ -38,13 +46,14 @@ import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
 import { toLatLngPositions } from '../features/saved-routes/routeGeometry'
 import type { ActivityProfileCode } from '../types/activityProfile'
 import type {
-    RouteCalculation,
+    RouteCalculation, RouteWeatherSegment,
 } from '../types/routeCalculation'
 import type { RouteMapSegment } from '../types/routeMap'
 import type { Place } from '../types/searchPlaces'
 import { isLatestRequest } from '../utils/latestRequest'
 
 import styles from './RoutePlannerPage.module.css'
+import DepartureTimeSlider from "../components/DepartureTimePicker/DepartureTimeSlider";
 
 const SELECTED_PROFILE_STORAGE_KEY =
     'warp-selected-activity-profile'
@@ -94,8 +103,24 @@ export default function RoutePlannerPage() {
         useState<RouteCalculation | null>(null)
     const [routeCalculationError, setRouteCalculationError] =
         useState<string | null>(null)
+    const [optimizationData, setOptimizationData] =
+        useState<WeatherOptimizationResponse | null>(null)
+    const [selectedSlotIndex, setSelectedSlotIndex] =
+        useState<number | null>(null)
+    const [userSelectedDepartureIso, setUserSelectedDepartureIso] =
+        useState<string | null>(null)
     const [hoveredSegmentIndex, setHoveredSegmentIndex] =
         useState<number | null>(null)
+    const [aiAnalysis, setAiAnalysis] =
+        useState<RouteWeatherAiAnalysisResponse | null>(null)
+    const [aiAnalysisLoading, setAiAnalysisLoading] =
+        useState(false)
+    const [aiAnalysisError, setAiAnalysisError] =
+        useState<string | null>(null)
+    const [aiAnalysisErrorCode, setAiAnalysisErrorCode] =
+        useState<string | null>(null)
+    const [aiRefreshTrigger, setAiRefreshTrigger] =
+        useState(0)
     const [selectedStart, setSelectedStart] =
         useState<Place | null>(null)
     const [selectedDestination, setSelectedDestination] =
@@ -197,12 +222,167 @@ export default function RoutePlannerPage() {
         completedRouteCalculation !== null &&
         canExportRouteAsGpx(completedRouteCalculation.geometry)
 
-    const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
+    useEffect(() => {
+        if (!completedRouteCalculation?.geometry?.coordinates || completedRouteCalculation.geometry.coordinates.length < 2) {
+            setOptimizationData(null)
+            setSelectedSlotIndex(null)
+            setUserSelectedDepartureIso(null)
+            return
+        }
+
+        let isCancelled = false
+        fetchWeatherOptimization({
+            routeCalculationId: completedRouteCalculation.id,
+            activityProfile: selectedProfile ?? completedRouteCalculation.activityProfile?.code,
+            departureTime: completedRouteCalculation.departureTime,
+            durationSeconds: completedRouteCalculation.durationSeconds ?? undefined,
+            distanceMeters: completedRouteCalculation.distanceMeters ?? undefined,
+            coordinates: completedRouteCalculation.geometry.coordinates as [number, number][],
+        })
+            .then((data) => {
+                if (isCancelled) return
+                setOptimizationData(data)
+                setSelectedSlotIndex(data.recommendedSlotIndex)
+            })
+            .catch(() => {
+                if (isCancelled) return
+                setOptimizationData(null)
+            })
+
+        return () => {
+            isCancelled = true
+        }
+    }, [completedRouteCalculation?.id, completedRouteCalculation?.status, completedRouteCalculation?.geometry, completedRouteCalculation?.departureTime, completedRouteCalculation?.durationSeconds, completedRouteCalculation?.distanceMeters, selectedProfile, completedRouteCalculation?.activityProfile?.code])
+
+    const initialDepartureSlotIndex = useMemo(() => {
+        if (!optimizationData?.departureSlots || !completedRouteCalculation?.departureTime) {
+            return 0
+        }
+        const targetMs = new Date(completedRouteCalculation.departureTime).getTime()
+        let closestIdx = 0
+        let minDiff = Infinity
+        optimizationData.departureSlots.forEach((slot, idx) => {
+            const diff = Math.abs(new Date(slot.departureIso).getTime() - targetMs)
+            if (diff < minDiff) {
+                minDiff = diff
+                closestIdx = idx
+            }
+        })
+        return closestIdx
+    }, [optimizationData, completedRouteCalculation?.departureTime])
+
+    const activeSlot = useMemo(() => {
+        if (!optimizationData?.departureSlots || selectedSlotIndex === null) {
+            return null
+        }
+        return optimizationData.departureSlots[selectedSlotIndex] ?? null
+    }, [optimizationData, selectedSlotIndex])
+
+    const handleRefreshAiAnalysis = useCallback(() => {
+        setAiRefreshTrigger((prev) => prev + 1)
+    }, [])
+
+    useEffect(() => {
+        if (
+            !isAuthenticated ||
+            !completedRouteCalculation?.geometry?.coordinates ||
+            completedRouteCalculation.geometry.coordinates.length < 2
+        ) {
+            setAiAnalysis(null)
+            setAiAnalysisLoading(false)
+            setAiAnalysisError(null)
+            setAiAnalysisErrorCode(null)
+            return
+        }
+
+        let isCancelled = false
+        setAiAnalysisLoading(true)
+        setAiAnalysisError(null)
+        setAiAnalysisErrorCode(null)
+
+        fetchRouteWeatherAiAnalysis({
+            routeCalculationId: completedRouteCalculation.id,
+            startLabel: completedRouteCalculation.start?.label,
+            destinationLabel: completedRouteCalculation.destination?.label,
+            activityProfile:
+                selectedProfile ??
+                completedRouteCalculation.activityProfile?.code,
+            departureTime:
+                userSelectedDepartureIso ??
+                completedRouteCalculation.departureTime,
+            durationSeconds:
+                completedRouteCalculation.durationSeconds ?? undefined,
+            distanceMeters:
+                completedRouteCalculation.distanceMeters ?? undefined,
+            coordinates:
+                completedRouteCalculation.geometry.coordinates as [
+                    number,
+                    number,
+                ][],
+        })
+            .then((data) => {
+                if (isCancelled) return
+                setAiAnalysis(data)
+                setAiAnalysisLoading(false)
+            })
+            .catch((err: unknown) => {
+                if (isCancelled) return
+                setAiAnalysisLoading(false)
+                if (err instanceof ApiRequestError) {
+                    setAiAnalysisError(err.message)
+                    setAiAnalysisErrorCode(err.code ?? null)
+                } else {
+                    setAiAnalysisError(
+                        'Die KI-Wetteranalyse konnte momentan nicht geladen werden.',
+                    )
+                    setAiAnalysisErrorCode(null)
+                }
+            })
+
+        return () => {
+            isCancelled = true
+        }
+    }, [
+        isAuthenticated,
+        completedRouteCalculation?.id,
+        completedRouteCalculation?.status,
+        completedRouteCalculation?.geometry,
+        completedRouteCalculation?.departureTime,
+        completedRouteCalculation?.durationSeconds,
+        completedRouteCalculation?.distanceMeters,
+        completedRouteCalculation?.start?.label,
+        completedRouteCalculation?.destination?.label,
+        completedRouteCalculation?.activityProfile?.code,
+        selectedProfile,
+        userSelectedDepartureIso,
+        aiRefreshTrigger,
+    ])
+
+    const activeWeatherSegments = useMemo<RouteWeatherSegment[] | undefined>(() => {
         if (!completedRouteCalculation?.weatherSegments) {
+            return undefined
+        }
+        if (!activeSlot?.segmentScores || activeSlot.segmentScores.length === 0) {
+            return completedRouteCalculation.weatherSegments
+        }
+        return completedRouteCalculation.weatherSegments.map((seg, idx) => {
+            const newScore = activeSlot.segmentScores[idx] ?? seg.score
+            const newReason = activeSlot.segmentReasons?.[idx] ?? seg.reasonLabel
+            return {
+                ...seg,
+                score: newScore,
+                color: getScoreColor(newScore),
+                reasonLabel: newReason,
+            }
+        })
+    }, [completedRouteCalculation, activeSlot])
+
+    const coloredMapSegments = useMemo<RouteMapSegment[]>(() => {
+        if (!activeWeatherSegments) {
             return []
         }
 
-        return [...completedRouteCalculation.weatherSegments]
+        return [...activeWeatherSegments]
             .sort(
                 (first, second) =>
                     first.segmentIndex - second.segmentIndex,
@@ -216,7 +396,7 @@ export default function RoutePlannerPage() {
                     ? [{ positions, color: segment.color }]
                     : []
             })
-    }, [completedRouteCalculation])
+    }, [activeWeatherSegments])
 
     useEffect(() => {
         if (selectedProfile) {
@@ -419,6 +599,8 @@ export default function RoutePlannerPage() {
         stopPollingSafely()
         setRouteCalculationError(null)
         setRouteCalculation(null)
+        setOptimizationData(null)
+        setSelectedSlotIndex(null)
         setHoveredSegmentIndex(null)
 
         try {
@@ -488,9 +670,18 @@ export default function RoutePlannerPage() {
         }
     }
 
-    const statusClass = (
-        variant: string,
-    ): string => [styles.statusBanner, variant].join(' ')
+    function statusClass(
+        ...variants: Array<string | undefined>
+    ): string {
+        return [
+            styles.statusBanner,
+            ...variants,
+        ]
+            .filter((className): className is string =>
+                Boolean(className),
+            )
+            .join(' ')
+    }
 
     return (
         <main className={styles.page}>
@@ -792,7 +983,6 @@ export default function RoutePlannerPage() {
                         role="status"
                         aria-live="polite"
                     >
-                        <span aria-hidden="true">⏳</span>
                         <span>
                             Die Routenberechnung wird gestartet.
                         </span>
@@ -807,7 +997,6 @@ export default function RoutePlannerPage() {
                             role="status"
                             aria-live="polite"
                         >
-                            <span aria-hidden="true">🕒</span>
                             <span>
                                 Die Routenberechnung wartet auf die
                                 Verarbeitung.
@@ -823,7 +1012,6 @@ export default function RoutePlannerPage() {
                             role="status"
                             aria-live="polite"
                         >
-                            <span aria-hidden="true">⚙️</span>
                             <span>
                                 Die Route wird aktuell verarbeitet.
                             </span>
@@ -836,7 +1024,6 @@ export default function RoutePlannerPage() {
                         )}
                         role="status"
                     >
-                        <span aria-hidden="true">✅</span>
                         <span>
                             Die Routenberechnung wurde erfolgreich
                             abgeschlossen.
@@ -850,7 +1037,6 @@ export default function RoutePlannerPage() {
                         )}
                         role="alert"
                     >
-                        <span aria-hidden="true">⚠️</span>
                         <span>
                             {routeCalculation.error?.message ??
                                 'Für diese Anfrage konnte keine Route berechnet werden.'}
@@ -864,7 +1050,6 @@ export default function RoutePlannerPage() {
                         )}
                         role="alert"
                     >
-                        <span aria-hidden="true">⚠️</span>
                         <span>{routeCalculationError}</span>
                     </div>
                 )}
@@ -875,7 +1060,6 @@ export default function RoutePlannerPage() {
                         )}
                         role="alert"
                     >
-                        <span aria-hidden="true">⚠️</span>
                         <span>
                             Die Routenberechnung konnte wegen eines
                             Kommunikationsfehlers nicht gestartet
@@ -890,7 +1074,6 @@ export default function RoutePlannerPage() {
                         )}
                         role="alert"
                     >
-                        <span aria-hidden="true">⚠️</span>
                         <span>
                             Der aktuelle Stand der Routenberechnung
                             konnte nicht abgerufen werden.
@@ -950,30 +1133,35 @@ export default function RoutePlannerPage() {
                                 Ankunftszeit
                             </dt>
                             <dd className={styles.statValue}>
-                                {completedRouteCalculation.arrivalTime
-                                    ? formatArrivalTime(
-                                        completedRouteCalculation.arrivalTime,
-                                    )
-                                    : 'Nicht verfügbar'}
+                                {activeSlot
+                                    ? `${activeSlot.arrivalTime} Uhr (Start ${activeSlot.departureTime} Uhr)`
+                                    : completedRouteCalculation.arrivalTime
+                                      ? formatArrivalTime(
+                                            completedRouteCalculation.arrivalTime,
+                                        )
+                                      : 'Nicht verfügbar'}
                             </dd>
                         </div>
-                        {typeof completedRouteCalculation.weatherScore ===
-                            'number' && (
-                                <div className={styles.statCard}>
-                                    <dt className={styles.statLabel}>
-                                        Wetterscore
-                                    </dt>
-                                    <dd className={styles.statValue}>
-                                        {
-                                            completedRouteCalculation.weatherScore
-                                        }{' '}
-                                        / 100
-                                    </dd>
-                                </div>
-                            )}
+
+                        {(
+                            activeSlot !== null ||
+                            typeof completedRouteCalculation.weatherScore === 'number'
+                        ) && (
+                            <div className={styles.statCard}>
+                                <dt className={styles.statLabel}>
+                                    Wetterscore
+                                </dt>
+
+                                <dd className={styles.statValue}>
+                                    {activeSlot?.routeScore ??
+                                        completedRouteCalculation.weatherScore}{' '}
+                                    / 100
+                                </dd>
+                            </div>
+                        )}
                     </dl>
 
-                    {completedRouteCalculation.thunderstormCapApplied && (
+                    {(activeSlot ? activeSlot.hasThunderCap : completedRouteCalculation.thunderstormCapApplied) && (
                         <div
                             className={statusClass(
                                 styles.statusBannerError,
@@ -981,7 +1169,6 @@ export default function RoutePlannerPage() {
                             role="status"
                             style={{ marginTop: '0.75rem' }}
                         >
-                            <span aria-hidden="true">⚡</span>
                             <span>
                                 Erhöhtes Gewitterrisiko auf der Route
                                 erkannt. Der Gesamtwetterscore wurde
@@ -990,6 +1177,23 @@ export default function RoutePlannerPage() {
                         </div>
                     )}
                 </section>
+            )}
+
+            {optimizationData && optimizationData.departureSlots.length > 0 && (
+                <DepartureTimeSlider
+                    slots={optimizationData.departureSlots}
+                    recommendedSlotIndex={optimizationData.recommendedSlotIndex}
+                    selectedSlotIndex={selectedSlotIndex ?? optimizationData.recommendedSlotIndex}
+                    optimalWindowSummary={optimizationData.optimalWindowSummary}
+                    initialDepartureIndex={initialDepartureSlotIndex}
+                    onSelectSlot={(idx) => {
+                        setSelectedSlotIndex(idx)
+                        const chosenSlot = optimizationData.departureSlots[idx]
+                        if (chosenSlot?.departureIso) {
+                            setUserSelectedDepartureIso(chosenSlot.departureIso)
+                        }
+                    }}
+                />
             )}
 
             <section
@@ -1003,34 +1207,36 @@ export default function RoutePlannerPage() {
                     geometry={
                         completedRouteCalculation?.geometry ?? null
                     }
-                    weatherSegments={
-                        completedRouteCalculation?.weatherSegments ??
-                        undefined
-                    }
+                    weatherSegments={activeWeatherSegments}
                     hoveredSegmentIndex={hoveredSegmentIndex}
                     onHoverSegment={setHoveredSegmentIndex}
                 />
 
-                {completedRouteCalculation?.weatherSegments &&
-                    completedRouteCalculation.weatherSegments.length >
-                    0 && (
-                        <MeteogramDock
-                            segments={
-                                completedRouteCalculation.weatherSegments
-                            }
-                            totalDistanceMeters={
-                                completedRouteCalculation.distanceMeters
-                            }
-                            hoveredSegmentIndex={
-                                hoveredSegmentIndex
-                            }
-                            onHoverSegment={
-                                setHoveredSegmentIndex
-                            }
-                            activityProfileCode={selectedProfile}
-                        />
-                    )}
+                {activeWeatherSegments && activeWeatherSegments.length > 0 && (
+                    <MeteogramDock
+                        segments={activeWeatherSegments}
+                        totalDistanceMeters={
+                            completedRouteCalculation?.distanceMeters
+                        }
+                        hoveredSegmentIndex={hoveredSegmentIndex}
+                        onHoverSegment={setHoveredSegmentIndex}
+                        onSelectSegment={setHoveredSegmentIndex}
+                        activityProfileCode={selectedProfile}
+                    />
+                )}
             </section>
+
+            {completedRouteCalculation && (
+                <AiWeatherAdvisorPanel
+                    analysis={aiAnalysis}
+                    loading={aiAnalysisLoading}
+                    error={aiAnalysisError}
+                    errorCode={aiAnalysisErrorCode}
+                    isAuthenticated={isAuthenticated}
+                    onRefresh={handleRefreshAiAnalysis}
+                    onHoverSegment={setHoveredSegmentIndex}
+                />
+            )}
 
             {completedRouteCalculation && (
                 <section

@@ -75,6 +75,8 @@ services:
       OPEN_METEO_READ_TIMEOUT: "8s"
       OPEN_METEO_MAX_LOCATIONS: "50"
       OPEN_METEO_FORECAST_HOURS: "168"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
     depends_on:
       weather-db:
         condition: service_healthy
