@@ -250,7 +250,6 @@ export default function AppLayout() {
                                 <span aria-hidden="true">×</span>
                             </button>
                         </div>
-
                         <nav
                             className={styles.navigation}
                             aria-label="Hauptnavigation"
@@ -259,14 +258,7 @@ export default function AppLayout() {
                                 to="/route-planner"
                                 className={navigationClassName}
                             >
-    <span
-        className={styles.navigationIcon}
-        aria-hidden="true"
-    >
-        🗺️
-    </span>
-
-                                <span>Routenplaner</span>
+                                Routenplaner
                             </NavLink>
 
                             {isAuthenticated && (
@@ -275,28 +267,14 @@ export default function AppLayout() {
                                         to="/saved-routes"
                                         className={navigationClassName}
                                     >
-    <span
-        className={styles.navigationIcon}
-        aria-hidden="true"
-    >
-        ✅
-    </span>
-
-                                        <span>Gespeicherte Routen</span>
+                                        Gespeicherte Routen
                                     </NavLink>
 
                                     <NavLink
                                         to="/profile"
                                         className={navigationClassName}
                                     >
-    <span
-        className={styles.navigationIcon}
-        aria-hidden="true"
-    >
-        👤
-    </span>
-
-                                        <span>Profil</span>
+                                        Profil
                                     </NavLink>
                                 </>
                             )}
@@ -306,14 +284,7 @@ export default function AppLayout() {
                                     to="/login"
                                     className={navigationClassName}
                                 >
-            <span
-                className={styles.navigationIcon}
-                aria-hidden="true"
-            >
-                →
-            </span>
-
-                                    <span>Anmelden</span>
+                                    Anmelden
                                 </NavLink>
                             )}
 
@@ -329,18 +300,9 @@ export default function AppLayout() {
                                     aria-busy={isLoggingOut}
                                     onClick={openLogoutDialog}
                                 >
-            <span
-                className={styles.navigationIcon}
-                aria-hidden="true"
-            >
-                ←
-            </span>
-
-                                    <span>
-                {isLoggingOut
-                    ? 'Abmeldung läuft …'
-                    : 'Abmelden'}
-            </span>
+                                    {isLoggingOut
+                                        ? 'Abmeldung läuft …'
+                                        : 'Abmelden'}
                                 </button>
                             )}
                         </nav>
