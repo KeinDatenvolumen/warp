@@ -149,4 +149,20 @@ describe('DepartureTimeSlider', () => {
 
         expect(screen.getByText(/Gewitterrisiko \(Score max\. 50\)/)).toBeInTheDocument()
     })
+
+    it('renders best marker pin on recommended slot and active pin on selected slot', () => {
+        render(
+            <DepartureTimeSlider
+                slots={mockSlots}
+                recommendedSlotIndex={1}
+                selectedSlotIndex={0}
+                optimalWindowSummary={mockSummary}
+                initialDepartureIndex={0}
+                onSelectSlot={vi.fn()}
+            />,
+        )
+
+        expect(screen.getByText('BEST')).toBeInTheDocument()
+        expect(screen.getByText('AKTIV')).toBeInTheDocument()
+    })
 })

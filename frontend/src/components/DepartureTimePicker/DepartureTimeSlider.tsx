@@ -123,48 +123,81 @@ export default function DepartureTimeSlider({
             {/* Bargraph / Departure Slot Picker */}
             <div className={styles.bargraphContainer}>
                 <div className={styles.bargraphScrollWrapper}>
-                    <div className={styles.bargraphTrack} role="listbox" aria-label="Abfahrtszeitpunkte">
-                        {slots.map((slot, idx) => {
-                            const isSelected = idx === selectedSlotIndex
-                            const isBest = idx === recommendedSlotIndex
-                            const score = Math.max(0, Math.min(100, slot.routeScore))
-                            const barHeightPercent = Math.max(12, score)
-                            const color = getScoreColor(score)
+                    <div className={styles.chartWrapper}>
+                        <div
+                            className={styles.bargraphTrack}
+                            role="listbox"
+                            aria-label="Abfahrtszeitpunkte"
+                        >
+                            {slots.map((slot, idx) => {
+                                const isSelected = idx === selectedSlotIndex
+                                const isBest = idx === recommendedSlotIndex
+                                const score = Math.max(0, Math.min(100, slot.routeScore))
+                                const barHeightPercent = Math.max(12, score)
+                                const color = getScoreColor(score)
 
-                            return (
-                                <div
-                                    key={slot.departureIso || idx}
-                                    className={`${styles.barSlot} ${isSelected ? styles.barSlotActive : ''}`}
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    title={`Start ${slot.departureTime} Uhr (ETA ${slot.arrivalTime}) · Score ${score}${slot.hasThunderCap ? ' · Gewitterrisiko' : ''}${slot.reachesNightfall ? ' · Dämmerung' : ''}`}
-                                    onClick={() => onSelectSlot(idx)}
-                                >
-                                    {isBest && (
-                                        <div className={styles.barMarkerPin}>
-                                            BEST
-                                        </div>
-                                    )}
-
+                                return (
                                     <div
-                                        className={`${styles.barFill} ${slot.reachesNightfall ? styles.barNightfall : ''}`}
-                                        style={{
-                                            height: `${barHeightPercent}%`,
-                                            backgroundColor: color,
-                                        }}
-                                    />
+                                        key={slot.departureIso || idx}
+                                        className={`${styles.barSlot} ${isSelected ? styles.barSlotActive : ''}`}
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        title={`Start ${slot.departureTime} Uhr (ETA ${slot.arrivalTime}) · Score ${score}${slot.hasThunderCap ? ' · Gewitterrisiko' : ''}${slot.reachesNightfall ? ' · Dämmerung' : ''}`}
+                                        onClick={() => onSelectSlot(idx)}
+                                    >
+                                        {isBest && (
+                                            <div className={styles.barMarkerPin}>
+                                                BEST
+                                            </div>
+                                        )}
+                                        {isSelected && !isBest && (
+                                            <div className={styles.barSelectedPin}>
+                                                AKTIV
+                                            </div>
+                                        )}
 
-                                    {/* Show label every 4th slot (hourly) or on active/best */}
-                                    {(idx % 4 === 0 || isSelected || isBest) && (
-                                        <span
-                                            className={`${styles.slotTimeLabel} ${isSelected ? styles.slotTimeLabelActive : ''}`}
-                                        >
-                                            {slot.departureTime}
-                                        </span>
-                                    )}
-                                </div>
-                            )
-                        })}
+                                        <div
+                                            className={`${styles.barFill} ${slot.reachesNightfall ? styles.barNightfall : ''}`}
+                                            style={{
+                                                height: `${barHeightPercent}%`,
+                                                backgroundColor: color,
+                                            }}
+                                        />
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Baseline */}
+                        <div className={styles.chartBaseline} />
+
+                        {/* Dedicated Time Axis underneath the baseline */}
+                        <div className={styles.timeAxis} aria-hidden="true">
+                            {slots.map((slot, idx) => {
+                                const showLabel =
+                                    slots.length <= 8
+                                        ? true
+                                        : idx % 4 === 0
+
+                                return (
+                                    <div
+                                        key={slot.departureIso || idx}
+                                        className={styles.timeTickCol}
+                                    >
+                                        {showLabel && (
+                                            <>
+                                                <div className={styles.timeTickMark} />
+                                                <span
+                                                    className={`${styles.slotTimeLabel} ${idx === selectedSlotIndex ? styles.slotTimeLabelActive : ''}`}
+                                                >
+                                                    {slot.departureTime}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -202,12 +235,12 @@ export default function DepartureTimeSlider({
                             Score {activeSlot.routeScore} / 100
                         </span>
                         {activeSlot.hasThunderCap && (
-                            <span style={{ color: '#ef4444', fontSize: '0.85rem' }}>
+                            <span className={styles.thunderNotice}>
                                 Gewitterrisiko (Score max. 50)
                             </span>
                         )}
                         {activeSlot.reachesNightfall && (
-                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                            <span className={styles.nightfallNotice}>
                                 Ankunft in der Dämmerung
                             </span>
                         )}
@@ -254,10 +287,9 @@ export default function DepartureTimeSlider({
                                     return (
                                         <div
                                             key={`${segIdx}-${sIdx}`}
-                                            className={styles.carpetCell}
+                                            className={`${styles.carpetCell} ${isCurrentSlot ? styles.carpetCellCurrent : ''}`}
                                             style={{
                                                 backgroundColor: cellColor,
-                                                outline: isCurrentSlot ? '1px solid #000' : 'none',
                                             }}
                                             title={`Segment ${segIdx + 1} bei Start ${slot.departureTime}: Score ${segScore} (${slot.segmentReasons?.[segIdx] ?? ''})`}
                                             onClick={() => onSelectSlot(sIdx)}
