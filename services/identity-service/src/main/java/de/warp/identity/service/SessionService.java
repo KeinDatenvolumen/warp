@@ -27,6 +27,7 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionTokenService sessionTokenService;
+    private final CachedSessionService cachedSessionService;
     private final Clock clock;
     private final Duration sessionDuration;
     private final String dummyPasswordHash;
@@ -36,6 +37,7 @@ public class SessionService {
             SessionRepository sessionRepository,
             PasswordEncoder passwordEncoder,
             SessionTokenService sessionTokenService,
+            CachedSessionService cachedSessionService,
             Clock clock,
             @Value("${warp.session.duration:PT12H}")
             Duration sessionDuration
@@ -44,6 +46,7 @@ public class SessionService {
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.sessionTokenService = sessionTokenService;
+        this.cachedSessionService = cachedSessionService;
         this.clock = clock;
         this.sessionDuration = sessionDuration;
 
@@ -107,9 +110,8 @@ public class SessionService {
     public SessionResponse validateSession(String sessionToken) {
         String tokenHash = sessionTokenService.hashToken(sessionToken);
 
-        SessionEntity session = sessionRepository
-                .findByTokenHash(tokenHash)
-                .orElseThrow(SessionNotFoundException::new);
+        SessionEntity session =
+                cachedSessionService.findByTokenHash(tokenHash);
 
         if (!session.isValidAt(clock.instant())) {
             throw new SessionExpiredException();
@@ -125,7 +127,8 @@ public class SessionService {
     }
     @Transactional
     public void invalidateSession(String sessionToken) {
-        String tokenHash = sessionTokenService.hashToken(sessionToken);
+        String tokenHash =
+                sessionTokenService.hashToken(sessionToken);
 
         sessionRepository
                 .findByTokenHash(tokenHash)
@@ -133,5 +136,7 @@ public class SessionService {
                     session.invalidate(clock.instant());
                     sessionRepository.save(session);
                 });
+
+        cachedSessionService.evictByTokenHash(tokenHash);
     }
 }

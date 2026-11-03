@@ -39,6 +39,7 @@ class SessionServiceTest {
     private SessionRepository sessionRepository;
     private PasswordEncoder passwordEncoder;
     private SessionTokenService sessionTokenService;
+    private CachedSessionService cachedSessionService;
     private SessionService sessionService;
 
     @BeforeEach
@@ -47,6 +48,7 @@ class SessionServiceTest {
         sessionRepository = mock(SessionRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         sessionTokenService = mock(SessionTokenService.class);
+        cachedSessionService = mock(CachedSessionService.class);
 
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         Duration sessionDuration = Duration.ofHours(12);
@@ -60,6 +62,7 @@ class SessionServiceTest {
                 sessionRepository,
                 passwordEncoder,
                 sessionTokenService,
+                cachedSessionService,
                 clock,
                 sessionDuration
         );
@@ -220,8 +223,8 @@ class SessionServiceTest {
         when(sessionTokenService.hashToken("valid-session-token"))
                 .thenReturn("a".repeat(64));
 
-        when(sessionRepository.findByTokenHash("a".repeat(64)))
-                .thenReturn(Optional.of(session));
+        when(cachedSessionService.findByTokenHash("a".repeat(64)))
+                .thenReturn(session);
 
         SessionResponse response =
                 sessionService.validateSession("valid-session-token");
@@ -236,7 +239,7 @@ class SessionServiceTest {
         verify(sessionTokenService)
                 .hashToken("valid-session-token");
 
-        verify(sessionRepository)
+        verify(cachedSessionService)
                 .findByTokenHash("a".repeat(64));
     }
 
@@ -245,8 +248,8 @@ class SessionServiceTest {
         when(sessionTokenService.hashToken("unknown-session-token"))
                 .thenReturn("b".repeat(64));
 
-        when(sessionRepository.findByTokenHash("b".repeat(64)))
-                .thenReturn(Optional.empty());
+        when(cachedSessionService.findByTokenHash("b".repeat(64)))
+                .thenThrow(new SessionNotFoundException());
 
         assertThatThrownBy(
                 () -> sessionService.validateSession(
@@ -277,8 +280,8 @@ class SessionServiceTest {
         when(sessionTokenService.hashToken("expired-session-token"))
                 .thenReturn("c".repeat(64));
 
-        when(sessionRepository.findByTokenHash("c".repeat(64)))
-                .thenReturn(Optional.of(session));
+        when(cachedSessionService.findByTokenHash("c".repeat(64)))
+                .thenReturn(session);
 
         assertThatThrownBy(
                 () -> sessionService.validateSession(
@@ -313,8 +316,8 @@ class SessionServiceTest {
         when(sessionTokenService.hashToken("invalidated-session-token"))
                 .thenReturn("d".repeat(64));
 
-        when(sessionRepository.findByTokenHash("d".repeat(64)))
-                .thenReturn(Optional.of(session));
+        when(cachedSessionService.findByTokenHash("d".repeat(64)))
+                .thenReturn(session);
 
         assertThatThrownBy(
                 () -> sessionService.validateSession(
@@ -359,6 +362,9 @@ class SessionServiceTest {
                 .isFalse();
 
         verify(sessionRepository).save(session);
+
+        verify(cachedSessionService)
+                .evictByTokenHash("e".repeat(64));
     }
 
     @Test
@@ -373,5 +379,8 @@ class SessionServiceTest {
 
         verify(sessionRepository, never())
                 .save(any(SessionEntity.class));
+
+        verify(cachedSessionService)
+                .evictByTokenHash("f".repeat(64));
     }
 }

@@ -12,35 +12,64 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.warp.routing.domain.model.Place;
-import de.warp.routing.infrastructure.geocoding.MapTilerGeocodingClient;
 
 class GeocodingServiceTest {
 
-    private MapTilerGeocodingClient geocodingClient;
+    private CachedGeocodingService cachedGeocodingService;
     private GeocodingService geocodingService;
 
     @BeforeEach
     void setUp() {
-        geocodingClient = mock(MapTilerGeocodingClient.class);
-        geocodingService = new GeocodingService(geocodingClient);
+        cachedGeocodingService =
+                mock(CachedGeocodingService.class);
+
+        geocodingService = new GeocodingService(
+                cachedGeocodingService
+        );
+    }
+
+    @Test
+    void returnsEmptyListForNullQuery() {
+        List<Place> result =
+                geocodingService.searchPlaces(null, 5);
+
+        assertEquals(List.of(), result);
+
+        verify(cachedGeocodingService, never())
+                .searchPlaces(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt()
+                );
     }
 
     @Test
     void returnsEmptyListForQueryThatIsTooShort() {
-        List<Place> result = geocodingService.searchPlaces("ab", 5);
+        List<Place> result =
+                geocodingService.searchPlaces("ab", 5);
 
         assertEquals(List.of(), result);
-        verify(geocodingClient, never()).searchPlaces("ab", 5);
+
+        verify(cachedGeocodingService, never())
+                .searchPlaces(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt()
+                );
     }
 
     @Test
     void returnsEmptyListForQueryThatIsTooLong() {
         String query = "a".repeat(201);
 
-        List < Place > result = geocodingService.searchPlaces(query, 5);
+        List<Place> result =
+                geocodingService.searchPlaces(query, 5);
 
         assertEquals(List.of(), result);
-        verify(geocodingClient, never()).searchPlaces(query, 5);
+
+        verify(cachedGeocodingService, never())
+                .searchPlaces(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt()
+                );
     }
 
     @Test
@@ -52,23 +81,46 @@ class GeocodingServiceTest {
                 9.1829
         );
 
-        when(geocodingClient.searchPlaces("Stuttgart", 5))
-                .thenReturn(List.of(place));
+        when(cachedGeocodingService.searchPlaces(
+                "Stuttgart",
+                5
+        )).thenReturn(List.of(place));
 
-        List < Place > result =
-                geocodingService.searchPlaces("  Stuttgart  ", null);
+        List<Place> result =
+                geocodingService.searchPlaces(
+                        "  Stuttgart  ",
+                        null
+                );
 
         assertEquals(List.of(place), result);
-        verify(geocodingClient).searchPlaces("Stuttgart", 5);
+
+        verify(cachedGeocodingService)
+                .searchPlaces("Stuttgart", 5);
     }
 
     @Test
     void limitsResultCountToMaximumTen() {
-        when(geocodingClient.searchPlaces("Stuttgart", 10))
-                .thenReturn(List.of());
+        when(cachedGeocodingService.searchPlaces(
+                "Stuttgart",
+                10
+        )).thenReturn(List.of());
 
         geocodingService.searchPlaces("Stuttgart", 20);
 
-        verify(geocodingClient).searchPlaces("Stuttgart", 10);
+        verify(cachedGeocodingService)
+                .searchPlaces("Stuttgart", 10);
+    }
+
+    @Test
+    void limitsResultCountToMinimumOne() {
+        when(cachedGeocodingService.searchPlaces(
+                "Stuttgart",
+                1
+        )).thenReturn(List.of());
+
+        geocodingService.searchPlaces("Stuttgart", 0);
+
+        verify(cachedGeocodingService)
+                .searchPlaces("Stuttgart", 1);
     }
 }
