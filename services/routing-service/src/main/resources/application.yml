@@ -2,6 +2,13 @@ spring:
   application:
     name: routing-service
 
+  cache:
+    type: caffeine
+    cache-names:
+      - geocoding-results
+    caffeine:
+      spec: maximumSize=5000,expireAfterWrite=24h
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
