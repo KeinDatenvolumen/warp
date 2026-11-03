@@ -23,6 +23,13 @@ spring:
       "[mail.smtp.timeout]": 5000
       "[mail.smtp.writetimeout]": 5000
 
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://localhost:5672}
+    connection-timeout: 3s
+    listener:
+      simple:
+        default-requeue-rejected: false
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -45,6 +52,11 @@ warp:
     from: ${MAIL_FROM:no-reply@warp.local}
   frontend:
     public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  messaging:
+    enabled: ${WARP_MESSAGING_ENABLED:false}
+    mail:
+      max-attempts: 3
+      retry-backoff: PT2S
 
 logging:
   pattern:
@@ -77,3 +89,5 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+    rabbit:
+      enabled: ${warp.messaging.enabled:false}

@@ -62,6 +62,8 @@ docker compose -f docker-compose.dev.yaml up --build -d
 | Storage-Service | `http://localhost:8084` |
 | Mailpit-Weboberfläche | `http://localhost:8025` |
 | Mailpit SMTP | `localhost:1025` |
+| RabbitMQ-Management-UI | `http://localhost:15672` |
+| RabbitMQ (AMQP) | `localhost:5672` |
 
 ## Hot-Reload-Verhalten
 
@@ -211,6 +213,28 @@ Mailpit-Logs:
 
 ```bash
 docker compose -f docker-compose.dev.yaml logs -f mailpit
+```
+
+## RabbitMQ
+
+Der Identity-Service ist vorkonfiguriert mit:
+
+```text
+RABBITMQ_URL=amqp://<RABBITMQ_USER>:<RABBITMQ_PASSWORD>@rabbitmq:5672
+```
+
+Die Zugangsdaten stehen in `.env` (Vorlage: `.env.example`). Nach dem Update der `.env` neu starten:
+
+```bash
+docker compose -f docker-compose.dev.yaml up --build -d
+```
+
+Queue-Prüfung: Registriere einen Benutzer und öffne `http://localhost:15672` → Queues → `warp.mail.send`. Die Mail erscheint anschließend in Mailpit (`http://localhost:8025`). Fehlgeschlagene Aufträge liegen in `warp.mail.send.dlq`.
+
+RabbitMQ-Logs:
+
+```bash
+docker compose -f docker-compose.dev.yaml logs -f rabbitmq
 ```
 
 ## Healthchecks prüfen

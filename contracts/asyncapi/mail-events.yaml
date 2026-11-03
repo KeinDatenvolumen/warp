@@ -1,0 +1,65 @@
+asyncapi: 3.0.0
+info:
+  title: WaRP Mail-Aufträge (RabbitMQ)
+  version: 1.0.0
+  description: |
+    Der Identity-Service reiht nach erfolgreichem Datenbank-Commit einen Auftrag
+    zum Versand einer E-Mail ein und verarbeitet ihn asynchron.
+    Die Nachricht ist ein JSON-Text (AMQP-Content-Type text/plain).
+    Sie enthält keine E-Mail-Adresse. Der Konsument lädt den Benutzer per userId.
+    Das Token ist ein Einmal-Token (24 h bzw. 30 min gültig): Broker nur mit
+    Zugangsdaten und TLS (amqps) betreiben.
+defaultContentType: application/json
+channels:
+  mailSend:
+    address: warp.mail.send
+    description: Queue (Exchange warp.mail, Routing-Key mail.send).
+    messages:
+      emailRequested:
+        $ref: '#/components/messages/EmailRequested'
+  mailSendDeadLetter:
+    address: warp.mail.send.dlq
+    description: |
+      Dead-Letter-Queue (Exchange warp.mail.dlx, Routing-Key mail.send.dead).
+      Enthält Aufträge, die nach allen Versuchen nicht zugestellt werden konnten
+      oder nicht lesbar waren.
+    messages:
+      emailRequested:
+        $ref: '#/components/messages/EmailRequested'
+operations:
+  requestEmail:
+    action: send
+    channel:
+      $ref: '#/channels/mailSend'
+    summary: Mail-Auftrag nach Commit einreihen (Fallback bei Brokerausfall - direkte Zustellung).
+  deliverEmail:
+    action: receive
+    channel:
+      $ref: '#/channels/mailSend'
+    summary: Mail zustellen, bis zu 3 Versuche mit 2 s Pause, danach Dead-Letter-Queue.
+components:
+  messages:
+    EmailRequested:
+      name: EmailRequested
+      payload:
+        $ref: '#/components/schemas/EmailRequestedEvent'
+  schemas:
+    EmailRequestedEvent:
+      type: object
+      required: [eventId, type, userId, token, occurredAt]
+      properties:
+        eventId:
+          type: string
+          description: UUID des Auftrags (für Logs, nicht idempotent ausgewertet).
+        type:
+          type: string
+          enum: [VERIFICATION, PASSWORD_RESET]
+        userId:
+          type: string
+          examples: [usr_123]
+        token:
+          type: string
+          description: Klartext-Token für den Link in der E-Mail. Niemals loggen.
+        occurredAt:
+          type: string
+          format: date-time

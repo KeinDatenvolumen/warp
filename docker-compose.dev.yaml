@@ -27,11 +27,15 @@ services:
       MAIL_FROM: "no-reply@warp.local"
       APP_PUBLIC_URL: "http://localhost:5173"
       WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      WARP_MESSAGING_ENABLED: "true"
 
     depends_on:
       identity-db:
         condition: service_healthy
       mailpit:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "8081:8081"
@@ -234,6 +238,24 @@ services:
       - mailpit-data:/data
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+
 volumes:
   bff-gradle-cache:
   identity-gradle-cache:
@@ -261,3 +283,4 @@ volumes:
   storage-db-data:
 
   mailpit-data:
+  rabbitmq-data:

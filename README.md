@@ -53,6 +53,7 @@ Das Frontend kommuniziert ausschließlich mit dem BFF. Interne Services werden n
 | MPA | Multi-Page Application (Express, EJS & GraphQL) | `8085` | keine |
 | Mailpit UI | lokale E-Mail-Ansicht | `8025` | lokales Volume |
 | Mailpit SMTP | lokaler SMTP-Eingang | `1025` | lokales Volume |
+| RabbitMQ | Message Queue für den E-Mail-Versand (UI auf `15672`) | `5672` | lokales Volume |
 
 Die PostgreSQL-Instanzen sind in der Docker-Entwicklung zusätzlich über die Host-Ports `5434` bis `5437` erreichbar.
 
@@ -315,6 +316,25 @@ Weboberfläche:            http://localhost:8025
 ```
 
 Der Identity-Service verwendet lokal `no-reply@warp.local` als Absender. Es werden keine E-Mails ins Internet versendet.
+
+## Message Queue (RabbitMQ)
+
+Der Identity-Service stellt E-Mails (Verifikation, Passwort-Reset) nicht mehr
+synchron in der Datenbank-Transaktion zu. Er reiht nach dem Commit einen Auftrag
+in RabbitMQ ein, ein Konsument stellt ihn per SMTP zu.
+
+```text
+Exchange warp.mail -> Queue warp.mail.send -> Konsument (3 Versuche)
+                                           -> Dead-Letter-Queue warp.mail.send.dlq
+```
+
+- Management-UI lokal: `http://localhost:15672` (Zugang aus `RABBITMQ_USER` und `RABBITMQ_PASSWORD`)
+- Broker-Adresse: `RABBITMQ_URL` (`amqp://…`, produktiv `amqps://…`)
+- Standard ist die direkte Zustellung nach dem Commit. Die Queue ist abgeschaltet.
+- Aktiviert wird sie mit `WARP_MESSAGING_ENABLED=true` und `RABBITMQ_URL`. Lokal setzt das `docker-compose.dev.yaml`.
+- Ist die Queue aktiv und der Broker nicht erreichbar, fällt der Service automatisch auf die direkte Zustellung zurück.
+- Fehlgeschlagene Aufträge in `warp.mail.send.dlq` sind in der UI sichtbar. Benutzer können die Mail über „erneut senden“ bzw. „Passwort vergessen“ neu anfordern.
+- Vertrag: `contracts/asyncapi/mail-events.yaml`
 
 ## Umgebungsvariablen und Secrets
 
