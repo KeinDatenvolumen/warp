@@ -25,7 +25,10 @@ export async function fetchCurrentSession(): Promise<CurrentSession | null> {
     const result = await apolloClient.query({
         query: CURRENT_SESSION_QUERY,
         fetchPolicy: 'no-cache',
-        errorPolicy: 'all'
+        errorPolicy: 'all',
+        context: {
+            skipSessionInvalidNotification: true
+        }
     })
 
     if (containsSessionInvalidCode(result.error)) {

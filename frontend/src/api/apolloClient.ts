@@ -22,7 +22,11 @@ export const sessionInvalidLink = new ApolloLink(
     (operation, forward) =>
         forward(operation).pipe(
             tap((result) => {
-                if (containsSessionInvalidCode(result.errors)) {
+                if (
+                    operation.operationName !== 'CurrentSession' &&
+                    !operation.getContext().skipSessionInvalidNotification &&
+                    containsSessionInvalidCode(result.errors)
+                ) {
                     notifySessionInvalid()
                 }
             })
