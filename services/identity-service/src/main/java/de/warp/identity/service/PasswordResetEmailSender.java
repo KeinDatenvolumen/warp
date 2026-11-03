@@ -1,39 +1,29 @@
 package de.warp.identity.service;
 
 import de.warp.identity.entity.UserEntity;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import de.warp.identity.messaging.EmailRequestedEvent;
+import de.warp.identity.messaging.MailType;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Objects;
 
+/**
+ * Fordert den Versand der Passwort-Reset-E-Mail an. Die Zustellung erfolgt
+ * entkoppelt nach dem Commit (siehe QueueMailEventRelay und
+ * PasswordResetMailDelivery).
+ */
 @Service
 public class PasswordResetEmailSender {
 
-    private final JavaMailSender mailSender;
-    private final String mailFrom;
-    private final String publicUrl;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PasswordResetEmailSender(
-            JavaMailSender mailSender,
-            @Value("${warp.mail.from}") String mailFrom,
-            @Value("${warp.frontend.public-url}") String publicUrl
+            ApplicationEventPublisher eventPublisher
     ) {
-        this.mailSender = Objects.requireNonNull(
-                mailSender,
-                "mailSender darf nicht null sein"
-        );
-        this.mailFrom = requireText(
-                mailFrom,
-                "mailFrom"
-        );
-        this.publicUrl = removeTrailingSlashes(
-                requireText(
-                        publicUrl,
-                        "publicUrl"
-                )
+        this.eventPublisher = Objects.requireNonNull(
+                eventPublisher,
+                "eventPublisher darf nicht null sein"
         );
     }
 
@@ -41,10 +31,7 @@ public class PasswordResetEmailSender {
             UserEntity user,
             String plainToken
     ) {
-        Objects.requireNonNull(
-                user,
-                "user darf nicht null sein"
-        );
+        Objects.requireNonNull(user, "user darf nicht null sein");
 
         if (plainToken == null || plainToken.isBlank()) {
             throw new IllegalArgumentException(
@@ -52,85 +39,12 @@ public class PasswordResetEmailSender {
             );
         }
 
-        String resetLink = createResetLink(plainToken);
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
-        message.setTo(user.getEmail());
-        message.setSubject(
-                "WARP-Passwort zurücksetzen"
-        );
-        message.setText(
-                createMessageText(
-                        user.getName(),
-                        resetLink
+        eventPublisher.publishEvent(
+                EmailRequestedEvent.create(
+                        MailType.PASSWORD_RESET,
+                        user.getId(),
+                        plainToken
                 )
         );
-
-        mailSender.send(message);
-    }
-
-    String createResetLink(String plainToken) {
-        if (plainToken == null || plainToken.isBlank()) {
-            throw new IllegalArgumentException(
-                    "plainToken darf nicht leer sein"
-            );
-        }
-
-        return UriComponentsBuilder
-                .fromUriString(publicUrl)
-                .path("/reset-password")
-                .queryParam("token", plainToken)
-                .build()
-                .encode()
-                .toUriString();
-    }
-
-    private String createMessageText(
-            String name,
-            String resetLink
-    ) {
-        return """
-                Hallo %s,
-
-                über den folgenden Link kannst du ein neues Passwort für dein WARP-Konto vergeben:
-
-                %s
-
-                Der Link ist 30 Minuten gültig und kann nur einmal verwendet werden.
-
-                Falls du keine Passwort-Rücksetzung angefordert hast, kannst du diese E-Mail ignorieren. Dein bisheriges Passwort bleibt unverändert.
-
-                Viele Grüße
-                dein WARP-Team
-                """.formatted(name, resetLink);
-    }
-
-    private static String requireText(
-            String value,
-            String fieldName
-    ) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    fieldName + " darf nicht leer sein"
-            );
-        }
-
-        return value;
-    }
-
-    private static String removeTrailingSlashes(
-            String value
-    ) {
-        String result = value;
-
-        while (result.endsWith("/")) {
-            result = result.substring(
-                    0,
-                    result.length() - 1
-            );
-        }
-
-        return result;
     }
 }
