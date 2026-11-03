@@ -246,6 +246,24 @@ describe('AuthProvider', () => {
             expect(mockedClearApolloCache).toHaveBeenCalledTimes(1)
         })
 
+        it('ignoriert SESSION_INVALID wenn der Benutzer bereits unauthenticated ist', async () => {
+            mockedFetchCurrentSession.mockResolvedValueOnce(null)
+
+            renderProvider()
+            await waitFor(() =>
+                expect(auth.status).toBe('unauthenticated')
+            )
+
+            act(() => {
+                notifySessionInvalid()
+            })
+
+            expect(mockedClearApolloCache).not.toHaveBeenCalled()
+            expect(screen.getByTestId('status')).toHaveTextContent(
+                'unauthenticated:-'
+            )
+        })
+
         it('überschreibt eine Anmeldung nicht mit dem späten Startergebnis', async () => {
             let resolveStartup!: (value: CurrentSession | null) => void
             mockedFetchCurrentSession.mockReturnValueOnce(

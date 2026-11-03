@@ -14,14 +14,18 @@ vi.mock('../features/auth/sessionEvents', () => ({
 }))
 
 const query = gql`
-    query CurrentSession {
-        currentSession {
-            userId
+    query CurrentUser {
+        currentUser {
+            id
         }
     }
 `
 
-function runWithResult(result: object): Promise<void> {
+function runWithResult(
+    result: object,
+    operationQuery = query,
+    context?: Record<string, unknown>
+): Promise<void> {
     const terminating = new ApolloLink(
         () => new Observable((subscriber) => {
             subscriber.next(result)
@@ -32,7 +36,7 @@ function runWithResult(result: object): Promise<void> {
     return new Promise((resolve, reject) => {
         execute(
             ApolloLink.from([sessionInvalidLink, terminating]),
-            {query},
+            {query: operationQuery, context},
             {client: {} as never}
         ).subscribe({
             complete: resolve,
@@ -46,7 +50,7 @@ describe('sessionInvalidLink', () => {
         notifySessionInvalid.mockClear()
     })
 
-    it('meldet SESSION_INVALID', async () => {
+    it('meldet SESSION_INVALID bei normalen Operationen', async () => {
         await runWithResult({
             data: null,
             errors: [
@@ -60,6 +64,48 @@ describe('sessionInvalidLink', () => {
         expect(notifySessionInvalid).toHaveBeenCalledTimes(1)
     })
 
+    it('ignoriert CurrentSession-Anfragen (Initial-Check beim Start)', async () => {
+        const currentSessionQuery = gql`
+            query CurrentSession {
+                currentSession {
+                    userId
+                }
+            }
+        `
+        await runWithResult(
+            {
+                data: null,
+                errors: [
+                    {
+                        message: 'Die Sitzung ist ungültig.',
+                        extensions: {code: 'SESSION_INVALID'}
+                    }
+                ]
+            },
+            currentSessionQuery
+        )
+
+        expect(notifySessionInvalid).not.toHaveBeenCalled()
+    })
+
+    it('ignoriert Anfragen mit skipSessionInvalidNotification Context', async () => {
+        await runWithResult(
+            {
+                data: null,
+                errors: [
+                    {
+                        message: 'Die Sitzung ist ungültig.',
+                        extensions: {code: 'SESSION_INVALID'}
+                    }
+                ]
+            },
+            query,
+            {skipSessionInvalidNotification: true}
+        )
+
+        expect(notifySessionInvalid).not.toHaveBeenCalled()
+    })
+
     it('ignoriert andere Fehler und erfolgreiche Antworten', async () => {
         await runWithResult({
             data: null,
@@ -70,7 +116,7 @@ describe('sessionInvalidLink', () => {
                 }
             ]
         })
-        await runWithResult({data: {currentSession: {userId: 'u'}}})
+        await runWithResult({data: {currentUser: {id: 'u'}}})
 
         expect(notifySessionInvalid).not.toHaveBeenCalled()
     })

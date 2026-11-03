@@ -80,9 +80,14 @@ export function AuthProvider({children}: PropsWithChildren) {
     useEffect(
         () =>
             subscribeToSessionInvalid(() => {
-                stateVersion.current += 1
-                setState(UNAUTHENTICATED_STATE)
-                clearCachedUserData()
+                setState((current) => {
+                    if (current.status === 'authenticated') {
+                        stateVersion.current += 1
+                        clearCachedUserData()
+                        return UNAUTHENTICATED_STATE
+                    }
+                    return current
+                })
             }),
         []
     )
