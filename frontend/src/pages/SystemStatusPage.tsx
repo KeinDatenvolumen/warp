@@ -1,4 +1,5 @@
 import {useQuery} from '@apollo/client/react'
+import {extractGraphQlErrorMessage} from '../api/graphqlErrors'
 import {SYSTEM_HEALTH_QUERY} from '../api/systemHealthQuery'
 import ServiceCard from '../components/ui/ServiceCard/ServiceCard'
 import Loader from '../components/ui/Loader/Loader'
@@ -25,14 +26,30 @@ export function SystemStatusPage() {
         <div><h1>Systemstatus wird geladen</h1><p>Die Statusinformationen werden über GraphQL vom BFF abgerufen.</p>
         </div>
     </MessageCard></main>
-    if (error && !data) return <main className={styles.page}><MessageCard error><span className={styles.largeErrorDot}
-                                                                                      aria-hidden="true"/>
-        <div><h1>Systemstatus nicht verfügbar</h1><p>{error.message}</p>
-            <button type="button" className={`${styles.button} ${styles.messageAction}`}
-                    onClick={() => refetch()}>Erneut versuchen
-            </button>
-        </div>
-    </MessageCard></main>
+    if (error && !data) {
+        const errorMessage =
+            extractGraphQlErrorMessage(error) ??
+            'Der Systemstatus konnte momentan nicht geladen werden. Bitte prüfe deine Verbindung und versuche es erneut.'
+
+        return (
+            <main className={styles.page}>
+                <MessageCard error>
+                    <span className={styles.largeErrorDot} aria-hidden="true" />
+                    <div>
+                        <h1>Systemstatus nicht verfügbar</h1>
+                        <p>{errorMessage}</p>
+                        <button
+                            type="button"
+                            className={`${styles.button} ${styles.messageAction}`}
+                            onClick={() => refetch()}
+                        >
+                            Erneut versuchen
+                        </button>
+                    </div>
+                </MessageCard>
+            </main>
+        )
+    }
     const systemHealth = data?.systemHealth
     if (!systemHealth) return <main className={styles.page}><MessageCard error><span className={styles.largeErrorDot}
                                                                                      aria-hidden="true"/>

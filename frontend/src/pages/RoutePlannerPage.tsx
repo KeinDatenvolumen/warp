@@ -26,6 +26,15 @@ import RouteMap from '../components/RouteMap/RouteMap'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
 import { useAuth } from '../features/auth/useAuth'
 import {
+    extractGraphQlErrorCodes,
+    isNetworkError,
+} from '../api/graphqlErrors'
+import {
+    parseCalculationStatusError,
+    parseRouteCalculationError,
+    type RouteCalculationErrorDetail,
+} from '../features/route-planner/routeCalculationError'
+import {
     createInitialDepartureTime,
     createMaximumDepartureTime,
     createMinimumDepartureTime,
@@ -102,7 +111,7 @@ export default function RoutePlannerPage() {
     const [routeCalculation, setRouteCalculation] =
         useState<RouteCalculation | null>(null)
     const [routeCalculationError, setRouteCalculationError] =
-        useState<string | null>(null)
+        useState<RouteCalculationErrorDetail | null>(null)
     const [optimizationData, setOptimizationData] =
         useState<WeatherOptimizationResponse | null>(null)
     const [selectedSlotIndex, setSelectedSlotIndex] =
@@ -221,6 +230,22 @@ export default function RoutePlannerPage() {
     const routeCanBeExportedAsGpx =
         completedRouteCalculation !== null &&
         canExportRouteAsGpx(completedRouteCalculation.geometry)
+    const statusError = parseCalculationStatusError(routeCalculation)
+
+    function getPlaceSearchErrorMessage(error: unknown): string {
+        if (!error) return ''
+        if (isNetworkError(error)) {
+            return 'Verbindungsfehler bei der Ortssuche. Bitte prüfe deine Internetverbindung.'
+        }
+        const codes = extractGraphQlErrorCodes(error)
+        if (
+            codes.includes('GEOCODING_SERVICE_UNAVAILABLE') ||
+            codes.includes('DOWNSTREAM_SERVICE_UNAVAILABLE')
+        ) {
+            return 'Die Ortssuche ist vorübergehend nicht erreichbar. Bitte versuche es später noch einmal.'
+        }
+        return 'Der Ort konnte nicht gesucht werden. Bitte prüfe deine Eingabe.'
+    }
 
     useEffect(() => {
         if (!completedRouteCalculation?.geometry?.coordinates || completedRouteCalculation.geometry.coordinates.length < 2) {
@@ -603,6 +628,22 @@ export default function RoutePlannerPage() {
         setSelectedSlotIndex(null)
         setHoveredSegmentIndex(null)
 
+        if (!isAuthenticated) {
+            setRouteCalculationError(
+                parseRouteCalculationError({
+                    graphQLErrors: [
+                        {
+                            extensions: {
+                                code: 'SESSION_INVALID',
+                                classification: 'UNAUTHORIZED',
+                            },
+                        },
+                    ],
+                }),
+            )
+            return
+        }
+
         try {
             const result = await startRouteCalculation({
                 variables: {
@@ -618,23 +659,21 @@ export default function RoutePlannerPage() {
 
             if (!payload) {
                 setRouteCalculationError(
-                    'Die Routenberechnung konnte nicht gestartet werden.',
+                    parseRouteCalculationError(result.error ?? {}),
                 )
                 return
             }
 
             if (payload.errors.length > 0) {
                 setRouteCalculationError(
-                    payload.errors
-                        .map((error) => error.message)
-                        .join(' '),
+                    parseRouteCalculationError(payload.errors),
                 )
                 return
             }
 
             if (!payload.calculation) {
                 setRouteCalculationError(
-                    'Die Routenberechnung konnte nicht gestartet werden.',
+                    parseRouteCalculationError({}),
                 )
                 return
             }
@@ -663,9 +702,9 @@ export default function RoutePlannerPage() {
                     isPollingRef.current = false
                 }
             }
-        } catch {
+        } catch (caught) {
             setRouteCalculationError(
-                'Die Routenberechnung konnte nicht gestartet werden.',
+                parseRouteCalculationError(caught),
             )
         }
     }
@@ -748,8 +787,7 @@ export default function RoutePlannerPage() {
                                 className={styles.fieldError}
                                 role="alert"
                             >
-                                Der Startpunkt konnte nicht gesucht
-                                werden.
+                                {getPlaceSearchErrorMessage(startError)}
                             </p>
                         )}
                         {!startLoading &&
@@ -846,8 +884,7 @@ export default function RoutePlannerPage() {
                                 className={styles.fieldError}
                                 role="alert"
                             >
-                                Der Zielpunkt konnte nicht gesucht
-                                werden.
+                                {getPlaceSearchErrorMessage(destinationError)}
                             </p>
                         )}
                         {!destinationLoading &&
@@ -973,6 +1010,14 @@ export default function RoutePlannerPage() {
                             ? 'Route wird berechnet …'
                             : 'Route berechnen'}
                     </button>
+                    {!isAuthenticated && (
+                        <p className={styles.authNotice}>
+                            Hinweis: Für die Routenberechnung ist ein Benutzerkonto erforderlich.{' '}
+                            <Link to="/login" className={styles.statusBannerActionLink}>
+                                Jetzt anmelden
+                            </Link>
+                        </p>
+                    )}
                 </div>
 
                 {startRouteCalculationLoading && (
@@ -1030,19 +1075,6 @@ export default function RoutePlannerPage() {
                         </span>
                     </div>
                 )}
-                {routeCalculation?.status === 'FAILED' && (
-                    <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
-                        role="alert"
-                    >
-                        <span>
-                            {routeCalculation.error?.message ??
-                                'Für diese Anfrage konnte keine Route berechnet werden.'}
-                        </span>
-                    </div>
-                )}
                 {routeCalculationError && (
                     <div
                         className={statusClass(
@@ -1050,36 +1082,126 @@ export default function RoutePlannerPage() {
                         )}
                         role="alert"
                     >
-                        <span>{routeCalculationError}</span>
+                        <div className={styles.statusBannerContent}>
+                            {routeCalculationError.title && (
+                                <strong
+                                    className={
+                                        styles.statusBannerTitle
+                                    }
+                                >
+                                    {routeCalculationError.title}
+                                </strong>
+                            )}
+                            <p className={styles.statusBannerText}>
+                                {routeCalculationError.message}
+                            </p>
+                            {routeCalculationError.action && (
+                                <div
+                                    className={
+                                        styles.statusBannerActions
+                                    }
+                                >
+                                    {routeCalculationError.action.to ? (
+                                        <Link
+                                            to={
+                                                routeCalculationError
+                                                    .action.to
+                                            }
+                                            className={
+                                                styles.statusBannerActionLink
+                                            }
+                                        >
+                                            {
+                                                routeCalculationError
+                                                    .action.label
+                                            }
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className={
+                                                styles.statusBannerActionLink
+                                            }
+                                            onClick={
+                                                routeCalculationError
+                                                    .action.onClick
+                                            }
+                                        >
+                                            {
+                                                routeCalculationError
+                                                    .action.label
+                                            }
+                                        </button>
+                                    )}
+                                    {routeCalculationError
+                                        .secondaryAction?.to && (
+                                        <Link
+                                            to={
+                                                routeCalculationError
+                                                    .secondaryAction.to
+                                            }
+                                            className={
+                                                styles.statusBannerSecondaryLink
+                                            }
+                                        >
+                                            {
+                                                routeCalculationError
+                                                    .secondaryAction
+                                                    .label
+                                            }
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
-                {startRouteCalculationGraphQlError && (
+                {statusError && !routeCalculationError && (
                     <div
                         className={statusClass(
                             styles.statusBannerError,
                         )}
                         role="alert"
                     >
-                        <span>
-                            Die Routenberechnung konnte wegen eines
-                            Kommunikationsfehlers nicht gestartet
-                            werden.
-                        </span>
+                        <div className={styles.statusBannerContent}>
+                            <strong
+                                className={
+                                    styles.statusBannerTitle
+                                }
+                            >
+                                {statusError.title}
+                            </strong>
+                            <p className={styles.statusBannerText}>
+                                {statusError.message}
+                            </p>
+                        </div>
                     </div>
                 )}
-                {routeCalculationQueryError && (
-                    <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
-                        role="alert"
-                    >
-                        <span>
-                            Der aktuelle Stand der Routenberechnung
-                            konnte nicht abgerufen werden.
-                        </span>
-                    </div>
-                )}
+                {routeCalculationQueryError &&
+                    !routeCalculationError &&
+                    !statusError && (
+                        <div
+                            className={statusClass(
+                                styles.statusBannerError,
+                            )}
+                            role="alert"
+                        >
+                            <div className={styles.statusBannerContent}>
+                                <strong
+                                    className={
+                                        styles.statusBannerTitle
+                                    }
+                                >
+                                    Abfragefehler
+                                </strong>
+                                <p className={styles.statusBannerText}>
+                                    Der aktuelle Stand der Routenberechnung
+                                    konnte nicht abgerufen werden. Bitte
+                                    überprüfe deine Verbindung.
+                                </p>
+                            </div>
+                        </div>
+                    )}
             </section>
 
             {completedRouteCalculation && (

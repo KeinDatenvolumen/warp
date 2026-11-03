@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -352,6 +352,10 @@ describe('RoutePlannerPage', () => {
         const user = userEvent.setup()
         renderPage()
 
+        expect(
+            screen.getByText(/Für die Routenberechnung ist ein Benutzerkonto erforderlich/i),
+        ).toBeInTheDocument()
+
         await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
 
         await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
@@ -362,7 +366,137 @@ describe('RoutePlannerPage', () => {
 
         await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
 
-        expect(await screen.findByText(/melde dich an/i)).toBeInTheDocument()
+        const alert = screen.getByRole('alert')
+        expect(alert).toHaveTextContent('Anmeldung erforderlich')
+        expect(
+            within(alert).getByRole('link', { name: 'Jetzt anmelden' }),
+        ).toHaveAttribute('href', '/login')
+        expect(
+            within(alert).getByRole('link', { name: 'Konto erstellen' }),
+        ).toHaveAttribute('href', '/register')
+        expect(screen.queryByText(/Kommunikationsfehler/i)).not.toBeInTheDocument()
         expect(screen.queryByLabelText('Name der Route')).not.toBeInTheDocument()
+    })
+
+    it('behandelt SESSION_INVALID Fehler vom Backend mit adäquater Meldung', async () => {
+        useAuthMock.mockReturnValue({ isAuthenticated: true })
+        startCalculationMock.mockRejectedValue({
+            graphQLErrors: [
+                {
+                    message: 'Die Sitzung ist ungültig oder abgelaufen.',
+                    extensions: {
+                        code: 'SESSION_INVALID',
+                        classification: 'UNAUTHORIZED',
+                    },
+                },
+            ],
+        })
+
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
+        await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
+        await user.click(await screen.findByRole('button', { name: 'Mosbach' }))
+        await user.type(screen.getByLabelText('Zielpunkt'), 'Mergentheim')
+        await user.click(await screen.findByRole('button', { name: 'Bad Mergentheim' }))
+
+        await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
+
+        expect(await screen.findByText('Anmeldung erforderlich')).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Jetzt anmelden' })).toHaveAttribute(
+            'href',
+            '/login',
+        )
+        expect(screen.queryByText(/Kommunikationsfehler/i)).not.toBeInTheDocument()
+    })
+
+    it('behandelt EMAIL_NOT_VERIFIED Fehler mit Link zur Verifizierung', async () => {
+        useAuthMock.mockReturnValue({ isAuthenticated: true })
+        startCalculationMock.mockResolvedValue({
+            data: {
+                startRouteCalculation: {
+                    calculation: null,
+                    errors: [
+                        {
+                            code: 'EMAIL_NOT_VERIFIED',
+                            message: 'Die E-Mail-Adresse ist noch nicht verifiziert.',
+                        },
+                    ],
+                },
+            },
+        })
+
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
+        await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
+        await user.click(await screen.findByRole('button', { name: 'Mosbach' }))
+        await user.type(screen.getByLabelText('Zielpunkt'), 'Mergentheim')
+        await user.click(await screen.findByRole('button', { name: 'Bad Mergentheim' }))
+
+        await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
+
+        expect(
+            await screen.findByText('E-Mail-Bestätigung erforderlich'),
+        ).toBeInTheDocument()
+        expect(
+            screen.getByRole('link', { name: 'E-Mail bestätigen' }),
+        ).toHaveAttribute('href', '/verify-email')
+    })
+
+    it('behandelt ROUTING_SERVICE_UNAVAILABLE Fehler mit verständlicher Meldung', async () => {
+        useAuthMock.mockReturnValue({ isAuthenticated: true })
+        startCalculationMock.mockRejectedValue({
+            graphQLErrors: [
+                {
+                    extensions: {
+                        code: 'ROUTING_SERVICE_UNAVAILABLE',
+                    },
+                },
+            ],
+        })
+
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
+        await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
+        await user.click(await screen.findByRole('button', { name: 'Mosbach' }))
+        await user.type(screen.getByLabelText('Zielpunkt'), 'Mergentheim')
+        await user.click(await screen.findByRole('button', { name: 'Bad Mergentheim' }))
+
+        await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
+
+        expect(
+            await screen.findByText('Dienst vorübergehend nicht verfügbar'),
+        ).toBeInTheDocument()
+        expect(screen.queryByText(/Kommunikationsfehler/i)).not.toBeInTheDocument()
+    })
+
+    it('behandelt Netzwerkfehler mit klarer Meldung', async () => {
+        useAuthMock.mockReturnValue({ isAuthenticated: true })
+        startCalculationMock.mockRejectedValue({
+            networkError: new TypeError('Failed to fetch'),
+        })
+
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
+        await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
+        await user.click(await screen.findByRole('button', { name: 'Mosbach' }))
+        await user.type(screen.getByLabelText('Zielpunkt'), 'Mergentheim')
+        await user.click(await screen.findByRole('button', { name: 'Bad Mergentheim' }))
+
+        await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
+
+        expect(await screen.findByText('Verbindungsfehler')).toBeInTheDocument()
+        expect(
+            screen.getByText(
+                /Bitte prüfe deine Internetverbindung und versuche es erneut/i,
+            ),
+        ).toBeInTheDocument()
     })
 })

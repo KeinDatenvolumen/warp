@@ -225,6 +225,64 @@
     background: var(--color-danger-soft);
 }
 
+.statusBannerContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.statusBannerTitle {
+    font-weight: 700;
+    margin-bottom: 0.125rem;
+}
+
+.statusBannerText {
+    margin: 0;
+    line-height: var(--line-height-default);
+}
+
+.statusBannerActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.statusBannerActionLink {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.statusBannerActionLink:hover {
+    color: var(--color-primary-hover);
+}
+
+.statusBannerSecondaryLink {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    opacity: 0.9;
+}
+
+.statusBannerSecondaryLink:hover {
+    opacity: 1;
+}
+
+.authNotice {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
 .calculateButton {
     display: inline-flex;
     width: 100%;
