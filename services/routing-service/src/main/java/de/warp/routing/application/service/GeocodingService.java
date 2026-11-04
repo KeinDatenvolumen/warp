@@ -1,11 +1,11 @@
 package de.warp.routing.application.service;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Service;
 
 import de.warp.routing.domain.model.Place;
-import de.warp.routing.infrastructure.geocoding.MapTilerGeocodingClient;
 
 @Service
 public class GeocodingService {
@@ -15,12 +15,12 @@ public class GeocodingService {
     private static final int MINIMUM_QUERY_LENGTH = 3;
     private static final int MAXIMUM_QUERY_LENGTH = 200;
 
-    private final MapTilerGeocodingClient geocodingClient;
+    private final CachedGeocodingService cachedGeocodingService;
 
     public GeocodingService(
-            MapTilerGeocodingClient geocodingClient
+            CachedGeocodingService cachedGeocodingService
     ) {
-        this.geocodingClient = geocodingClient;
+        this.cachedGeocodingService = cachedGeocodingService;
     }
 
     public List<Place> searchPlaces(
@@ -31,7 +31,7 @@ public class GeocodingService {
             return List.of();
         }
 
-        String normalizedQuery = query.trim();
+        String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
 
         if (normalizedQuery.length() < MINIMUM_QUERY_LENGTH
                 || normalizedQuery.length() > MAXIMUM_QUERY_LENGTH) {
@@ -42,7 +42,7 @@ public class GeocodingService {
                 ? DEFAULT_LIMIT
                 : Math.clamp(limit, 1, MAXIMUM_LIMIT);
 
-        return geocodingClient.searchPlaces(
+        return cachedGeocodingService.searchPlaces(
                 normalizedQuery,
                 effectiveLimit
         );
