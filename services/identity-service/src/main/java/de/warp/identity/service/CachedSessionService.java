@@ -1,6 +1,5 @@
 package de.warp.identity.service;
 
-import de.warp.identity.entity.SessionEntity;
 import de.warp.identity.exceptions.SessionNotFoundException;
 import de.warp.identity.repository.SessionRepository;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,20 +22,19 @@ public class CachedSessionService {
 
     @Cacheable(
             cacheNames = SESSION_CACHE,
-            key = "#p0",
             sync = true
     )
-    public SessionEntity findByTokenHash(
+    public CachedSession findByTokenHash(
             String tokenHash
     ) {
         return sessionRepository
                 .findByTokenHash(tokenHash)
+                .map(CachedSession::from)
                 .orElseThrow(SessionNotFoundException::new);
     }
 
     @CacheEvict(
-            cacheNames = SESSION_CACHE,
-            key = "#p0"
+            cacheNames = SESSION_CACHE
     )
     public void evictByTokenHash(
             String tokenHash

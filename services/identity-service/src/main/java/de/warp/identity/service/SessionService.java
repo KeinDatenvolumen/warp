@@ -7,7 +7,6 @@ import de.warp.identity.entity.SessionEntity;
 import de.warp.identity.entity.UserEntity;
 import de.warp.identity.exceptions.InvalidCredentialsException;
 import de.warp.identity.exceptions.SessionExpiredException;
-import de.warp.identity.exceptions.SessionNotFoundException;
 import de.warp.identity.repository.SessionRepository;
 import de.warp.identity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,7 +109,7 @@ public class SessionService {
     public SessionResponse validateSession(String sessionToken) {
         String tokenHash = sessionTokenService.hashToken(sessionToken);
 
-        SessionEntity session =
+        CachedSession session =
                 cachedSessionService.findByTokenHash(tokenHash);
 
         if (!session.isValidAt(clock.instant())) {
@@ -118,11 +117,11 @@ public class SessionService {
         }
 
         return new SessionResponse(
-                session.getId(),
-                session.getUser().getId(),
-                session.getCreatedAt(),
-                session.getExpiresAt(),
-                session.getUser().isEmailVerified()
+                session.id(),
+                session.userId(),
+                session.createdAt(),
+                session.expiresAt(),
+                session.emailVerified()
         );
     }
     @Transactional

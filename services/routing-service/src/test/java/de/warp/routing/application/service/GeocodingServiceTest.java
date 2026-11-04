@@ -73,7 +73,7 @@ class GeocodingServiceTest {
     }
 
     @Test
-    void trimsQueryAndUsesDefaultLimit() {
+    void trimsAndLowercasesQueryAndUsesDefaultLimit() {
         Place place = new Place(
                 "stuttgart",
                 "Stuttgart, Deutschland",
@@ -82,7 +82,7 @@ class GeocodingServiceTest {
         );
 
         when(cachedGeocodingService.searchPlaces(
-                "Stuttgart",
+                "stuttgart",
                 5
         )).thenReturn(List.of(place));
 
@@ -95,32 +95,45 @@ class GeocodingServiceTest {
         assertEquals(List.of(place), result);
 
         verify(cachedGeocodingService)
-                .searchPlaces("Stuttgart", 5);
+                .searchPlaces("stuttgart", 5);
+    }
+
+    @Test
+    void convertsQueryToLowerCase() {
+        when(cachedGeocodingService.searchPlaces(
+                "berlin",
+                5
+        )).thenReturn(List.of());
+
+        geocodingService.searchPlaces("BeRLiN", 5);
+
+        verify(cachedGeocodingService)
+                .searchPlaces("berlin", 5);
     }
 
     @Test
     void limitsResultCountToMaximumTen() {
         when(cachedGeocodingService.searchPlaces(
-                "Stuttgart",
+                "stuttgart",
                 10
         )).thenReturn(List.of());
 
         geocodingService.searchPlaces("Stuttgart", 20);
 
         verify(cachedGeocodingService)
-                .searchPlaces("Stuttgart", 10);
+                .searchPlaces("stuttgart", 10);
     }
 
     @Test
     void limitsResultCountToMinimumOne() {
         when(cachedGeocodingService.searchPlaces(
-                "Stuttgart",
+                "stuttgart",
                 1
         )).thenReturn(List.of());
 
         geocodingService.searchPlaces("Stuttgart", 0);
 
         verify(cachedGeocodingService)
-                .searchPlaces("Stuttgart", 1);
+                .searchPlaces("stuttgart", 1);
     }
 }

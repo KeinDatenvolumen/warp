@@ -1,6 +1,7 @@
 package de.warp.routing.application.service;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class GeocodingService {
             return List.of();
         }
 
-        String normalizedQuery = query.trim();
+        String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
 
         if (normalizedQuery.length() < MINIMUM_QUERY_LENGTH
                 || normalizedQuery.length() > MAXIMUM_QUERY_LENGTH) {

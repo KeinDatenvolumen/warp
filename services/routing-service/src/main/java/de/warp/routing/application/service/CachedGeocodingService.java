@@ -22,7 +22,7 @@ public class CachedGeocodingService {
         this.geocodingClient = geocodingClient;
     }
 
-    @Cacheable(cacheNames = CACHE_NAME)
+    @Cacheable(cacheNames = CACHE_NAME, sync = true)
     public List<Place> searchPlaces(
             String query,
             int limit

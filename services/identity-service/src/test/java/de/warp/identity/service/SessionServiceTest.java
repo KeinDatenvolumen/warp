@@ -224,7 +224,7 @@ class SessionServiceTest {
                 .thenReturn("a".repeat(64));
 
         when(cachedSessionService.findByTokenHash("a".repeat(64)))
-                .thenReturn(session);
+                .thenReturn(CachedSession.from(session));
 
         SessionResponse response =
                 sessionService.validateSession("valid-session-token");
@@ -281,7 +281,7 @@ class SessionServiceTest {
                 .thenReturn("c".repeat(64));
 
         when(cachedSessionService.findByTokenHash("c".repeat(64)))
-                .thenReturn(session);
+                .thenReturn(CachedSession.from(session));
 
         assertThatThrownBy(
                 () -> sessionService.validateSession(
@@ -317,7 +317,7 @@ class SessionServiceTest {
                 .thenReturn("d".repeat(64));
 
         when(cachedSessionService.findByTokenHash("d".repeat(64)))
-                .thenReturn(session);
+                .thenReturn(CachedSession.from(session));
 
         assertThatThrownBy(
                 () -> sessionService.validateSession(
