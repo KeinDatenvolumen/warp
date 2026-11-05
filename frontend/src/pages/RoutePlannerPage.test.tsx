@@ -363,7 +363,10 @@ describe('RoutePlannerPage', () => {
 
         await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
 
-        expect(await screen.findByText(/melde dich an/i)).toBeInTheDocument()
+        expect(await screen.findByText(/Du musst angemeldet sein, um Routen berechnen zu können/i)).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Jetzt anmelden' })).toHaveAttribute('href', '/login')
+        expect(screen.getByRole('link', { name: 'Konto erstellen' })).toHaveAttribute('href', '/register')
+        expect(screen.queryByText(/Kommunikationsfehlers/i)).not.toBeInTheDocument()
         expect(screen.queryByLabelText('Name der Route')).not.toBeInTheDocument()
     })
 

@@ -631,6 +631,13 @@ export default function RoutePlannerPage() {
         setSelectedSlotIndex(null)
         setHoveredSegmentIndex(null)
 
+        if (!isAuthenticated) {
+            setRouteCalculationError(
+                'Du musst angemeldet sein, um Routen berechnen zu können. Bitte melde dich an.',
+            )
+            return
+        }
+
         try {
             const result = await startRouteCalculation({
                 variables: {
@@ -654,9 +661,18 @@ export default function RoutePlannerPage() {
                 const isUnverified = payload.errors.some(
                     (error) => error.code === 'EMAIL_NOT_VERIFIED',
                 )
+                const isSessionInvalid = payload.errors.some(
+                    (error) =>
+                        error.code === 'SESSION_INVALID' ||
+                        error.code === 'UNAUTHORIZED',
+                )
                 if (isUnverified) {
                     setRouteCalculationError(
                         'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.',
+                    )
+                } else if (isSessionInvalid) {
+                    setRouteCalculationError(
+                        'Du musst angemeldet sein, um Routen berechnen zu können. Bitte melde dich an.',
                     )
                 } else {
                     setRouteCalculationError(
@@ -698,7 +714,7 @@ export default function RoutePlannerPage() {
         } catch (err: unknown) {
             const apolloError = err as {
                 graphQLErrors?: Array<{
-                    extensions?: { code?: string }
+                    extensions?: { code?: string; classification?: string }
                     message?: string
                 }>
                 message?: string
@@ -708,9 +724,23 @@ export default function RoutePlannerPage() {
                     (e) => e.extensions?.code === 'EMAIL_NOT_VERIFIED',
                 ) || Boolean(apolloError?.message?.includes('EMAIL_NOT_VERIFIED'))
 
+            const isSessionInvalid =
+                !isAuthenticated ||
+                apolloError?.graphQLErrors?.some(
+                    (e) =>
+                        e.extensions?.code === 'SESSION_INVALID' ||
+                        e.extensions?.classification === 'UNAUTHORIZED',
+                ) ||
+                Boolean(apolloError?.message?.includes('SESSION_INVALID')) ||
+                Boolean(apolloError?.message?.includes('Sitzung ist ungültig'))
+
             if (isUnverified) {
                 setRouteCalculationError(
                     'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.',
+                )
+            } else if (isSessionInvalid) {
+                setRouteCalculationError(
+                    'Du musst angemeldet sein, um Routen berechnen zu können. Bitte melde dich an.',
                 )
             } else {
                 setRouteCalculationError(
@@ -1028,7 +1058,35 @@ export default function RoutePlannerPage() {
                         className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
-                        <span>{routeCalculationError}</span>
+                        <span>
+                            {routeCalculationError}
+                            {(!isAuthenticated ||
+                                routeCalculationError.includes('angemeldet sein')) && (
+                                <span style={{ display: 'block', marginTop: '0.4rem' }}>
+                                    <Link
+                                        to="/login"
+                                        style={{
+                                            textDecoration: 'underline',
+                                            fontWeight: 700,
+                                            color: 'inherit',
+                                            marginRight: '0.75rem',
+                                        }}
+                                    >
+                                        Jetzt anmelden
+                                    </Link>
+                                    <Link
+                                        to="/register"
+                                        style={{
+                                            textDecoration: 'underline',
+                                            fontWeight: 700,
+                                            color: 'inherit',
+                                        }}
+                                    >
+                                        Konto erstellen
+                                    </Link>
+                                </span>
+                            )}
+                        </span>
                     </div>
                 )}
                 {!routeCalculationError && startRouteCalculationGraphQlError && (
@@ -1038,11 +1096,33 @@ export default function RoutePlannerPage() {
                     >
                         <span>
                             {'graphQLErrors' in startRouteCalculationGraphQlError &&
-                            Array.isArray((startRouteCalculationGraphQlError as { graphQLErrors?: Array<{ extensions?: { code?: string } }> }).graphQLErrors) &&
-                            (startRouteCalculationGraphQlError as { graphQLErrors: Array<{ extensions?: { code?: string } }> }).graphQLErrors.some(
+                            Array.isArray((startRouteCalculationGraphQlError as { graphQLErrors?: Array<{ extensions?: { code?: string; classification?: string } }> }).graphQLErrors) &&
+                            (startRouteCalculationGraphQlError as { graphQLErrors: Array<{ extensions?: { code?: string; classification?: string } }> }).graphQLErrors.some(
                                 (e) => e.extensions?.code === 'EMAIL_NOT_VERIFIED',
                             )
                                 ? 'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.'
+                                : ('graphQLErrors' in startRouteCalculationGraphQlError &&
+                                   Array.isArray((startRouteCalculationGraphQlError as { graphQLErrors?: Array<{ extensions?: { code?: string; classification?: string } }> }).graphQLErrors) &&
+                                   (startRouteCalculationGraphQlError as { graphQLErrors: Array<{ extensions?: { code?: string; classification?: string } }> }).graphQLErrors.some(
+                                       (e) =>
+                                           e.extensions?.code === 'SESSION_INVALID' ||
+                                           e.extensions?.classification === 'UNAUTHORIZED',
+                                   )) || !isAuthenticated
+                                ? (
+                                    <>
+                                        Du musst angemeldet sein, um Routen berechnen zu können.{' '}
+                                        <Link
+                                            to="/login"
+                                            style={{
+                                                textDecoration: 'underline',
+                                                fontWeight: 700,
+                                                color: 'inherit',
+                                            }}
+                                        >
+                                            Jetzt anmelden
+                                        </Link>
+                                    </>
+                                )
                                 : 'Die Routenberechnung konnte wegen eines Kommunikationsfehlers nicht gestartet werden.'}
                         </span>
                     </div>

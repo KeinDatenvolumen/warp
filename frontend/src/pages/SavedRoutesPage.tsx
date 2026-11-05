@@ -38,7 +38,7 @@ export default function SavedRoutesPage() {
     const [onlyFavorites, setOnlyFavorites] = useState(false)
 
     function handleReplan(route: SavedRouteSummary): void {
-        navigate('/planner', {
+        navigate('/route-planner', {
             state: {
                 replanRoute: {
                     start: {

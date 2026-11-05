@@ -158,7 +158,7 @@ export default function SavedRouteDetailPage() {
 
     function handleReplan(): void {
         if (!route) return
-        navigate('/planner', {
+        navigate('/route-planner', {
             state: {
                 replanRoute: {
                     start: {
