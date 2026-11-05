@@ -1,4 +1,4 @@
-// [KI-Log Nr. KI-15 & KI-19] KI-generiert (Google Antigravity Gemini 3.8 Flash High) und beim Polling-Debugging angepasst
+// [KI-Log Nr. KI-15 & KI-19] KI-generiert und optimiert (Zusammenführung KI-Analyse, GPX-Export & Polling-Stabilität)
 import {
     useCallback,
     useEffect,
@@ -24,6 +24,7 @@ import {
 import AiWeatherAdvisorPanel from '../components/AiWeatherAdvisor/AiWeatherAdvisorPanel'
 import MeteogramDock from '../components/MeteogramDock/MeteogramDock'
 import RouteMap from '../components/RouteMap/RouteMap'
+import DepartureTimeSlider from '../components/DepartureTimePicker/DepartureTimeSlider'
 import ActivityProfileSelector from '../features/activity-profiles/ActivityProfileSelector'
 import { useAuth } from '../features/auth/useAuth'
 import {
@@ -47,17 +48,16 @@ import SaveRouteForm from '../features/saved-routes/SaveRouteForm'
 import { toLatLngPositions } from '../features/saved-routes/routeGeometry'
 import type { ActivityProfileCode } from '../types/activityProfile'
 import type {
-    RouteCalculation, RouteWeatherSegment,
+    RouteCalculation,
+    RouteWeatherSegment,
 } from '../types/routeCalculation'
 import type { RouteMapSegment } from '../types/routeMap'
 import type { Place } from '../types/searchPlaces'
 import { isLatestRequest } from '../utils/latestRequest'
 
 import styles from './RoutePlannerPage.module.css'
-import DepartureTimeSlider from "../components/DepartureTimePicker/DepartureTimeSlider";
 
-const SELECTED_PROFILE_STORAGE_KEY =
-    'warp-selected-activity-profile'
+const SELECTED_PROFILE_STORAGE_KEY = 'warp-selected-activity-profile'
 const MINIMUM_SEARCH_LENGTH = 3
 const MAXIMUM_SEARCH_LENGTH = 200
 const SEARCH_RESULT_LIMIT = 5
@@ -69,9 +69,7 @@ function readSelectedProfile(): ActivityProfileCode | null {
         return null
     }
 
-    const value = window.localStorage.getItem(
-        SELECTED_PROFILE_STORAGE_KEY,
-    )
+    const value = window.localStorage.getItem(SELECTED_PROFILE_STORAGE_KEY)
 
     if (
         value === 'BICYCLE' ||
@@ -114,21 +112,17 @@ export default function RoutePlannerPage() {
         useState<number | null>(null)
     const [aiAnalysis, setAiAnalysis] =
         useState<RouteWeatherAiAnalysisResponse | null>(null)
-    const [aiAnalysisLoading, setAiAnalysisLoading] =
-        useState(false)
+    const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false)
     const [aiAnalysisError, setAiAnalysisError] =
         useState<string | null>(null)
     const [aiAnalysisErrorCode, setAiAnalysisErrorCode] =
         useState<string | null>(null)
-    const [aiRefreshTrigger, setAiRefreshTrigger] =
-        useState(0)
-    const [selectedStart, setSelectedStart] =
-        useState<Place | null>(null)
+    const [aiRefreshTrigger, setAiRefreshTrigger] = useState(0)
+    const [selectedStart, setSelectedStart] = useState<Place | null>(null)
     const [selectedDestination, setSelectedDestination] =
         useState<Place | null>(null)
     const [startResults, setStartResults] = useState<Place[]>([])
-    const [destinationResults, setDestinationResults] =
-        useState<Place[]>([])
+    const [destinationResults, setDestinationResults] = useState<Place[]>([])
     const [lastCompletedStartQuery, setLastCompletedStartQuery] =
         useState<string | null>(null)
     const [
@@ -155,8 +149,7 @@ export default function RoutePlannerPage() {
             }
             : null
 
-    const departureTimeInFuture =
-        isDepartureTimeInFuture(departureTime)
+    const departureTimeInFuture = isDepartureTimeInFuture(departureTime)
     const departureTimeWithinForecast =
         isDepartureTimeWithinForecastPeriod(departureTime)
     const departureTimeIsValid =
@@ -207,7 +200,7 @@ export default function RoutePlannerPage() {
         try {
             stopPollingRef.current?.()
         } catch {
-            /* Apollo can throw if polling has not started yet. */
+            /* Apollo kann einen Fehler werfen, wenn polling vor der Ausführung gestoppt wird */
         }
     }
 
@@ -216,15 +209,16 @@ export default function RoutePlannerPage() {
         routeCalculation?.status === 'PENDING' ||
         routeCalculation?.status === 'PROCESSING'
     const completedRouteCalculation =
-        routeCalculation?.status === 'COMPLETED'
-            ? routeCalculation
-            : null
+        routeCalculation?.status === 'COMPLETED' ? routeCalculation : null
     const routeCanBeExportedAsGpx =
         completedRouteCalculation !== null &&
         canExportRouteAsGpx(completedRouteCalculation.geometry)
 
     useEffect(() => {
-        if (!completedRouteCalculation?.geometry?.coordinates || completedRouteCalculation.geometry.coordinates.length < 2) {
+        if (
+            !completedRouteCalculation?.geometry?.coordinates ||
+            completedRouteCalculation.geometry.coordinates.length < 2
+        ) {
             setOptimizationData(null)
             setSelectedSlotIndex(null)
             setUserSelectedDepartureIso(null)
@@ -234,11 +228,15 @@ export default function RoutePlannerPage() {
         let isCancelled = false
         fetchWeatherOptimization({
             routeCalculationId: completedRouteCalculation.id,
-            activityProfile: selectedProfile ?? completedRouteCalculation.activityProfile?.code,
+            activityProfile:
+                selectedProfile ?? completedRouteCalculation.activityProfile?.code,
             departureTime: completedRouteCalculation.departureTime,
-            durationSeconds: completedRouteCalculation.durationSeconds ?? undefined,
-            distanceMeters: completedRouteCalculation.distanceMeters ?? undefined,
-            coordinates: completedRouteCalculation.geometry.coordinates as [number, number][],
+            durationSeconds:
+                completedRouteCalculation.durationSeconds ?? undefined,
+            distanceMeters:
+                completedRouteCalculation.distanceMeters ?? undefined,
+            coordinates: completedRouteCalculation.geometry
+                .coordinates as [number, number][],
         })
             .then((data) => {
                 if (isCancelled) return
@@ -253,17 +251,33 @@ export default function RoutePlannerPage() {
         return () => {
             isCancelled = true
         }
-    }, [completedRouteCalculation?.id, completedRouteCalculation?.status, completedRouteCalculation?.geometry, completedRouteCalculation?.departureTime, completedRouteCalculation?.durationSeconds, completedRouteCalculation?.distanceMeters, selectedProfile, completedRouteCalculation?.activityProfile?.code])
+    }, [
+        completedRouteCalculation?.id,
+        completedRouteCalculation?.status,
+        completedRouteCalculation?.geometry,
+        completedRouteCalculation?.departureTime,
+        completedRouteCalculation?.durationSeconds,
+        completedRouteCalculation?.distanceMeters,
+        selectedProfile,
+        completedRouteCalculation?.activityProfile?.code,
+    ])
 
     const initialDepartureSlotIndex = useMemo(() => {
-        if (!optimizationData?.departureSlots || !completedRouteCalculation?.departureTime) {
+        if (
+            !optimizationData?.departureSlots ||
+            !completedRouteCalculation?.departureTime
+        ) {
             return 0
         }
-        const targetMs = new Date(completedRouteCalculation.departureTime).getTime()
+        const targetMs = new Date(
+            completedRouteCalculation.departureTime,
+        ).getTime()
         let closestIdx = 0
         let minDiff = Infinity
         optimizationData.departureSlots.forEach((slot, idx) => {
-            const diff = Math.abs(new Date(slot.departureIso).getTime() - targetMs)
+            const diff = Math.abs(
+                new Date(slot.departureIso).getTime() - targetMs,
+            )
             if (diff < minDiff) {
                 minDiff = diff
                 closestIdx = idx
@@ -273,7 +287,10 @@ export default function RoutePlannerPage() {
     }, [optimizationData, completedRouteCalculation?.departureTime])
 
     const activeSlot = useMemo(() => {
-        if (!optimizationData?.departureSlots || selectedSlotIndex === null) {
+        if (
+            !optimizationData?.departureSlots ||
+            selectedSlotIndex === null
+        ) {
             return null
         }
         return optimizationData.departureSlots[selectedSlotIndex] ?? null
@@ -315,11 +332,8 @@ export default function RoutePlannerPage() {
                 completedRouteCalculation.durationSeconds ?? undefined,
             distanceMeters:
                 completedRouteCalculation.distanceMeters ?? undefined,
-            coordinates:
-                completedRouteCalculation.geometry.coordinates as [
-                    number,
-                    number,
-                ][],
+            coordinates: completedRouteCalculation.geometry
+                .coordinates as [number, number][],
         })
             .then((data) => {
                 if (isCancelled) return
@@ -359,16 +373,22 @@ export default function RoutePlannerPage() {
         aiRefreshTrigger,
     ])
 
-    const activeWeatherSegments = useMemo<RouteWeatherSegment[] | undefined>(() => {
+    const activeWeatherSegments = useMemo<
+        RouteWeatherSegment[] | undefined
+    >(() => {
         if (!completedRouteCalculation?.weatherSegments) {
             return undefined
         }
-        if (!activeSlot?.segmentScores || activeSlot.segmentScores.length === 0) {
+        if (
+            !activeSlot?.segmentScores ||
+            activeSlot.segmentScores.length === 0
+        ) {
             return completedRouteCalculation.weatherSegments
         }
         return completedRouteCalculation.weatherSegments.map((seg, idx) => {
             const newScore = activeSlot.segmentScores[idx] ?? seg.score
-            const newReason = activeSlot.segmentReasons?.[idx] ?? seg.reasonLabel
+            const newReason =
+                activeSlot.segmentReasons?.[idx] ?? seg.reasonLabel
             return {
                 ...seg,
                 score: newScore,
@@ -384,10 +404,7 @@ export default function RoutePlannerPage() {
         }
 
         return [...activeWeatherSegments]
-            .sort(
-                (first, second) =>
-                    first.segmentIndex - second.segmentIndex,
-            )
+            .sort((first, second) => first.segmentIndex - second.segmentIndex)
             .flatMap((segment) => {
                 const positions = segment.geometry
                     ? toLatLngPositions(segment.geometry.coordinates)
@@ -408,21 +425,16 @@ export default function RoutePlannerPage() {
             return
         }
 
-        window.localStorage.removeItem(
-            SELECTED_PROFILE_STORAGE_KEY,
-        )
+        window.localStorage.removeItem(SELECTED_PROFILE_STORAGE_KEY)
     }, [selectedProfile])
 
     useEffect(() => {
         const trimmedInput = startInput.trim()
         const requestId = ++startRequestId.current
-        setLastCompletedStartQuery(null)
+        setLastCompletedStartQuery((prev) => (prev === null ? prev : null))
 
-        if (
-            trimmedInput.length < MINIMUM_SEARCH_LENGTH ||
-            selectedStart
-        ) {
-            setStartResults([])
+        if (trimmedInput.length < MINIMUM_SEARCH_LENGTH || selectedStart) {
+            setStartResults((prev) => (prev.length === 0 ? prev : []))
             return
         }
 
@@ -433,18 +445,11 @@ export default function RoutePlannerPage() {
                     limit: SEARCH_RESULT_LIMIT,
                 },
             }).then((result) => {
-                if (
-                    !isLatestRequest(
-                        requestId,
-                        startRequestId.current,
-                    )
-                ) {
+                if (!isLatestRequest(requestId, startRequestId.current)) {
                     return
                 }
 
-                setStartResults(
-                    (result.data?.searchPlaces ?? []) as Place[],
-                )
+                setStartResults((result.data?.searchPlaces ?? []) as Place[])
                 setLastCompletedStartQuery(trimmedInput)
             })
         }, SEARCH_DEBOUNCE_MS)
@@ -455,13 +460,15 @@ export default function RoutePlannerPage() {
     useEffect(() => {
         const trimmedInput = destinationInput.trim()
         const requestId = ++destinationRequestId.current
-        setLastCompletedDestinationQuery(null)
+        setLastCompletedDestinationQuery((prev) =>
+            prev === null ? prev : null,
+        )
 
         if (
             trimmedInput.length < MINIMUM_SEARCH_LENGTH ||
             selectedDestination
         ) {
-            setDestinationResults([])
+            setDestinationResults((prev) => (prev.length === 0 ? prev : []))
             return
         }
 
@@ -473,10 +480,7 @@ export default function RoutePlannerPage() {
                 },
             }).then((result) => {
                 if (
-                    !isLatestRequest(
-                        requestId,
-                        destinationRequestId.current,
-                    )
+                    !isLatestRequest(requestId, destinationRequestId.current)
                 ) {
                     return
                 }
@@ -489,19 +493,12 @@ export default function RoutePlannerPage() {
         }, SEARCH_DEBOUNCE_MS)
 
         return () => window.clearTimeout(timeoutId)
-    }, [
-        destinationInput,
-        selectedDestination,
-        searchDestinationPlaces,
-    ])
+    }, [destinationInput, selectedDestination, searchDestinationPlaces])
 
     useEffect(() => {
         const calculation = routeCalculationData?.routeCalculation
 
-        if (
-            !calculation ||
-            calculation.id !== currentCalculationId
-        ) {
+        if (!calculation || calculation.id !== currentCalculationId) {
             return
         }
 
@@ -521,16 +518,11 @@ export default function RoutePlannerPage() {
 
     useEffect(() => {
         stopPollingSafely()
-        setCurrentCalculationId(null)
-        setRouteCalculation(null)
-        setRouteCalculationError(null)
+        setCurrentCalculationId((prev) => (prev === null ? prev : null))
+        setRouteCalculation((prev) => (prev === null ? prev : null))
+        setRouteCalculationError((prev) => (prev === null ? prev : null))
         setHoveredSegmentIndex(null)
-    }, [
-        selectedStart,
-        selectedDestination,
-        selectedProfile,
-        departureTime,
-    ])
+    }, [selectedStart, selectedDestination, selectedProfile, departureTime])
 
     function handleStartInputChange(
         event: ChangeEvent<HTMLInputElement>,
@@ -573,27 +565,19 @@ export default function RoutePlannerPage() {
     }
 
     function handleGpxExport(): void {
-        if (
-            !completedRouteCalculation?.geometry ||
-            !routeCanBeExportedAsGpx
-        ) {
+        if (!completedRouteCalculation?.geometry || !routeCanBeExportedAsGpx) {
             return
         }
 
         downloadRouteAsGpx({
             startLabel: completedRouteCalculation.start.label,
-            destinationLabel:
-            completedRouteCalculation.destination.label,
+            destinationLabel: completedRouteCalculation.destination.label,
             geometry: completedRouteCalculation.geometry,
         })
     }
 
     async function handleRouteCalculation(): Promise<void> {
-        if (
-            !canCalculateRoute ||
-            !routeCoordinates ||
-            !selectedProfile
-        ) {
+        if (!canCalculateRoute || !routeCoordinates || !selectedProfile) {
             return
         }
 
@@ -609,8 +593,7 @@ export default function RoutePlannerPage() {
                 variables: {
                     input: {
                         activityProfile: selectedProfile,
-                        departureTime:
-                            toDepartureTimeIso(departureTime),
+                        departureTime: toDepartureTimeIso(departureTime),
                         ...routeCoordinates,
                     },
                 },
@@ -626,9 +609,7 @@ export default function RoutePlannerPage() {
 
             if (payload.errors.length > 0) {
                 setRouteCalculationError(
-                    payload.errors
-                        .map((error) => error.message)
-                        .join(' '),
+                    payload.errors.map((error) => error.message).join(' '),
                 )
                 return
             }
@@ -657,9 +638,7 @@ export default function RoutePlannerPage() {
             ) {
                 try {
                     isPollingRef.current = true
-                    startPolling(
-                        ROUTE_CALCULATION_POLL_INTERVAL_MS,
-                    )
+                    startPolling(ROUTE_CALCULATION_POLL_INTERVAL_MS)
                 } catch {
                     isPollingRef.current = false
                 }
@@ -671,16 +650,9 @@ export default function RoutePlannerPage() {
         }
     }
 
-    function statusClass(
-        ...variants: Array<string | undefined>
-    ): string {
-        return [
-            styles.statusBanner,
-            ...variants,
-        ]
-            .filter((className): className is string =>
-                Boolean(className),
-            )
+    function statusClass(...variants: Array<string | undefined>): string {
+        return [styles.statusBanner, ...variants]
+            .filter((className): className is string => Boolean(className))
             .join(' ')
     }
 
@@ -690,9 +662,8 @@ export default function RoutePlannerPage() {
                 <p className={styles.eyebrow}>Routenplanung</p>
                 <h1 className={styles.title}>Routenplaner</h1>
                 <p className={styles.description}>
-                    Wähle ein Aktivitätsprofil, Start- und Zielort
-                    sowie eine Abfahrtszeit für deine
-                    wetteroptimierte Route.
+                    Wähle ein Aktivitätsprofil, Start- und Zielort sowie eine
+                    Abfahrtszeit für deine wetteroptimierte Route.
                 </p>
             </section>
 
@@ -705,19 +676,13 @@ export default function RoutePlannerPage() {
                 className={styles.card}
                 aria-labelledby="route-input-heading"
             >
-                <h2
-                    id="route-input-heading"
-                    style={{ margin: '0 0 1rem' }}
-                >
+                <h2 id="route-input-heading" style={{ margin: '0 0 1rem' }}>
                     Route konfigurieren
                 </h2>
 
                 <div className={styles.formGrid}>
                     <div className={styles.field}>
-                        <label
-                            className={styles.label}
-                            htmlFor="start-input"
-                        >
+                        <label className={styles.label} htmlFor="start-input">
                             Startpunkt
                         </label>
                         <input
@@ -745,24 +710,16 @@ export default function RoutePlannerPage() {
                             </p>
                         )}
                         {startError && (
-                            <p
-                                className={styles.fieldError}
-                                role="alert"
-                            >
-                                Der Startpunkt konnte nicht gesucht
-                                werden.
+                            <p className={styles.fieldError} role="alert">
+                                Der Startpunkt konnte nicht gesucht werden.
                             </p>
                         )}
                         {!startLoading &&
                             !startError &&
                             !selectedStart &&
-                            lastCompletedStartQuery ===
-                            startInput.trim() &&
+                            lastCompletedStartQuery === startInput.trim() &&
                             startResults.length === 0 && (
-                                <p
-                                    className={styles.hint}
-                                    role="status"
-                                >
+                                <p className={styles.hint} role="status">
                                     Kein passender Startpunkt gefunden.
                                 </p>
                             )}
@@ -778,9 +735,7 @@ export default function RoutePlannerPage() {
                                     {startResults.map((place) => (
                                         <li
                                             key={place.placeId}
-                                            className={
-                                                styles.searchResultItem
-                                            }
+                                            className={styles.searchResultItem}
                                         >
                                             <button
                                                 type="button"
@@ -788,9 +743,7 @@ export default function RoutePlannerPage() {
                                                     styles.searchResultButton
                                                 }
                                                 onClick={() =>
-                                                    handleStartSelection(
-                                                        place,
-                                                    )
+                                                    handleStartSelection(place)
                                                 }
                                             >
                                                 {place.displayName}
@@ -800,10 +753,7 @@ export default function RoutePlannerPage() {
                                 </ul>
                             )}
                         {selectedStart && (
-                            <p
-                                className={styles.selectedStatus}
-                                role="status"
-                            >
+                            <p className={styles.selectedStatus} role="status">
                                 <span aria-hidden="true">✓</span>{' '}
                                 <strong>Ausgewählt:</strong>{' '}
                                 {selectedStart.displayName}
@@ -843,12 +793,8 @@ export default function RoutePlannerPage() {
                             </p>
                         )}
                         {destinationError && (
-                            <p
-                                className={styles.fieldError}
-                                role="alert"
-                            >
-                                Der Zielpunkt konnte nicht gesucht
-                                werden.
+                            <p className={styles.fieldError} role="alert">
+                                Der Zielpunkt konnte nicht gesucht werden.
                             </p>
                         )}
                         {!destinationLoading &&
@@ -857,10 +803,7 @@ export default function RoutePlannerPage() {
                             lastCompletedDestinationQuery ===
                             destinationInput.trim() &&
                             destinationResults.length === 0 && (
-                                <p
-                                    className={styles.hint}
-                                    role="status"
-                                >
+                                <p className={styles.hint} role="status">
                                     Kein passender Zielpunkt gefunden.
                                 </p>
                             )}
@@ -876,9 +819,7 @@ export default function RoutePlannerPage() {
                                     {destinationResults.map((place) => (
                                         <li
                                             key={place.placeId}
-                                            className={
-                                                styles.searchResultItem
-                                            }
+                                            className={styles.searchResultItem}
                                         >
                                             <button
                                                 type="button"
@@ -898,10 +839,7 @@ export default function RoutePlannerPage() {
                                 </ul>
                             )}
                         {selectedDestination && (
-                            <p
-                                className={styles.selectedStatus}
-                                role="status"
-                            >
+                            <p className={styles.selectedStatus} role="status">
                                 <span aria-hidden="true">✓</span>{' '}
                                 <strong>Ausgewählt:</strong>{' '}
                                 {selectedDestination.displayName}
@@ -930,43 +868,28 @@ export default function RoutePlannerPage() {
                             aria-invalid={!departureTimeIsValid}
                             aria-describedby="departure-time-hint"
                         />
-                        <p
-                            id="departure-time-hint"
-                            className={styles.hint}
-                        >
+                        <p id="departure-time-hint" className={styles.hint}>
                             Wähle eine zukünftige Abfahrtszeit im
-                            Vorhersagebereich. Möglich sind bis zu
-                            sieben Tage im Voraus in
-                            15-Minuten-Schritten.
+                            Vorhersagebereich. Möglich sind bis zu sieben Tage
+                            im Voraus in 15-Minuten-Schritten.
                         </p>
                         {!departureTimeInFuture && (
-                            <p
-                                className={styles.fieldError}
-                                role="alert"
-                            >
-                                Die Abfahrtszeit muss in der Zukunft
-                                liegen.
+                            <p className={styles.fieldError} role="alert">
+                                Die Abfahrtszeit muss in der Zukunft liegen.
                             </p>
                         )}
-                        {departureTimeInFuture &&
-                            !departureTimeWithinForecast && (
-                                <p
-                                    className={styles.fieldError}
-                                    role="alert"
-                                >
-                                    Die Abfahrtszeit darf maximal sieben
-                                    Tage in der Zukunft liegen.
-                                </p>
-                            )}
+                        {departureTimeInFuture && !departureTimeWithinForecast && (
+                            <p className={styles.fieldError} role="alert">
+                                Die Abfahrtszeit darf maximal sieben Tage in der
+                                Zukunft liegen.
+                            </p>
+                        )}
                     </div>
 
                     <button
                         type="button"
                         className={styles.calculateButton}
-                        disabled={
-                            !canCalculateRoute ||
-                            routeCalculationIsRunning
-                        }
+                        disabled={!canCalculateRoute || routeCalculationIsRunning}
                         aria-busy={routeCalculationIsRunning}
                         onClick={() => void handleRouteCalculation()}
                     >
@@ -978,23 +901,17 @@ export default function RoutePlannerPage() {
 
                 {startRouteCalculationLoading && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerInfo,
-                        )}
+                        className={statusClass(styles.statusBannerInfo)}
                         role="status"
                         aria-live="polite"
                     >
-                        <span>
-                            Die Routenberechnung wird gestartet.
-                        </span>
+                        <span>Die Routenberechnung wird gestartet.</span>
                     </div>
                 )}
                 {!startRouteCalculationLoading &&
                     routeCalculation?.status === 'PENDING' && (
                         <div
-                            className={statusClass(
-                                styles.statusBannerInfo,
-                            )}
+                            className={statusClass(styles.statusBannerInfo)}
                             role="status"
                             aria-live="polite"
                         >
@@ -1007,22 +924,16 @@ export default function RoutePlannerPage() {
                 {!startRouteCalculationLoading &&
                     routeCalculation?.status === 'PROCESSING' && (
                         <div
-                            className={statusClass(
-                                styles.statusBannerInfo,
-                            )}
+                            className={statusClass(styles.statusBannerInfo)}
                             role="status"
                             aria-live="polite"
                         >
-                            <span>
-                                Die Route wird aktuell verarbeitet.
-                            </span>
+                            <span>Die Route wird aktuell verarbeitet.</span>
                         </div>
                     )}
                 {routeCalculation?.status === 'COMPLETED' && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerSuccess,
-                        )}
+                        className={statusClass(styles.statusBannerSuccess)}
                         role="status"
                     >
                         <span>
@@ -1033,9 +944,7 @@ export default function RoutePlannerPage() {
                 )}
                 {routeCalculation?.status === 'FAILED' && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
+                        className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
                         <span>
@@ -1046,9 +955,7 @@ export default function RoutePlannerPage() {
                 )}
                 {routeCalculationError && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
+                        className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
                         <span>{routeCalculationError}</span>
@@ -1056,28 +963,23 @@ export default function RoutePlannerPage() {
                 )}
                 {startRouteCalculationGraphQlError && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
+                        className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
                         <span>
                             Die Routenberechnung konnte wegen eines
-                            Kommunikationsfehlers nicht gestartet
-                            werden.
+                            Kommunikationsfehlers nicht gestartet werden.
                         </span>
                     </div>
                 )}
                 {routeCalculationQueryError && (
                     <div
-                        className={statusClass(
-                            styles.statusBannerError,
-                        )}
+                        className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
                         <span>
-                            Der aktuelle Stand der Routenberechnung
-                            konnte nicht abgerufen werden.
+                            Der aktuelle Stand der Routenberechnung konnte nicht
+                            abgerufen werden.
                         </span>
                     </div>
                 )}
@@ -1089,9 +991,7 @@ export default function RoutePlannerPage() {
                     aria-labelledby="route-result-heading"
                 >
                     <div className={styles.resultsHeader}>
-                        <h2 id="route-result-heading">
-                            Routenergebnis
-                        </h2>
+                        <h2 id="route-result-heading">Routenergebnis</h2>
                         <button
                             type="button"
                             className={styles.exportButton}
@@ -1104,9 +1004,7 @@ export default function RoutePlannerPage() {
 
                     <dl className={styles.statsGrid}>
                         <div className={styles.statCard}>
-                            <dt className={styles.statLabel}>
-                                Distanz
-                            </dt>
+                            <dt className={styles.statLabel}>Distanz</dt>
                             <dd className={styles.statValue}>
                                 {completedRouteCalculation.distanceMeters !==
                                 null
@@ -1117,9 +1015,7 @@ export default function RoutePlannerPage() {
                             </dd>
                         </div>
                         <div className={styles.statCard}>
-                            <dt className={styles.statLabel}>
-                                Fahrtdauer
-                            </dt>
+                            <dt className={styles.statLabel}>Fahrtdauer</dt>
                             <dd className={styles.statValue}>
                                 {completedRouteCalculation.durationSeconds !==
                                 null
@@ -1130,29 +1026,25 @@ export default function RoutePlannerPage() {
                             </dd>
                         </div>
                         <div className={styles.statCard}>
-                            <dt className={styles.statLabel}>
-                                Ankunftszeit
-                            </dt>
+                            <dt className={styles.statLabel}>Ankunftszeit</dt>
                             <dd className={styles.statValue}>
                                 {activeSlot
                                     ? `${activeSlot.arrivalTime} Uhr (Start ${activeSlot.departureTime} Uhr)`
                                     : completedRouteCalculation.arrivalTime
-                                      ? formatArrivalTime(
+                                        ? formatArrivalTime(
                                             completedRouteCalculation.arrivalTime,
                                         )
-                                      : 'Nicht verfügbar'}
+                                        : 'Nicht verfügbar'}
                             </dd>
                         </div>
 
-                        {(
-                            activeSlot !== null ||
-                            typeof completedRouteCalculation.weatherScore === 'number'
-                        ) && (
+                        {(activeSlot !== null ||
+                            typeof completedRouteCalculation.weatherScore ===
+                            'number') && (
                             <div className={styles.statCard}>
                                 <dt className={styles.statLabel}>
                                     Wetterscore
                                 </dt>
-
                                 <dd className={styles.statValue}>
                                     {activeSlot?.routeScore ??
                                         completedRouteCalculation.weatherScore}{' '}
@@ -1162,18 +1054,18 @@ export default function RoutePlannerPage() {
                         )}
                     </dl>
 
-                    {(activeSlot ? activeSlot.hasThunderCap : completedRouteCalculation.thunderstormCapApplied) && (
+                    {(activeSlot
+                        ? activeSlot.hasThunderCap
+                        : completedRouteCalculation.thunderstormCapApplied) && (
                         <div
-                            className={statusClass(
-                                styles.statusBannerError,
-                            )}
+                            className={statusClass(styles.statusBannerError)}
                             role="status"
                             style={{ marginTop: '0.75rem' }}
                         >
                             <span>
-                                Erhöhtes Gewitterrisiko auf der Route
-                                erkannt. Der Gesamtwetterscore wurde
-                                auf maximal 50 begrenzt.
+                                Erhöhtes Gewitterrisiko auf der Route erkannt.
+                                Der Gesamtwetterscore wurde auf maximal 50
+                                begrenzt.
                             </span>
                         </div>
                     )}
@@ -1184,7 +1076,10 @@ export default function RoutePlannerPage() {
                 <DepartureTimeSlider
                     slots={optimizationData.departureSlots}
                     recommendedSlotIndex={optimizationData.recommendedSlotIndex}
-                    selectedSlotIndex={selectedSlotIndex ?? optimizationData.recommendedSlotIndex}
+                    selectedSlotIndex={
+                        selectedSlotIndex ??
+                        optimizationData.recommendedSlotIndex
+                    }
                     optimalWindowSummary={optimizationData.optimalWindowSummary}
                     initialDepartureIndex={initialDepartureSlotIndex}
                     onSelectSlot={(idx) => {
@@ -1205,9 +1100,7 @@ export default function RoutePlannerPage() {
                     startPlace={selectedStart}
                     destinationPlace={selectedDestination}
                     routeSegments={coloredMapSegments}
-                    geometry={
-                        completedRouteCalculation?.geometry ?? null
-                    }
+                    geometry={completedRouteCalculation?.geometry ?? null}
                     weatherSegments={activeWeatherSegments}
                     hoveredSegmentIndex={hoveredSegmentIndex}
                     onHoverSegment={setHoveredSegmentIndex}
@@ -1244,18 +1137,13 @@ export default function RoutePlannerPage() {
                     className={styles.card}
                     aria-labelledby="save-route-heading"
                 >
-                    <h2
-                        id="save-route-heading"
-                        style={{ margin: '0 0 1rem' }}
-                    >
+                    <h2 id="save-route-heading" style={{ margin: '0 0 1rem' }}>
                         Route speichern
                     </h2>
 
                     {isAuthenticated ? (
                         <SaveRouteForm
-                            routeCalculationId={
-                                completedRouteCalculation.id
-                            }
+                            routeCalculationId={completedRouteCalculation.id}
                             weatherEvaluationId={(
                                 completedRouteCalculation.weatherEvaluationId ??
                                 `w_${completedRouteCalculation.id}`
@@ -1267,7 +1155,7 @@ export default function RoutePlannerPage() {
                             <Link
                                 to="/login"
                                 style={{
-                                    color: 'var(--color-primary)',
+                                    color: 'var(--color-primary, #2563eb)',
                                     fontWeight: 700,
                                 }}
                             >
