@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
 import type {ActivityProfile} from './activityProfile'
 
 export interface RoutePlace {

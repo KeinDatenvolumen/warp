@@ -1,3 +1,4 @@
+@rem [KI-Log Nr. KI-02] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Monorepo-Setup, Gradle & Docker (WARP-001)
 @rem
 @rem Copyright 2015 the original author or authors.
 @rem

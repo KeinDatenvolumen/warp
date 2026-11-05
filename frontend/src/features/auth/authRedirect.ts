@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
 export const LOGIN_PATH = '/login'
 
 export const DEFAULT_AUTHENTICATED_PATH = '/route-planner'

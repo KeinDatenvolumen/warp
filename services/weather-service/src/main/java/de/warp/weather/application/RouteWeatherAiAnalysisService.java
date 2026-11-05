@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für Change Request Ereigniskarte 12 (MCP & Gemini)
 @Service
 public class RouteWeatherAiAnalysisService {
 

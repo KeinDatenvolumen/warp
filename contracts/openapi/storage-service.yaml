@@ -1,67 +1,23 @@
+# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
 openapi: 3.1.0
 info:
   title: Storage Service Internal API
   version: 1.0.0
   description: >
-    Interner REST-Vertrag für den Storage Service. Verwaltet Aktivitätsprofile
-    und benutzergebundene gespeicherte Routen inklusive Snapshots und Wetterscores.
+    Interner REST-Vertrag für den Storage Service. Verwaltet benutzergebundene
+    gespeicherte Routen inklusive Geometrie-Snapshots, Aktivitätsprofil-Snapshots
+    und Wetterscores. (Zentrale Aktivitätsprofile werden über den Routing-Service
+    bereitgestellt; siehe routing-service.yaml.)
 servers:
+  - url: http://localhost:8084
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
   - url: http://storage-service:8084
     description: Interner Docker-/Cluster-Dienst
 
+security:
+  - InternalServiceToken: []
+
 paths:
-  /internal/v1/activity-profiles:
-    get:
-      summary: Alle zentral konfigurierten Aktivitätsprofile abrufen
-      operationId: listActivityProfiles
-      parameters:
-        - $ref: '#/components/parameters/CorrelationIdHeader'
-        - $ref: '#/components/parameters/ServiceTokenHeader'
-      responses:
-        '200':
-          description: Liste aller Aktivitätsprofile
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActivityProfileResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /internal/v1/activity-profiles/{code}:
-    get:
-      summary: Einzelnes Aktivitätsprofil anhand des Codes abrufen
-      operationId: getActivityProfile
-      parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: [BICYCLE, MOTORCYCLE, HIKING]
-        - $ref: '#/components/parameters/CorrelationIdHeader'
-        - $ref: '#/components/parameters/ServiceTokenHeader'
-      responses:
-        '200':
-          description: Gefundenes Aktivitätsprofil
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActivityProfileResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          description: Aktivitätsprofil nicht gefunden
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
   /internal/v1/users/{userId}/saved-routes:
     post:
       summary: Berechnete Route als Snapshot benutzergebunden speichern
@@ -239,6 +195,12 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
 components:
+  securitySchemes:
+    InternalServiceToken:
+      type: apiKey
+      in: header
+      name: X-WaRP-Service-Token
+      description: "Interner Service-Token für Microservice-Kommunikation (lokal: local_internal_service_token_change_me)"
   parameters:
     UserIdPath:
       name: userId

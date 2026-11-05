@@ -17,6 +17,7 @@ import static de.warp.identity.messaging.MailMessagingTopology.MAIL_ROUTING_KEY;
  * Rollback der Transaktion erzeugt daher keine Mail. Ist der Broker nicht
  * erreichbar, wird direkt zugestellt, damit kein Auftrag verloren geht.
  */
+// [KI-Log Nr. KI-21] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für RabbitMQ Mail-Queue & Fallback (WARP-036)
 @Component
 @ConditionalOnProperty(
         name = "warp.messaging.enabled",

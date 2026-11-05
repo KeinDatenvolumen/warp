@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-15 & KI-19] KI-generiert (Google Antigravity Gemini 3.8 Flash High) und beim Polling-Debugging angepasst
 import {
     useCallback,
     useEffect,

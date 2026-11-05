@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
 import {Link, useLocation} from 'react-router'
 import styles from './NotFoundPage.module.css'
 

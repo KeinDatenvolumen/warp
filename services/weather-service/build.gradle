@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
     plugins {
         id 'java'
         id 'org.springframework.boot'
@@ -28,3 +29,7 @@
 
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
+
+springBoot {
+    mainClass = 'de.warp.weather.WeatherServiceApplication'
+}

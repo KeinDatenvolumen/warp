@@ -1,3 +1,4 @@
+<!-- [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033) -->
 # WaRP-Frontend
 
 Das WaRP-Frontend ist die browserbasierte Benutzeroberfläche von **WaRP (Weather-aware Route Planning)**. Die Anwendung wird mit React, TypeScript und Vite entwickelt und kommuniziert ausschließlich über den BFF-Service mit dem Backend.
@@ -142,7 +143,11 @@ Startet die Vite-Vorschau für einen zuvor erzeugten Build.
 
 ### `/`
 
-Zeigt aktuell das REST-basierte Service-Dashboard. Die Seite fragt den Systemzustand alle fünf Sekunden über folgenden BFF-Endpunkt ab:
+Leitet automatisch auf den interaktiven Routenplaner (`/route-planner`) weiter.
+
+### `/system-health`
+
+Zeigt das REST-basierte Service-Dashboard. Die Seite fragt den Systemzustand alle fünf Sekunden über folgenden BFF-Endpunkt ab:
 
 ```text
 GET /api/v1/system/health
@@ -178,23 +183,37 @@ Angezeigt werden:
 
 ### `/route-planner`
 
-Zeigt den aktuellen Stand des Routenplaners mit einer Leaflet-Karte. Die Kartenkacheln werden über MapTiler geladen.
+Zeigt den produktiven interaktiven Routenplaner mit Leaflet-Karte (Kartenkacheln werden direkt über MapTiler / OpenStreetMap geladen):
 
-Für die Darstellung muss `VITE_MAPTILER_PUBLIC_API_KEY` gesetzt sein. Die eigentliche wetterabhängige Routenplanung ist noch nicht implementiert.
+- Ortssuche mit Autovervollständigung über die GraphQL-Query `searchPlaces`
+- Auswahl eines zentralen Aktivitätsprofils (`BICYCLE`, `MOTORCYCLE`, `HIKING`) und einer Abfahrtszeit
+- Asynchrone Routenberechnung (`startRouteCalculation`) mit Live-Polling (`routeCalculation`)
+- Farblich kodierte Streckendarstellung nach der 101-stufigen perzeptuellen Wetter-Skala inkl. Engpass-Badges und interaktivem Meteogramm-Dock
+- Interaktiver Abfahrtszeit-Optimierer (`DepartureTimeSlider` über `POST /api/v1/routes/weather-optimization`)
+- KI-Wetterberater (`AiWeatherAdvisorPanel` über `POST /api/v1/routes/weather-ai-analysis`, Google Gemini & MCP-Server)
+- Direktes Speichern berechneter Routen im Benutzerkonto (`SaveRouteForm`)
 
-### `/login`
+### `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`
 
-Zeigt das Anmeldeformular mit E-Mail-Adresse und Passwort. Die Anmeldung läuft über den BFF (`POST /api/v1/sessions`). Details siehe Abschnitt [Anmeldung und Sitzungsstatus](#anmeldung-und-sitzungsstatus).
+Vollständige Authentifizierungs- und Kontowiederherstellungs-Flows:
 
-Bereits angemeldete Benutzer werden von `/login` automatisch weitergeleitet.
+- `/login`: Anmeldeformular (`POST /api/v1/sessions`), setzt das HttpOnly-Session-Cookie. Bereits angemeldete Benutzer werden automatisch weitergeleitet.
+- `/register`: Registrierungsformular (`POST /api/v1/users`) mit Client- und Servervalidierung.
+- `/verify-email`: E-Mail-Verifikation anhand des Bestätigungs-Tokens (`POST /api/v1/email-verifications/confirm`) sowie Möglichkeit zum erneuten Anfordern.
+- `/forgot-password` & `/reset-password`: Passwort-Zurücksetzung anfordern (`POST /api/v1/password-resets/send`) und neues Passwort per Token setzen (`POST /api/v1/password-resets/confirm`).
 
 ### `/profile`
 
-Geschützte Platzhalterseite für zukünftige Profildaten. Nicht angemeldete Benutzer werden zu `/login` weitergeleitet und nach der Anmeldung zur ursprünglich angeforderten Seite zurückgeführt. Während der Sitzungsprüfung beim Start wird kein geschützter Inhalt angezeigt.
+Geschützte Profilseite für angemeldete Benutzer:
 
-### `/saved-routes`
+- Anzeige der Kontodaten (`currentUser` via GraphQL) und des E-Mail-Verifikationsstatus
+- Änderung des eigenen Passworts (`POST /api/v1/users/me/password-changes`)
+- Änderung der eigenen E-Mail-Adresse (`POST /api/v1/users/me/email-changes`) mit erneutem Verifikations-Flow
+- Auswahl des Farbprofils (`profile-1` bis `profile-3`) und des Darstellungsmodus (Hell, Dunkel, System)
 
-Geschützte Platzhalterseite für zukünftig gespeicherte Routen. Nicht angemeldete Benutzer werden zu `/login` weitergeleitet.
+### `/saved-routes` und `/saved-routes/:routeId`
+
+Geschützte Seiten zur Verwaltung eigener gespeicherter Routen (Übersicht, Favoriten-Filter, Umbenennen, Löschen sowie Detailansicht mit Karte und Wettersegmenten). Nicht angemeldete Benutzer werden zu `/login` weitergeleitet.
 
 ### Unbekannte Routen
 

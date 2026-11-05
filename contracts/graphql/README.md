@@ -1,3 +1,4 @@
+<!-- [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019) -->
 # WaRP GraphQL-Vertrag
 
 Dieses Verzeichnis enthält den öffentlichen GraphQL-Vertrag zwischen dem
@@ -506,14 +507,33 @@ bereitgestellt. Der BFF gibt davon nur Profilcode und Anzeigename an das
 Frontend weiter. Das Frontend darf keine eigenen Profilparameter erzeugen oder
 überschreiben.
 
-Die Auswahl eines Profils im Frontend ist in diesem ersten Implementierungsschritt
-noch nicht dauerhaft an ein Backend-Benutzerkonto gebunden. Die produktive
-Benutzerpersistenz benötigt zusätzlich eine implementierte Session- und
-Benutzerverwaltung im Identity-Service.
+Bei der Routenberechnung (`startRouteCalculation`) und der Routenspeicherung
+(`saveRoute`) wird jeweils ein unveränderlicher Snapshot des gewählten
+Aktivitätsprofils an das Backend-Benutzerkonto (`userId` aus der validierten
+Sitzung) gebunden und persistiert.
 
-Die Bereiche bleiben Teil eines gemeinsamen öffentlichen GraphQL-Schemas des
-BFF. Die internen Services werden dadurch nicht selbst zu öffentlichen
-GraphQL-Servern.
+### Übersicht aller produktiven GraphQL-Operationen
+
+#### Queries (`type Query`)
+- `systemHealth: SystemHealth!` – Aggregierter Gesundheitsstatus aller 5 Backend-Services
+- `currentSession: CurrentSession!` – Aktuell authentifizierte Sitzung (`userId`, `createdAt`, `expiresAt`)
+- `currentUser: User` – Kontodaten des angemeldeten Benutzers inkl. `emailVerified`-Status
+- `activityProfiles: [ActivityProfile!]!` – Alle zentral konfigurierten Aktivitätsprofile (`BICYCLE`, `MOTORCYCLE`, `HIKING`)
+- `activityProfile(code: ActivityProfileCode!): ActivityProfile!` – Einzelnes Aktivitätsprofil anhand seines Codes
+- `searchPlaces(query: String!, limit: Int = 5): [Place!]!` – Geocodierung / Ortssuche über den Routing-Service (mit 24h Caffeine-Cache)
+- `routeCalculation(id: ID!): RouteCalculation` – Status (`PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`), Geometrie und verknüpfte Wetterbewertung einer gestarteten Routenberechnung
+- `savedRoutes(filter: SavedRouteFilter, page: PageInput): SavedRoutePage!` – Paginierte Liste eigener gespeicherter Routen (Favoriten zuerst)
+- `savedRoute(id: ID!): SavedRoute` – Vollständige Detailansicht einer gespeicherten Route samt Wettersegmenten
+
+#### Mutations (`type Mutation`)
+- `startRouteCalculation(input: RouteCalculationInput!): RouteCalculationPayload!` – Startet asynchron eine Routenberechnung inkl. anschließender Wetterbewertung
+- `saveRoute(input: SaveRouteInput!): SaveRoutePayload!` – Persistiert eine berechnete Route samt Wetterbewertung im Storage-Service
+- `updateSavedRoute(id: ID!, input: UpdateSavedRouteInput!): UpdateSavedRoutePayload!` – Aktualisiert Name und/oder Favoritenstatus einer eigenen Route
+- `deleteSavedRoute(id: ID!): DeleteSavedRoutePayload!` – Löscht eine eigene gespeicherte Route
+
+Die Bereiche sind Teil eines gemeinsamen öffentlichen GraphQL-Schemas des
+BFF (`contracts/graphql/schema.graphqls`). Die internen Services bleiben reine
+REST-/JSON-RPC-Dienste und werden nicht selbst zu öffentlichen GraphQL-Servern.
 
 ## Zentrale Fehlerübersetzung im BFF
 

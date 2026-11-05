@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034)
 name: warp
 
 services:
@@ -8,6 +9,7 @@ services:
     environment:
       PORT: "8081"
       WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
+      WARP_DEV_TOKEN_ENABLED: "false"
     ports:
       - "8081:8081"
     restart: unless-stopped
@@ -43,6 +45,7 @@ services:
     environment:
       PORT: "8084"
       WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
+      WARP_DEV_TOKEN_ENABLED: "false"
     ports:
       - "8084:8084"
     restart: unless-stopped
@@ -95,4 +98,16 @@ services:
     depends_on:
       - bff-service
     restart: unless-stopped
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.18.2
+    environment:
+      URLS: "[{url: '/specs/bff-service.yaml', name: 'BFF Service (Public REST API)'}, {url: '/specs/identity-service.yaml', name: 'Identity Service (Internal API)'}, {url: '/specs/routing-service.yaml', name: 'Routing Service (Internal API)'}, {url: '/specs/weather-service.yaml', name: 'Weather Service & MCP (Internal API)'}, {url: '/specs/storage-service.yaml', name: 'Storage Service (Internal API)'}]"
+      URLS_PRIMARY_NAME: "BFF Service (Public REST API)"
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./contracts/openapi:/usr/share/nginx/html/specs:ro
+    restart: unless-stopped
+
 

@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
 package de.warp.identity.config;
 
 import org.springframework.cache.annotation.EnableCaching;

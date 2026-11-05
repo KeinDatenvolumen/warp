@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
 
 set -eu
 

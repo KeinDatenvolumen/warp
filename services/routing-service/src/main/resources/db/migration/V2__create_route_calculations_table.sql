@@ -1,3 +1,4 @@
+-- [KI-Log Nr. KI-12] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone Routenberechnung via OpenRouteService (WARP-012)
 CREATE TABLE warp_routing.route_calculations
 (
     id                       VARCHAR(40)              NOT NULL,

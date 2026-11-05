@@ -1,0 +1,286 @@
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: Routing Service Internal API
+  version: 1.0.0
+  description: >
+    Interner REST-Vertrag des Routing-Service für zentral verwaltete Aktivitätsprofile,
+    Geocodierung (Ortssuche mit Caffeine In-Memory-Cache) und asynchrone Routenberechnungen
+    über OpenRouteService.
+servers:
+  - url: http://localhost:8082
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://routing-service:8082
+    description: Interner Docker-/Cluster-Dienst
+
+paths:
+  /internal/v1/activity-profiles:
+    get:
+      summary: Alle zentral konfigurierten Aktivitätsprofile abrufen
+      operationId: listActivityProfiles
+      responses:
+        '200':
+          description: Liste aller Aktivitätsprofile inkl. interner Routing- und Wetterparameter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityProfileResponse'
+
+  /internal/v1/activity-profiles/{code}:
+    get:
+      summary: Einzelnes Aktivitätsprofil anhand des Codes abrufen
+      operationId: getActivityProfile
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ActivityProfileCode'
+      responses:
+        '200':
+          description: Gefundenes Aktivitätsprofil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityProfileResponse'
+        '400':
+          description: Ungültiger Profilcode
+
+  /internal/v1/places:
+    get:
+      summary: Orte und Adressen per Geocodierung suchen
+      description: >
+        Sucht passende Orte über die MapTiler Geocoding API.
+        Suchbegriffe werden getrimmt und in Kleinbuchstaben normalisiert.
+        Ergebnisse werden für 24 Stunden im lokalen Caffeine In-Memory-Cache
+        (geocoding-results, max. 5.000 Einträge, sync=true) zwischengespeichert.
+      operationId: searchPlaces
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 200
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+      responses:
+        '200':
+          description: Gefundene Orte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceSearchResponse'
+        '503':
+          description: Externer Geocoding-Dienst nicht verfügbar (GEOCODING_SERVICE_UNAVAILABLE)
+
+  /internal/v1/route-calculations:
+    post:
+      summary: Asynchrone Routenberechnung starten
+      description: >
+        Nimmt einen Berechnungsauftrag entgegen, speichert ihn mit Status PENDING
+        und startet die Berechnung über OpenRouteService asynchron im Hintergrund.
+        Wiederholte Aufrufe mit demselben Idempotency-Key liefern denselben Auftrag.
+      operationId: startRouteCalculation
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRouteCalculationRequest'
+      responses:
+        '202':
+          description: Berechnungsauftrag angenommen
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Pfad zur Abfrage des Berechnungsstatus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteCalculationAcceptedResponse'
+        '400':
+          description: Ungültige Eingabedaten (INVALID_ROUTE_CALCULATION_REQUEST)
+
+  /internal/v1/route-calculations/{calculationId}:
+    get:
+      summary: Status und Ergebnis einer Routenberechnung abrufen
+      operationId: getRouteCalculation
+      parameters:
+        - name: calculationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Aktueller Zustand und ggf. Geometrie/Segmente der Routenberechnung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteCalculationResponse'
+        '404':
+          description: Routenberechnung nicht gefunden oder gehört anderem Benutzer (ROUTE_CALCULATION_NOT_FOUND)
+
+components:
+  schemas:
+    ActivityProfileCode:
+      type: string
+      enum: [BICYCLE, MOTORCYCLE, HIKING]
+
+    ActivityProfileResponse:
+      type: object
+      required:
+        - code
+        - displayName
+        - averageSpeedKmh
+        - routingProfile
+        - weatherQueryIntervalKm
+        - wayPreferences
+      properties:
+        code:
+          $ref: '#/components/schemas/ActivityProfileCode'
+        displayName:
+          type: string
+        averageSpeedKmh:
+          type: number
+        routingProfile:
+          type: string
+          enum: [CYCLING_REGULAR, DRIVING_CAR, FOOT_HIKING]
+        weatherQueryIntervalKm:
+          type: integer
+        wayPreferences:
+          type: object
+          properties:
+            preferScenicRoutes: { type: boolean }
+            avoidHighways: { type: boolean }
+            avoidTollRoads: { type: boolean }
+            avoidUnpavedRoads: { type: boolean }
+            preferCycleways: { type: boolean }
+            preferHikingTrails: { type: boolean }
+
+    Place:
+      type: object
+      required: [placeId, displayName, latitude, longitude]
+      properties:
+        placeId: { type: string }
+        displayName: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+
+    PlaceSearchResponse:
+      type: object
+      required: [places]
+      properties:
+        places:
+          type: array
+          items:
+            $ref: '#/components/schemas/Place'
+
+    RoutePointRequest:
+      type: object
+      required: [label, latitude, longitude]
+      properties:
+        label: { type: string }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+
+    ActivityProfileSnapshotRequest:
+      type: object
+      required: [code, displayName, averageSpeedKmh, routingProfile, weatherQueryIntervalKm]
+      properties:
+        code: { type: string }
+        displayName: { type: string }
+        averageSpeedKmh: { type: number }
+        routingProfile: { type: string }
+        weatherQueryIntervalKm: { type: integer }
+
+    StartRouteCalculationRequest:
+      type: object
+      required: [requestedByUserId, start, destination, departureTime, activityProfile]
+      properties:
+        requestedByUserId: { type: string }
+        start:
+          $ref: '#/components/schemas/RoutePointRequest'
+        destination:
+          $ref: '#/components/schemas/RoutePointRequest'
+        departureTime:
+          type: string
+          format: date-time
+        activityProfile:
+          $ref: '#/components/schemas/ActivityProfileSnapshotRequest'
+
+    RouteCalculationAcceptedResponse:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id: { type: string }
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        createdAt:
+          type: string
+          format: date-time
+
+    RouteCalculationResponse:
+      type: object
+      required: [id, status, start, destination, activityProfile, departureTime, createdAt]
+      properties:
+        id: { type: string }
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        start:
+          $ref: '#/components/schemas/RoutePointRequest'
+        destination:
+          $ref: '#/components/schemas/RoutePointRequest'
+        activityProfile:
+          $ref: '#/components/schemas/ActivityProfileSnapshotRequest'
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        distanceMeters:
+          type: number
+        durationSeconds:
+          type: number
+        geometry:
+          type: object
+          properties:
+            type: { type: string, enum: [LineString] }
+            coordinates:
+              type: array
+              items:
+                type: array
+                items: { type: number }
+        createdAt:
+          type: string
+          format: date-time
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }

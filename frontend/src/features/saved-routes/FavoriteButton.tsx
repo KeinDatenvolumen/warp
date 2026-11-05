@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
 import {useMutation} from '@apollo/client/react'
 import {extractGraphQlErrorCodes} from '../../api/graphqlErrors'
 import {UPDATE_SAVED_ROUTE_MUTATION} from '../../api/savedRoutesApi'

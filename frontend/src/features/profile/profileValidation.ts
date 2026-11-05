@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
 import {PASSWORD_MIN_LENGTH} from '../password-reset/passwordResetValidation'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

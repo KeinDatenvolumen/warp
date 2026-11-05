@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
 package de.warp.weather.application;
 
 import de.warp.weather.application.WeatherScoringService.ScoringActivityProfile;
@@ -186,6 +187,40 @@ class WeatherScoringServiceTest {
         assertThat(scoringService.calculateOverallScore(
                 localBlackIce, ScoringActivityProfile.MOTORCYCLE, null
         ).overallScore()).isEqualTo(0);
+    }
+
+    @Test
+    void calculatesFiftySegmentRouteScoringWithinFiftyMilliseconds() {
+        Instant base = Instant.parse("2026-10-27T10:00:00Z");
+        WeatherCondition condition = new WeatherCondition(
+                18.0, 210.0, 28.0, 35.0, 0.4, 0.3, 0.0, 15.0,
+                16.0, 15.0, 70.0, 10.5, 250.0, 14.0, 18_000.0, 150.0, 3.0, 3
+        );
+
+        long startNanos = System.nanoTime();
+        List<WeatherSegment> segments = new ArrayList<>(50);
+        for (int i = 0; i < 50; i++) {
+            int segScore = scoringService.calculateSegmentScore(
+                    condition, (i * 15.0) % 360.0, ScoringActivityProfile.BICYCLE, 18.0
+            );
+            String color = scoringService.resolveScoreColor(segScore);
+            segments.add(new WeatherSegment(
+                    i,
+                    base.plusSeconds(i * 600L),
+                    segScore,
+                    color,
+                    i * 5000,
+                    condition,
+                    List.of()
+            ));
+        }
+        WeatherScoringService.OverallScoreResult overall = scoringService.calculateOverallScore(
+                segments, ScoringActivityProfile.BICYCLE, null
+        );
+        long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000;
+
+        assertThat(overall.overallScore()).isBetween(0, 100);
+        assertThat(elapsedMillis).isLessThan(50L);
     }
 
     private static List<WeatherSegment> buildSegments(

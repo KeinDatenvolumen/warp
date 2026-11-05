@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-20] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für serverseitig gerenderte MPA (WARP-034)
 import { app } from './app.js'
 import { config } from './config.js'
 

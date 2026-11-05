@@ -1,3 +1,4 @@
+<!-- [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034) -->
 # WaRP Multi-Page Application (MPA)
 
 Die **WaRP Multi-Page Application (MPA)** ist eine leichtgewichtige, serverseitig gerenderte Webanwendung für den Weather-Aware Route Planner (WaRP). Sie ergänzt die bestehende Single-Page Application (SPA) und bietet klassische Multi-Page-Navigation, Server-Side Rendering (SSR) sowie direkte GraphQL- und REST-Anbindung an das Backend-for-Frontend (BFF).

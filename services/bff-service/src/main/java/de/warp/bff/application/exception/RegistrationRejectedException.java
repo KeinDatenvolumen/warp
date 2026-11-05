@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-07] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Benutzerregistrierung & Validierung (WARP-005)
 package de.warp.bff.application.exception;
 
 import de.warp.bff.api.dto.FieldErrorResponse;

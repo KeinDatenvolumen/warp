@@ -1,0 +1,360 @@
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: WaRP BFF Public REST API
+  version: 1.0.0
+  description: >
+    Öffentlicher REST-Vertrag des Backend-for-Frontend (BFF) für Systemstatus,
+    CSRF-Schutz, Benutzerregistrierung, Cookie-basierte Sitzungsverwaltung (An- und Abmeldung),
+    E-Mail-Verifikation, Passwort-Zurücksetzung, Kontoänderungen sowie Abfahrtszeit-Optimierung
+    und KI-Wetteranalyse. Fachliche Abfragen und Routen-Mutationen laufen ergänzend über
+    den GraphQL-Endpunkt POST /graphql (siehe contracts/graphql/schema.graphqls).
+servers:
+  - url: http://localhost:8080
+    description: Lokaler BFF-Service
+
+paths:
+  /api/v1/system/health:
+    get:
+      summary: Zusammengefasster Systemstatus aller WaRP-Services
+      operationId: getSystemHealth
+      responses:
+        '200':
+          description: Alle Services erreichbar (UP)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+        '503':
+          description: Mindestens ein nachgelagerter Service nicht erreichbar (DEGRADED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+
+  /api/v1/csrf:
+    get:
+      summary: CSRF-Token für zustandsverändernde REST- und GraphQL-Anfragen abrufen
+      operationId: getCsrfToken
+      responses:
+        '200':
+          description: Aktuelles CSRF-Token samt Header- und Parameternamen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfTokenResponse'
+
+  /api/v1/users:
+    post:
+      summary: Neues Benutzerkonto registrieren
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: Benutzerkonto erstellt; Bestätigungs-E-Mail wird zugestellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUserResponse'
+        '409':
+          description: EMAIL_ALREADY_EXISTS
+        '422':
+          description: VALIDATION_FAILED
+
+  /api/v1/sessions:
+    post:
+      summary: Anmelden und HttpOnly-Session-Cookie setzen
+      description: >
+        Authentifiziert den Benutzer über den Identity-Service (mit Rate-Limiting
+        gegen Brute-Force-Angriffe) und setzt bei Erfolg das HttpOnly-Session-Cookie.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '204':
+          description: Anmeldung erfolgreich; Set-Cookie Header enthält das Session-Cookie
+        '401':
+          description: INVALID_CREDENTIALS
+        '429':
+          description: RATE_LIMIT_EXCEEDED (inkl. Retry-After Header)
+
+  /api/v1/sessions/current:
+    delete:
+      summary: Aktuelle Sitzung beenden (Abmelden)
+      description: >
+        Invalidiert die Sitzung im Identity-Service (inkl. Cache-Eviction) und
+        löscht das Session-Cookie im Browser. Erfordert ein gültiges CSRF-Token.
+      operationId: logout
+      responses:
+        '204':
+          description: Sitzung beendet und Cookie gelöscht
+
+  /api/v1/email-verifications/confirm:
+    post:
+      summary: E-Mail-Adresse mit Token bestätigen
+      operationId: confirmEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse erfolgreich verifiziert
+        '400':
+          description: INVALID_EMAIL_VERIFICATION_TOKEN
+
+  /api/v1/email-verifications/resend:
+    post:
+      summary: Bestätigungs-E-Mail erneut anfordern
+      operationId: resendEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '204':
+          description: Anfrage entgegengenommen
+
+  /api/v1/password-resets/send:
+    post:
+      summary: E-Mail zum Zurücksetzen des Passworts anfordern
+      operationId: sendPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '204':
+          description: Anfrage entgegengenommen
+
+  /api/v1/password-resets/confirm:
+    post:
+      summary: Neues Passwort mit Reset-Token festlegen
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPasswordResetRequest'
+      responses:
+        '204':
+          description: Passwort erfolgreich geändert
+        '400':
+          description: INVALID_PASSWORD_RESET_TOKEN
+        '422':
+          description: PASSWORD_REQUIREMENTS_NOT_MET
+
+  /api/v1/users/me/password-changes:
+    post:
+      summary: Eigenes Passwort ändern (authentifiziert)
+      operationId: changeOwnPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Passwort wurde geändert
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD
+        '422':
+          description: PASSWORD_REQUIREMENTS_NOT_MET oder INVALID_ACCOUNT_CHANGE_REQUEST
+
+  /api/v1/users/me/email-changes:
+    post:
+      summary: Eigene E-Mail-Adresse ändern (authentifiziert)
+      operationId: changeOwnEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse geändert; neue Bestätigungs-E-Mail versendet
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD
+        '409':
+          description: EMAIL_ALREADY_EXISTS
+        '422':
+          description: INVALID_ACCOUNT_CHANGE_REQUEST
+
+  /api/v1/routes/weather-optimization:
+    post:
+      summary: Optimales Abfahrtszeitfenster für eine berechnete Route ermitteln
+      operationId: optimizeRouteWeather
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherOptimizationApiRequest'
+      responses:
+        '200':
+          description: Zeitfenster-Slots mit Wetterscores und optimalem Startzeitpunkt
+
+  /api/v1/routes/weather-ai-analysis:
+    post:
+      summary: KI-gestützte Wetteranalyse über Google Gemini & MCP-Tools anfordern
+      description: >
+        Erfordert eine authentifizierte Sitzung und eine bestätigte E-Mail-Adresse.
+        Orchestriert Routen-, Profil- und Wetterdaten und ruft die KI-Analyse im
+        Weather-Service auf.
+      operationId: analyzeRouteWeatherAi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherAiAnalysisApiRequest'
+      responses:
+        '200':
+          description: Strukturierte KI-Wetteranalyse
+        '401':
+          description: SESSION_INVALID
+        '403':
+          description: EMAIL_NOT_VERIFIED
+
+components:
+  schemas:
+    SystemHealthResponse:
+      type: object
+      required: [status, checkedAt, healthyServices, totalServices, services]
+      properties:
+        status: { type: string, enum: [UP, DEGRADED] }
+        checkedAt: { type: string, format: date-time }
+        healthyServices: { type: integer }
+        totalServices: { type: integer }
+        services:
+          type: array
+          items:
+            type: object
+            required: [service, status, reachable, responseTimeMs]
+            properties:
+              service: { type: string }
+              status: { type: string }
+              reachable: { type: boolean }
+              responseTimeMs: { type: integer }
+
+    CsrfTokenResponse:
+      type: object
+      required: [token, headerName, parameterName]
+      properties:
+        token: { type: string }
+        headerName: { type: string }
+        parameterName: { type: string }
+
+    RegisterUserRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12 }
+
+    RegisteredUserResponse:
+      type: object
+      required: [id, name, email, emailVerified, createdAt, message]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        message: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    ConfirmEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+
+    EmailOnlyRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    ConfirmPasswordResetRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string, minLength: 12 }
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 12 }
+
+    ChangeEmailRequest:
+      type: object
+      required: [newEmail, password]
+      properties:
+        newEmail: { type: string, format: email }
+        password: { type: string }
+
+    RouteWeatherOptimizationApiRequest:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: number }
+        distanceMeters: { type: number }
+        activityProfile: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }
+        windowStart: { type: string, format: date-time }
+        windowEnd: { type: string, format: date-time }
+
+    RouteWeatherAiAnalysisApiRequest:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: number }
+        distanceMeters: { type: number }
+        activityProfile: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+        startLabel: { type: string }
+        destinationLabel: { type: string }
+        userPrompt: { type: string }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }

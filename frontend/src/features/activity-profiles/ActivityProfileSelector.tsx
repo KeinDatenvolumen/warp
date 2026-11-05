@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
 import {useQuery} from '@apollo/client/react'
 import {ACTIVITY_PROFILES_QUERY} from '../../api/activityProfilesQuery'
 import Loader from '../../components/ui/Loader/Loader'

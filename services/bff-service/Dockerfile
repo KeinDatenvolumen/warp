@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
 FROM gradle:9.8.0-jdk21 AS build
 
 WORKDIR /workspace

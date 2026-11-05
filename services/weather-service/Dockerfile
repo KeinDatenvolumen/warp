@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
 FROM gradle:9.8.0-jdk21 AS build
 
 WORKDIR /workspace

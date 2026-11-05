@@ -1,0 +1,327 @@
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: Weather Service Internal API & MCP Server
+  version: 1.0.0
+  description: >
+    Interner REST- und JSON-RPC-Vertrag des Weather-Service für stündliche
+    Open-Meteo-Wetterprognosen, 101-stufige perzeptuelle Routen-Wetterbewertungen,
+    Abfahrtszeit-Optimierung, KI-gestützte Wetteranalyse (Google Gemini) sowie
+    den integrierten Model Context Protocol (MCP) JSON-RPC 2.0 Server.
+servers:
+  - url: http://localhost:8083
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://weather-service:8083
+    description: Interner Docker-/Cluster-Dienst
+
+paths:
+  /internal/v1/weather/forecast:
+    get:
+      summary: Stündliche Wettervorhersage für einen Standort abrufen
+      operationId: getForecast
+      parameters:
+        - name: locationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: latitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: longitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: elevationMeters
+          in: query
+          required: false
+          schema: { type: number }
+        - name: start
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: end
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Stündliches Wettervorhersage-Bündel von Open-Meteo
+
+  /internal/v1/weather/evaluations:
+    post:
+      summary: Wetterbewertung entlang einer berechneten Route erstellen
+      description: >
+        Interpoliert Raum-Zeit-Wegpunkte entlang der Routengeometrie gemäß
+        Aktivitätsprofil, ruft Wetterdaten ab, berechnet den 101-stufigen
+        Wetterscore inkl. Gewitter-Deckelung (thunderstormCap) und persistiert
+        das Ergebnis.
+      operationId: evaluateRouteWeather
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRouteWeatherRequest'
+      responses:
+        '200':
+          description: Persistierte Wetterbewertung der Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+
+  /internal/v1/weather/evaluations/{evaluationId}:
+    get:
+      summary: Wetterbewertung anhand ihrer ID abrufen
+      operationId: getEvaluation
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Gefundene Wetterbewertung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+        '404':
+          description: Wetterbewertung nicht gefunden
+
+  /internal/v1/weather/evaluations/by-route/{routeCalculationId}:
+    get:
+      summary: Wetterbewertung zu einer Routenberechnungs-ID abrufen
+      operationId: getEvaluationByRoute
+      parameters:
+        - name: routeCalculationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Gefundene Wetterbewertung zur Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+        '404':
+          description: Keine Wetterbewertung für diese Routenberechnung vorhanden
+
+  /internal/v1/weather/optimization:
+    post:
+      summary: Optimales Abfahrtszeitfenster für eine Route berechnen
+      description: >
+        Simuliert verschiedene Abfahrtszeitpunkte innerhalb eines Zeitfensters
+        und ermittelt den optimalen Startzeitpunkt mit dem höchsten Wetterscore.
+      operationId: optimizeDeparture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherOptimizationRequest'
+      responses:
+        '200':
+          description: Berechnete Zeitfenster-Slots und optimales Abfahrtsfenster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteWeatherOptimizationResponse'
+
+  /internal/v1/weather/ai-analysis:
+    post:
+      summary: KI-gestützte Wetteranalyse über Google Gemini & MCP-Tools erstellen
+      description: >
+        Nutzt Google Gemini zusammen mit den registrierten MCP-Wetter-Tools, um
+        Gefahrenabschnitte, verdeckte Wetterparameter, Ausrüstungsempfehlungen
+        und ein optimales Startzeitfenster zu analysieren.
+      operationId: analyzeRouteWeatherAi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherAiAnalysisRequest'
+      responses:
+        '200':
+          description: Strukturierte KI-Wetteranalyse inkl. Tool-Call-Protokoll
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteWeatherAiAnalysisResponse'
+
+  /internal/v1/weather/mcp:
+    post:
+      summary: Model Context Protocol (MCP) JSON-RPC 2.0 Server-Endpunkt
+      description: >
+        Standardkonformer MCP-Endpunkt (Protokollversion 2024-11-05).
+        Unterstützt die Methoden initialize, tools/list und tools/call für
+        spezialisierte Wetteranalyse-Tools.
+      operationId: handleMcpJsonRpc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpJsonRpcRequest'
+      responses:
+        '200':
+          description: JSON-RPC 2.0 Antwort (result oder error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpJsonRpcResponse'
+
+components:
+  schemas:
+    RouteSnapshotDto:
+      type: object
+      required: [routeCalculationId, departureTime, durationSeconds, distanceMeters, coordinates, activityProfile]
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: integer }
+        distanceMeters: { type: integer }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }
+        activityProfile:
+          type: object
+          required: [code, averageSpeedKmh, weatherQueryIntervalKm]
+          properties:
+            code: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+            averageSpeedKmh: { type: number }
+            weatherQueryIntervalKm: { type: integer }
+
+    EvaluateRouteWeatherRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+
+    WeatherEvaluationResponse:
+      type: object
+      required:
+        - evaluationId
+        - routeCalculationId
+        - status
+        - departureTime
+        - overallScore
+        - scoreVersion
+        - thunderstormCapApplied
+        - segments
+      properties:
+        evaluationId: { type: string }
+        routeCalculationId: { type: string }
+        status: { type: string, enum: [COMPLETED, FAILED] }
+        departureTime: { type: string, format: date-time }
+        overallScore: { type: integer, minimum: 0, maximum: 100 }
+        scoreVersion: { type: string }
+        thunderstormCapApplied: { type: boolean }
+        weatherDataGeneratedAt: { type: string, format: date-time }
+        weatherDataExpiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        segments:
+          type: array
+          items:
+            type: object
+            properties:
+              segmentIndex: { type: integer }
+              distanceFromStartMeters: { type: integer }
+              expectedArrivalTime: { type: string, format: date-time }
+              score: { type: integer, minimum: 0, maximum: 100 }
+              color: { type: string }
+              limitingFactor: { type: string }
+              reasonLabel: { type: string }
+
+    RouteWeatherOptimizationRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        windowStart: { type: string, format: date-time }
+        windowEnd: { type: string, format: date-time }
+
+    RouteWeatherOptimizationResponse:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        currentDepartureTime: { type: string, format: date-time }
+        currentScore: { type: integer }
+        optimalDepartureTime: { type: string, format: date-time }
+        optimalScore: { type: integer }
+        scoreImprovement: { type: integer }
+        slots:
+          type: array
+          items:
+            type: object
+            properties:
+              departureTime: { type: string, format: date-time }
+              arrivalTime: { type: string, format: date-time }
+              overallScore: { type: integer }
+              color: { type: string }
+              limitingFactor: { type: string }
+              thunderstormCapApplied: { type: boolean }
+
+    RouteWeatherAiAnalysisRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        startLabel: { type: string }
+        destinationLabel: { type: string }
+        userPrompt: { type: string }
+
+    RouteWeatherAiAnalysisResponse:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        activityProfile: { type: string }
+        overallScore: { type: integer }
+        verdictLevel: { type: string }
+        headline: { type: string }
+        summary: { type: string }
+        tacticalAdvice:
+          type: array
+          items: { type: string }
+        gearRecommendations:
+          type: array
+          items: { type: string }
+        mcpToolsInvoked:
+          type: array
+          items: { type: string }
+        aiPowered: { type: boolean }
+        modelUsed: { type: string }
+        generatedAt: { type: string, format: date-time }
+
+    McpJsonRpcRequest:
+      type: object
+      required: [jsonrpc, method]
+      properties:
+        jsonrpc: { type: string, enum: ['2.0'] }
+        id: {}
+        method: { type: string, enum: [initialize, tools/list, tools/call] }
+        params: { type: object }
+
+    McpJsonRpcResponse:
+      type: object
+      required: [jsonrpc]
+      properties:
+        jsonrpc: { type: string, enum: ['2.0'] }
+        id: {}
+        result: { type: object }
+        error:
+          type: object
+          properties:
+            code: { type: integer }
+            message: { type: string }

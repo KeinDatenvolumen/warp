@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity Gemini 3.8 Flash High): Deterministische MCP-Tools (Ereigniskarte 12)
 @Component
 public class WeatherMcpTools {
 

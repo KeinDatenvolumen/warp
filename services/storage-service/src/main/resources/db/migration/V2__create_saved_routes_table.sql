@@ -1,3 +1,4 @@
+-- [KI-Log Nr. KI-13] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Persistenz gespeicherter Routen (WARP-020/021)
 CREATE TABLE warp_storage.saved_routes
 (
     id                       VARCHAR(40)              NOT NULL,

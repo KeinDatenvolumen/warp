@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-13] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Persistenz gespeicherter Routen (WARP-020/021)
 export const MAX_ROUTE_NAME_LENGTH = 100
 
 export function validateRouteName(value: string): string | undefined {

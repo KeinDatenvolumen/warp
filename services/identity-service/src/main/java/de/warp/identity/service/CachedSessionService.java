@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity Gemini 3.8 Flash High) und im PR-Review optimiert (WARP-035)
 @Service
 public class CachedSessionService {
 

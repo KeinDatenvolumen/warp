@@ -1,3 +1,4 @@
+<!-- [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036) -->
 # WaRP-Entwicklungsumgebung mit Docker und Hot Reload
 
 Diese Dokumentation beschreibt die vollständige lokale Docker-Entwicklungsumgebung aus `docker-compose.dev.yaml`. Sie ist von den Produktions-Dockerfiles und der produktionsnahen `docker-compose.yaml` getrennt.
@@ -6,16 +7,17 @@ Diese Dokumentation beschreibt die vollständige lokale Docker-Entwicklungsumgeb
 
 Die Entwicklungsumgebung startet:
 
-- fünf Spring-Boot-Services
-- React-/TypeScript-Frontend mit Vite und HMR
+- fünf Spring-Boot-Services (inkl. Caffeine In-Memory-Caches und MCP-Server)
+- React-/TypeScript-Frontend (SPA) mit Vite und HMR
 - vier getrennte PostgreSQL-18-Instanzen
+- RabbitMQ als lokalen Message Broker für asynchronen E-Mail-Versand
 - Mailpit als lokalen SMTP-Testserver
 - Gradle Continuous Build und Spring Boot DevTools
 
 ## Voraussetzungen
 
 - Docker mit Docker Compose V2
-- freie Ports `5173`, `8025`, `1025`, `8080` bis `8084` und `5434` bis `5437`
+- freie Ports `5173`, `8025`, `1025`, `5672`, `15672`, `8080` bis `8084` und `5434` bis `5437`
 
 Java, Gradle, Node.js und npm müssen für diesen Modus nicht zwingend auf dem Host installiert sein.
 
@@ -64,6 +66,7 @@ docker compose -f docker-compose.dev.yaml up --build -d
 | Mailpit SMTP | `localhost:1025` |
 | RabbitMQ-Management-UI | `http://localhost:15672` |
 | RabbitMQ (AMQP) | `localhost:5672` |
+| Swagger UI (OpenAPI 3.1) | `http://localhost:8088` |
 
 ## Hot-Reload-Verhalten
 
@@ -240,11 +243,11 @@ docker compose -f docker-compose.dev.yaml logs -f rabbitmq
 ## Healthchecks prüfen
 
 ```bash
-curl http://localhost:8080/actuator/health/readiness
-curl http://localhost:8081/actuator/health/readiness
-curl http://localhost:8082/actuator/health/readiness
-curl http://localhost:8083/actuator/health/readiness
-curl http://localhost:8084/actuator/health/readiness
+curl http://localhost:8080/internal/health/readiness
+curl http://localhost:8081/internal/health/readiness
+curl http://localhost:8082/internal/health/readiness
+curl http://localhost:8083/internal/health/readiness
+curl http://localhost:8084/internal/health/readiness
 ```
 
 BFF-Gesamtstatus:

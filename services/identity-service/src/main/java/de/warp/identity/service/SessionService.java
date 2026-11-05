@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot GPT 5.6 Sol) und im Review/Debugging angepasst
 @Service
 public class SessionService {
 

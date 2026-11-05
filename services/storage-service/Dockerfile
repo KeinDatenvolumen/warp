@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-13] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Persistenz gespeicherter Routen (WARP-020/021)
 FROM gradle:9.8.0-jdk21 AS build
 
 WORKDIR /workspace

@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -25,4 +26,8 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+springBoot {
+    mainClass = 'de.warp.routing.RoutingServiceApplication'
 }

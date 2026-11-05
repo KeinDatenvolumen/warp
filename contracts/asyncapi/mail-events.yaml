@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036)
 asyncapi: 3.0.0
 info:
   title: WaRP Mail-Aufträge (RabbitMQ)

@@ -1,16 +1,57 @@
+# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
 openapi: 3.1.0
 info:
-  title: Identity Service Internal API – Benutzerkonto
+  title: Identity Service Internal API
   version: 1.0.0
   description: >
-    Interner REST-Vertrag zum Lesen und Ändern des eigenen Benutzerkontos.
-    Der Name ist nicht änderbar. Nach einer E-Mail-Änderung ist die Adresse
-    unverifiziert und eine Bestätigungs-E-Mail geht an die neue Adresse.
+    Interner REST-Vertrag des Identity-Service für Benutzerregistrierung,
+    Sitzungsverwaltung (mit Caffeine In-Memory-Cache für Session-Lookups),
+    E-Mail-Verifikation, Passwort-Zurücksetzung (mit asynchronem E-Mail-Versand
+    über RabbitMQ) sowie Kontodaten- und Passwort-/E-Mail-Änderungen.
 servers:
+  - url: http://localhost:8081
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
   - url: http://identity-service:8081
     description: Interner Docker-/Cluster-Dienst
 
+security:
+  - InternalServiceToken: []
+
 paths:
+  /internal/v1/users:
+    post:
+      summary: Neues Benutzerkonto registrieren
+      description: >
+        Erstellt ein neues Benutzerkonto mit BCrypt-Passwort-Hash und reiht nach
+        erfolgreichem Datenbank-Commit asynchron einen Bestätigungs-E-Mail-Auftrag
+        in RabbitMQ (warp.mail.send) ein.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: Benutzer erfolgreich angelegt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUserResponse'
+        '409':
+          description: E-Mail-Adresse bereits vergeben (EMAIL_ALREADY_EXISTS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Eingabevalidierung fehlgeschlagen
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
   /internal/v1/users/{userId}:
     get:
       summary: Benutzerdaten lesen
@@ -98,7 +139,146 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
+  /internal/v1/sessions:
+    post:
+      summary: Neue Sitzung erstellen (Anmeldung)
+      description: >
+        Prüft die Anmeldedaten zeitkonstant gegen Timing-Angriffe, erzeugt einen
+        kryptographisch sicheren Session-Token und persistiert dessen SHA-256-Hash.
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Sitzung erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedSessionResponse'
+        '401':
+          description: Ungültige Zugangsdaten (INVALID_CREDENTIALS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /internal/v1/sessions/validation:
+    post:
+      summary: Sitzungs-Token validieren
+      description: >
+        Validiert ein Sitzungs-Token anhand seines SHA-256-Hashes.
+        Der Lookup erfolgt über den lokalen Caffeine In-Memory-Cache
+        (session-lookups, TTL 5m, max. 10.000 Einträge, sync=true) auf Basis
+        eines unveränderlichen CachedSession-Records.
+      operationId: validateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionTokenRequest'
+      responses:
+        '200':
+          description: Sitzung ist gültig
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Sitzung abgelaufen oder invalidiert (SESSION_EXPIRED)
+        '404':
+          description: Sitzung nicht gefunden (SESSION_NOT_FOUND)
+
+  /internal/v1/sessions/invalidation:
+    post:
+      summary: Sitzung invalidieren (Abmeldung)
+      description: >
+        Markiert die Sitzung in der Datenbank als invalidiert und entfernt den
+        Eintrag sofort per @CacheEvict aus dem Caffeine In-Memory-Cache.
+      operationId: invalidateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionTokenRequest'
+      responses:
+        '204':
+          description: Sitzung invalidiert und Cache-Eintrag entfernt
+
+  /internal/v1/email-verifications/confirm:
+    post:
+      summary: E-Mail-Adresse mit Verifikations-Token bestätigen
+      operationId: confirmEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailVerificationRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse erfolgreich bestätigt
+        '400':
+          description: Token ungültig, abgelaufen oder bereits verwendet (INVALID_EMAIL_VERIFICATION_TOKEN)
+
+  /internal/v1/email-verifications/resend:
+    post:
+      summary: Bestätigungs-E-Mail erneut anfordern
+      operationId: resendEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerificationRequest'
+      responses:
+        '204':
+          description: Bestätigungs-E-Mail wurde erneut eingereiht
+
+  /internal/v1/password-resets/send:
+    post:
+      summary: Passwort-Zurücksetzungs-E-Mail anfordern
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendPasswordResetRequest'
+      responses:
+        '204':
+          description: Anfrage verarbeitet (verrät nicht, ob die E-Mail existiert)
+
+  /internal/v1/password-resets/confirm:
+    post:
+      summary: Neues Passwort mit Reset-Token setzen
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPasswordResetRequest'
+      responses:
+        '204':
+          description: Passwort erfolgreich zurückgesetzt
+        '400':
+          description: Reset-Token ungültig oder abgelaufen (INVALID_PASSWORD_RESET_TOKEN)
+        '422':
+          description: Passwortanforderungen nicht erfüllt (PASSWORD_REQUIREMENTS_NOT_MET)
+
 components:
+  securitySchemes:
+    InternalServiceToken:
+      type: apiKey
+      in: header
+      name: X-WaRP-Service-Token
+      description: "Interner Service-Token für Microservice-Kommunikation (lokal: local_internal_service_token_change_me)"
   parameters:
     UserIdPath:
       name: userId
@@ -114,6 +294,22 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    RegisterUserRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12 }
+    RegisteredUserResponse:
+      type: object
+      required: [id, name, email, emailVerified, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
     User:
       type: object
       required: [id, name, email, emailVerified, createdAt]
@@ -135,6 +331,55 @@ components:
       properties:
         newEmail: { type: string }
         password: { type: string }
+    CreateSessionRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    CreatedSessionResponse:
+      type: object
+      required: [sessionToken, userId, createdAt, expiresAt]
+      properties:
+        sessionToken: { type: string }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    SessionTokenRequest:
+      type: object
+      required: [sessionToken]
+      properties:
+        sessionToken: { type: string }
+    SessionResponse:
+      type: object
+      required: [id, userId, createdAt, expiresAt, emailVerified]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        emailVerified: { type: boolean }
+    ConfirmEmailVerificationRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    ResendEmailVerificationRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    SendPasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    ConfirmPasswordResetRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string, minLength: 12 }
     Problem:
       type: object
       properties:

@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
 package de.warp.routing.profile.application;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot GPT 5.6 Sol) für Sliding-Window Brute-Force-Schutz
 @Component
 public class LoginRateLimiter {
 

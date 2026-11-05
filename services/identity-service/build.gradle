@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036)
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -38,4 +39,8 @@ tasks.named('test') {
             'test-internal-service-token'
     )
     systemProperty('warp.messaging.enabled', 'false')
+}
+
+springBoot {
+    mainClass = 'de.warp.identity.IdentityServiceApplication'
 }

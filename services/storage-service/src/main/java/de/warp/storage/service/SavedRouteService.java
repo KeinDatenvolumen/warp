@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+// [KI-Log Nr. KI-13] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für Routen-Persistenz & Ownership
 @Service
 public class SavedRouteService {
 

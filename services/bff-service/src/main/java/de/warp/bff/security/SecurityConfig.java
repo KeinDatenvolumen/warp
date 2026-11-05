@@ -1,8 +1,10 @@
+// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
 package de.warp.bff.security;
 
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -47,6 +49,7 @@ public class SecurityConfig {
                 );
 
         http
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize ->
                         authorize.anyRequest().permitAll()
                 )

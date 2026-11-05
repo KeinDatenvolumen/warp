@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
 package de.warp.bff.infrastructure.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,9 @@ public class CorsConfiguration implements WebMvcConfigurer {
 
     private static final String LOCAL_FRONTEND_URL =
             "http://localhost:5173";
+
+    private static final String LOCAL_SWAGGER_UI_URL =
+            "http://localhost:8088";
 
     private final String frontendUrl;
 
@@ -35,6 +39,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
                 .allowedOrigins(
                         frontendUrl,
                         LOCAL_FRONTEND_URL,
+                        LOCAL_SWAGGER_UI_URL,
                         ALTAIR_GRAPHQL
                 )
                 .allowedMethods(

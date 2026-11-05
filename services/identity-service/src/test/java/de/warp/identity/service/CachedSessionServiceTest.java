@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
 package de.warp.identity.service;
 
 import de.warp.identity.entity.SessionEntity;
@@ -103,6 +104,30 @@ class CachedSessionServiceTest {
 
         verify(sessionRepository, times(2))
                 .findByTokenHash(tokenHash);
+    }
+
+    @Test
+    void cachedSessionLookupMeetsSubFiveMillisecondResponseTimeTarget() {
+        String tokenHash = "d".repeat(64);
+        SessionEntity session = createSession(tokenHash);
+
+        when(sessionRepository.findByTokenHash(tokenHash))
+                .thenReturn(Optional.of(session));
+
+        // Warm up cache (first lookup hits repository)
+        cachedSessionService.findByTokenHash(tokenHash);
+
+        // Measure 100 consecutive cached lookups (NFR-P-01: < 5 ms per cached lookup)
+        long startNanos = System.nanoTime();
+        for (int i = 0; i < 100; i++) {
+            CachedSession cached = cachedSessionService.findByTokenHash(tokenHash);
+            assertThat(cached.userId()).isEqualTo("usr_123");
+        }
+        long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000;
+        double avgMillisPerLookup = elapsedMillis / 100.0;
+
+        assertThat(avgMillisPerLookup).isLessThan(5.0);
+        verify(sessionRepository, times(1)).findByTokenHash(tokenHash);
     }
 
     private SessionEntity createSession(String tokenHash) {

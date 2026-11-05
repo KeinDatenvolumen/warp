@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034)
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import cookieParser from 'cookie-parser'

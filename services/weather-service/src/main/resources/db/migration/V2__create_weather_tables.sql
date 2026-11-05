@@ -1,3 +1,4 @@
+-- [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
 CREATE TABLE warp_weather.weather_evaluation (
     evaluation_id VARCHAR(40) NOT NULL,
     route_calculation_id VARCHAR(40) NOT NULL,

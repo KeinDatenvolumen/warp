@@ -1,3 +1,4 @@
+-- [KI-Log Nr. KI-11] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): E-Mail-Verifikations-Flow (WARP-007)
 CREATE TABLE warp_identity.email_verification_tokens
 (
     id          VARCHAR(40)             NOT NULL,

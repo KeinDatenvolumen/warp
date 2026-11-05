@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
 import {useQuery} from '@apollo/client/react'
 import {SYSTEM_HEALTH_QUERY} from '../api/systemHealthQuery'
 import ServiceCard from '../components/ui/ServiceCard/ServiceCard'

@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
 package de.warp.identity.filter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -146,6 +147,31 @@ class InternalServiceAuthenticationFilterTest {
                 new MockHttpServletRequest(
                         "GET",
                         "/internal/health/readiness"
+                );
+
+        MockHttpServletResponse response =
+                new MockHttpServletResponse();
+
+        MockFilterChain filterChain =
+                new MockFilterChain();
+
+        filter.doFilter(
+                request,
+                response,
+                filterChain
+        );
+
+        assertThat(filterChain.getRequest())
+                .isSameAs(request);
+    }
+
+    @Test
+    void shouldPassOptionsRequestWithoutToken()
+            throws Exception {
+        MockHttpServletRequest request =
+                new MockHttpServletRequest(
+                        "OPTIONS",
+                        "/internal/v1/sessions/test-token"
                 );
 
         MockHttpServletResponse response =

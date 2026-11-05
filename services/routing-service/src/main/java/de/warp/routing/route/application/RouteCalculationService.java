@@ -13,6 +13,7 @@ import de.warp.routing.route.api.StartRouteCalculationRequest;
 import de.warp.routing.route.persistence.RouteCalculationEntity;
 import de.warp.routing.route.persistence.RouteCalculationRepository;
 
+// [KI-Log Nr. KI-12] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für idempotente Routenberechnung
 @Service
 public class RouteCalculationService {
 

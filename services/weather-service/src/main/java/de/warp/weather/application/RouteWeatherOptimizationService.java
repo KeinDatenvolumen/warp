@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity Gemini 3.8 Flash High): Single-Fetch Optimierung & Gleichstandsregel
 @Service
 public class RouteWeatherOptimizationService {
 

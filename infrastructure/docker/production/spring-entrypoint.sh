@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# [KI-Log Nr. KI-03] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): PostgreSQL DB-per-Service & Flyway (WARP-002)
 set -eu
 
 if [ -n "${DATABASE_URL:-}" ]; then

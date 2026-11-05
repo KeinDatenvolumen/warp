@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-07] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Benutzerregistrierung & Validierung (WARP-005)
 import type {ApiFieldError} from '../../types/apiError'
 import type {
     RegistrationFieldErrors

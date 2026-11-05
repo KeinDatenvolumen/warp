@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
 import {Navigate, useLocation} from 'react-router'
 import type {PropsWithChildren} from 'react'
 import Loader from '../ui/Loader/Loader'

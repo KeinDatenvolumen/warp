@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-17] KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): Clientseitiger GPX-1.1-Export (WARP-032)
 import type { RouteGeometry } from '../../types/routeCalculation'
 
 export interface GpxExportRoute {

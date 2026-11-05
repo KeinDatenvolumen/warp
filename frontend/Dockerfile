@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-05] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Interaktive Karte & TypeScript-Migration (WARP-009)
 FROM node:22.20.0-alpine AS build
 
 WORKDIR /app

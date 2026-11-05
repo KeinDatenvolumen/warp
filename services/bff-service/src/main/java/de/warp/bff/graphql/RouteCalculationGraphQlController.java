@@ -24,6 +24,7 @@ import de.warp.bff.security.AuthenticatedSessionPrincipal;
 import de.warp.bff.application.exception.EmailNotVerifiedException;
 import tools.jackson.databind.JsonNode;
 
+// [KI-Log Nr. KI-15 & KI-17] KI-generiert (Google Antigravity Gemini 3.8 Flash High / Gemini 4 Argon Medium)
 @Controller
 public class RouteCalculationGraphQlController {
 

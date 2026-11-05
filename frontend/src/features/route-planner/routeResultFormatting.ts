@@ -1,3 +1,4 @@
+// [KI-Log Nr. KI-15] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Routenplaner-UI & Polling (WARP-013)
 export function formatDistance(
     distanceMeters: number,
 ): string {

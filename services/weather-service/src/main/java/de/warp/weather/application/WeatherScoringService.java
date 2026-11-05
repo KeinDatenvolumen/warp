@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity Gemini 3.8 Flash High): 101-Stufen-Wetterscore & Gewitterkappung
 @Service
 public class WeatherScoringService {
 

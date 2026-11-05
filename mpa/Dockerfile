@@ -1,3 +1,4 @@
+# [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034)
 FROM node:22.20.0-alpine AS build
 
 WORKDIR /app
