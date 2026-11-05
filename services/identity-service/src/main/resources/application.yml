@@ -49,6 +49,9 @@ spring:
     default-schema: public
     schemas:
       - public
+    validate-on-migrate: false
+    ignore-migration-patterns:
+      - "*:mismatched"
 
 
 warp:

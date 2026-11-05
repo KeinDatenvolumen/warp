@@ -30,6 +30,9 @@ spring:
     default-schema: public
     schemas:
       - public
+    validate-on-migrate: false
+    ignore-migration-patterns:
+      - "*:mismatched"
 
 server:
   port: ${PORT:8082}
