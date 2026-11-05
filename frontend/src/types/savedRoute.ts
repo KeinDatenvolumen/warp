@@ -23,8 +23,8 @@ export interface SavedRouteWeatherSegment {
 export interface SavedRouteSummary {
     id: string
     name: string
-    start: Pick<RoutePlace, 'label'>
-    destination: Pick<RoutePlace, 'label'>
+    start: RoutePlace
+    destination: RoutePlace
     activityProfile: ActivityProfile
     weatherScore: number
     favorite: boolean

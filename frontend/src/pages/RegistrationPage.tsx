@@ -4,10 +4,11 @@ import {
     type FormEvent,
     useState,
 } from 'react'
-import {Link} from 'react-router'
+import {Link, useNavigate} from 'react-router'
 
 import {registerUser} from '../api/registrationApi'
 import {ApiRequestError} from '../api/restClient'
+import ConfirmDialog from '../components/ui/ConfirmDialog/ConfirmDialog'
 import {mapRegistrationApiErrors} from '../features/registration/registrationErrorMapping'
 import {
     validateRegistration,
@@ -23,6 +24,7 @@ const initialValues: RegistrationValues = {
 }
 
 export default function RegistrationPage() {
+    const navigate = useNavigate()
     const [values, setValues] =
         useState<RegistrationValues>(initialValues)
 
@@ -34,6 +36,12 @@ export default function RegistrationPage() {
 
     const [successMessage, setSuccessMessage] =
         useState<string>()
+
+    const [showVerificationPopup, setShowVerificationPopup] =
+        useState(false)
+
+    const [registeredEmail, setRegisteredEmail] =
+        useState('')
 
     const [isSubmitting, setIsSubmitting] =
         useState(false)
@@ -106,13 +114,16 @@ export default function RegistrationPage() {
         setIsSubmitting(true)
 
         try {
+            const emailValue = values.email.trim()
             const response = await registerUser({
                 name: values.name.trim(),
-                email: values.email.trim(),
+                email: emailValue,
                 password: values.password,
             })
 
+            setRegisteredEmail(emailValue)
             setSuccessMessage(response.message)
+            setShowVerificationPopup(true)
         } catch (error) {
             if (error instanceof ApiRequestError) {
                 const mapped =
@@ -195,7 +206,12 @@ export default function RegistrationPage() {
                             ✓
                         </span>
 
-                        <span>{successMessage}</span>
+                        <div>
+                            <div>{successMessage}</div>
+                            <p style={{ margin: '0.35rem 0 0', fontSize: '0.875rem' }}>
+                                Bitte prüfe dein E-Mail-Postfach{registeredEmail ? ` (${registeredEmail})` : ''} und klicke auf den Aktivierungslink, um dein Konto zu bestätigen.
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -332,6 +348,17 @@ export default function RegistrationPage() {
                     </Link>
                 </div>
             </section>
+
+            <ConfirmDialog
+                open={showVerificationPopup}
+                icon="✉️"
+                title="Bitte E-Mail-Postfach prüfen"
+                description={`Wir haben einen Aktivierungslink an ${registeredEmail || 'deine E-Mail-Adresse'} gesendet. Bitte öffne die E-Mail und bestätige deine Adresse, um Routen planen und dein Konto vollständig nutzen zu können.`}
+                confirmLabel="Zum Login"
+                cancelLabel="Schließen"
+                onConfirm={() => navigate('/login')}
+                onCancel={() => setShowVerificationPopup(false)}
+            />
         </div>
     )
 }

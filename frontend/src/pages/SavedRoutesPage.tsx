@@ -1,7 +1,7 @@
 // [KI-Log Nr. KI-13] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Persistenz gespeicherter Routen (WARP-020/021)
 import {useEffect, useState} from 'react'
 import {useMutation, useQuery} from '@apollo/client/react'
-import {Link} from 'react-router'
+import {Link, useNavigate} from 'react-router'
 
 import {extractGraphQlErrorCodes} from '../api/graphqlErrors'
 import {
@@ -15,6 +15,7 @@ import {formatDate} from '../features/saved-routes/format'
 import listStyles from '../features/saved-routes/SavedRoutes.module.css'
 import styles from './PagePlaceholder.module.css'
 import FavoriteButton from '../features/saved-routes/FavoriteButton'
+import type {SavedRouteSummary} from '../types/savedRoute'
 
 const PAGE_SIZE = 20
 
@@ -27,6 +28,7 @@ interface RouteToDelete {
 }
 
 export default function SavedRoutesPage() {
+    const navigate = useNavigate()
     const [page, setPage] = useState(0)
 
     const [routeToDelete, setRouteToDelete] =
@@ -34,6 +36,28 @@ export default function SavedRoutesPage() {
     const [deleteError, setDeleteError] = useState<string>()
     const [favoriteError, setFavoriteError] = useState<string>()
     const [onlyFavorites, setOnlyFavorites] = useState(false)
+
+    function handleReplan(route: SavedRouteSummary): void {
+        navigate('/planner', {
+            state: {
+                replanRoute: {
+                    start: {
+                        placeId: `saved-start-${route.id}`,
+                        displayName: route.start.label,
+                        latitude: route.start.latitude ?? 0,
+                        longitude: route.start.longitude ?? 0,
+                    },
+                    destination: {
+                        placeId: `saved-dest-${route.id}`,
+                        displayName: route.destination.label,
+                        latitude: route.destination.latitude ?? 0,
+                        longitude: route.destination.longitude ?? 0,
+                    },
+                    activityProfile: route.activityProfile.code,
+                },
+            },
+        })
+    }
 
     const {data, loading, error, refetch} = useQuery(SAVED_ROUTES_QUERY, {
         variables: {
@@ -345,15 +369,6 @@ export default function SavedRoutesPage() {
                                         >
                                             {route.name}
                                         </span>
-
-                                        <span
-                                            className={
-                                                listStyles.openHint
-                                            }
-                                            aria-hidden="true"
-                                        >
-                                            Öffnen
-                                        </span>
                                     </span>
 
                                     <span
@@ -427,6 +442,16 @@ export default function SavedRoutesPage() {
                                 </Link>
 
                           <div className={listStyles.itemActions}>
+                              <button
+                                  type="button"
+                                  className={listStyles.replanButton}
+                                  aria-label={`Route ${route.name} neu planen`}
+                                  onClick={() => handleReplan(route)}
+                              >
+                                  <span aria-hidden="true">↻</span>
+                                  <span>Neu planen</span>
+                              </button>
+
                               <FavoriteButton
                                   routeId={route.id}
                                   routeName={route.name}

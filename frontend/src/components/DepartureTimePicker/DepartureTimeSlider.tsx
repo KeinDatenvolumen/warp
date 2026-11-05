@@ -124,48 +124,73 @@ export default function DepartureTimeSlider({
             {/* Bargraph / Departure Slot Picker */}
             <div className={styles.bargraphContainer}>
                 <div className={styles.bargraphScrollWrapper}>
-                    <div className={styles.bargraphTrack} role="listbox" aria-label="Abfahrtszeitpunkte">
-                        {slots.map((slot, idx) => {
-                            const isSelected = idx === selectedSlotIndex
-                            const isBest = idx === recommendedSlotIndex
-                            const score = Math.max(0, Math.min(100, slot.routeScore))
-                            const barHeightPercent = Math.max(12, score)
-                            const color = getScoreColor(score)
+                    <div className={styles.bargraphInner}>
+                        <div
+                            className={styles.bargraphTrack}
+                            role="listbox"
+                            aria-label="Abfahrtszeitpunkte"
+                        >
+                            {slots.map((slot, idx) => {
+                                const isSelected = idx === selectedSlotIndex
+                                const isBest = idx === recommendedSlotIndex
+                                const score = Math.max(0, Math.min(100, slot.routeScore))
+                                const barHeightPercent = Math.max(12, score)
+                                const color = getScoreColor(score)
 
-                            return (
-                                <div
-                                    key={slot.departureIso || idx}
-                                    className={`${styles.barSlot} ${isSelected ? styles.barSlotActive : ''}`}
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    title={`Start ${slot.departureTime} Uhr (ETA ${slot.arrivalTime}) · Score ${score}${slot.hasThunderCap ? ' · Gewitterrisiko' : ''}${slot.reachesNightfall ? ' · Dämmerung' : ''}`}
-                                    onClick={() => onSelectSlot(idx)}
-                                >
-                                    {isBest && (
-                                        <div className={styles.barMarkerPin}>
-                                            BEST
-                                        </div>
-                                    )}
-
+                                return (
                                     <div
-                                        className={`${styles.barFill} ${slot.reachesNightfall ? styles.barNightfall : ''}`}
-                                        style={{
-                                            height: `${barHeightPercent}%`,
-                                            backgroundColor: color,
-                                        }}
-                                    />
+                                        key={slot.departureIso || idx}
+                                        className={`${styles.barSlot} ${isSelected ? styles.barSlotActive : ''}`}
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        title={`Start ${slot.departureTime} Uhr (ETA ${slot.arrivalTime}) · Score ${score}${slot.hasThunderCap ? ' · Gewitterrisiko' : ''}${slot.reachesNightfall ? ' · Dämmerung' : ''}`}
+                                        onClick={() => onSelectSlot(idx)}
+                                    >
+                                        {isBest && (
+                                            <div className={styles.barMarkerPin}>
+                                                BEST
+                                            </div>
+                                        )}
 
-                                    {/* Show label every 4th slot (hourly) or on active/best */}
-                                    {(idx % 4 === 0 || isSelected || isBest) && (
-                                        <span
-                                            className={`${styles.slotTimeLabel} ${isSelected ? styles.slotTimeLabelActive : ''}`}
-                                        >
-                                            {slot.departureTime}
-                                        </span>
-                                    )}
-                                </div>
-                            )
-                        })}
+                                        <div
+                                            className={`${styles.barFill} ${slot.reachesNightfall ? styles.barNightfall : ''}`}
+                                            style={{
+                                                height: `${barHeightPercent}%`,
+                                                backgroundColor: color,
+                                            }}
+                                        />
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Separate timeline axis track directly beneath baseline */}
+                        <div className={styles.timelineAxis} aria-hidden="true">
+                            {slots.map((slot, idx) => {
+                                const isSelected = idx === selectedSlotIndex
+                                const isBest = idx === recommendedSlotIndex
+                                const showLabel = idx % 4 === 0 || isSelected || isBest
+
+                                return (
+                                    <div
+                                        key={slot.departureIso || idx}
+                                        className={styles.timelineSlot}
+                                        onClick={() => onSelectSlot(idx)}
+                                    >
+                                        <div
+                                            className={`${styles.tick} ${idx % 4 === 0 ? styles.majorTick : ''} ${isSelected ? styles.activeTick : ''}`}
+                                        />
+                                        {showLabel && (
+                                            <span
+                                                className={`${styles.slotTimeLabel} ${isSelected ? styles.slotTimeLabelActive : ''}`}
+                                            >
+                                                {slot.departureTime}
+                                            </span>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>

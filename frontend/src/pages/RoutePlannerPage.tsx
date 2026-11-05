@@ -8,7 +8,7 @@ import {
     type ChangeEvent,
 } from 'react'
 import { useLazyQuery, useMutation } from '@apollo/client/react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 import type { WeatherOptimizationResponse } from '../types/weatherOptimization'
 import type { RouteWeatherAiAnalysisResponse } from '../types/weatherAiAnalysis'
@@ -84,6 +84,7 @@ function readSelectedProfile(): ActivityProfileCode | null {
 
 export default function RoutePlannerPage() {
     const { isAuthenticated } = useAuth()
+    const location = useLocation()
 
     const [selectedProfile, setSelectedProfile] =
         useState<ActivityProfileCode | null>(readSelectedProfile)
@@ -215,6 +216,33 @@ export default function RoutePlannerPage() {
         canExportRouteAsGpx(completedRouteCalculation.geometry)
 
     useEffect(() => {
+        const replan = (
+            location.state as {
+                replanRoute?: {
+                    start?: Place
+                    destination?: Place
+                    activityProfile?: ActivityProfileCode
+                }
+            } | null
+        )?.replanRoute
+
+        if (replan) {
+            if (replan.start) {
+                setSelectedStart(replan.start)
+                setStartInput(replan.start.displayName)
+            }
+            if (replan.destination) {
+                setSelectedDestination(replan.destination)
+                setDestinationInput(replan.destination.displayName)
+            }
+            if (replan.activityProfile) {
+                setSelectedProfile(replan.activityProfile)
+            }
+            setDepartureTime(createInitialDepartureTime())
+        }
+    }, [location.state])
+
+    useEffect(() => {
         if (
             !completedRouteCalculation?.geometry?.coordinates ||
             completedRouteCalculation.geometry.coordinates.length < 2
@@ -241,7 +269,22 @@ export default function RoutePlannerPage() {
             .then((data) => {
                 if (isCancelled) return
                 setOptimizationData(data)
-                setSelectedSlotIndex(data.recommendedSlotIndex)
+                // Select initial departure time slot so route score and map stay consistent without jumping
+                const targetMs = new Date(
+                    completedRouteCalculation.departureTime,
+                ).getTime()
+                let initialIdx = 0
+                let minDiff = Infinity
+                data.departureSlots.forEach((slot, idx) => {
+                    const diff = Math.abs(
+                        new Date(slot.departureIso).getTime() - targetMs,
+                    )
+                    if (diff < minDiff) {
+                        minDiff = diff
+                        initialIdx = idx
+                    }
+                })
+                setSelectedSlotIndex(initialIdx)
             })
             .catch(() => {
                 if (isCancelled) return
@@ -608,9 +651,18 @@ export default function RoutePlannerPage() {
             }
 
             if (payload.errors.length > 0) {
-                setRouteCalculationError(
-                    payload.errors.map((error) => error.message).join(' '),
+                const isUnverified = payload.errors.some(
+                    (error) => error.code === 'EMAIL_NOT_VERIFIED',
                 )
+                if (isUnverified) {
+                    setRouteCalculationError(
+                        'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.',
+                    )
+                } else {
+                    setRouteCalculationError(
+                        payload.errors.map((error) => error.message).join(' '),
+                    )
+                }
                 return
             }
 
@@ -643,10 +695,28 @@ export default function RoutePlannerPage() {
                     isPollingRef.current = false
                 }
             }
-        } catch {
-            setRouteCalculationError(
-                'Die Routenberechnung konnte nicht gestartet werden.',
-            )
+        } catch (err: unknown) {
+            const apolloError = err as {
+                graphQLErrors?: Array<{
+                    extensions?: { code?: string }
+                    message?: string
+                }>
+                message?: string
+            }
+            const isUnverified =
+                apolloError?.graphQLErrors?.some(
+                    (e) => e.extensions?.code === 'EMAIL_NOT_VERIFIED',
+                ) || Boolean(apolloError?.message?.includes('EMAIL_NOT_VERIFIED'))
+
+            if (isUnverified) {
+                setRouteCalculationError(
+                    'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.',
+                )
+            } else {
+                setRouteCalculationError(
+                    'Die Routenberechnung konnte nicht gestartet werden.',
+                )
+            }
         }
     }
 
@@ -961,14 +1031,19 @@ export default function RoutePlannerPage() {
                         <span>{routeCalculationError}</span>
                     </div>
                 )}
-                {startRouteCalculationGraphQlError && (
+                {!routeCalculationError && startRouteCalculationGraphQlError && (
                     <div
                         className={statusClass(styles.statusBannerError)}
                         role="alert"
                     >
                         <span>
-                            Die Routenberechnung konnte wegen eines
-                            Kommunikationsfehlers nicht gestartet werden.
+                            {'graphQLErrors' in startRouteCalculationGraphQlError &&
+                            Array.isArray((startRouteCalculationGraphQlError as { graphQLErrors?: Array<{ extensions?: { code?: string } }> }).graphQLErrors) &&
+                            (startRouteCalculationGraphQlError as { graphQLErrors: Array<{ extensions?: { code?: string } }> }).graphQLErrors.some(
+                                (e) => e.extensions?.code === 'EMAIL_NOT_VERIFIED',
+                            )
+                                ? 'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.'
+                                : 'Die Routenberechnung konnte wegen eines Kommunikationsfehlers nicht gestartet werden.'}
                         </span>
                     </div>
                 )}

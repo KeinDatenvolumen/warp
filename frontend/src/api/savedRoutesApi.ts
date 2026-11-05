@@ -30,9 +30,13 @@ export const SAVED_ROUTES_QUERY: TypedDocumentNode<
                 name
                 start {
                     label
+                    latitude
+                    longitude
                 }
                 destination {
                     label
+                    latitude
+                    longitude
                 }
                 activityProfile {
                     code

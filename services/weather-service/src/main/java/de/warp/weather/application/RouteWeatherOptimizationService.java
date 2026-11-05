@@ -112,9 +112,19 @@ public class RouteWeatherOptimizationService {
         Instant baseDeparture = routeSnapshot.departureTime() != null
                 ? routeSnapshot.departureTime()
                 : Instant.now();
-        Instant windowStart = requestedWindowStart != null
-                ? WeatherCacheService.normalizeToQuarterHour(requestedWindowStart)
-                : WeatherCacheService.normalizeToQuarterHour(baseDeparture.minus(Duration.ofHours(2)));
+        Instant windowStart;
+        if (requestedWindowStart != null) {
+            windowStart = WeatherCacheService.normalizeToQuarterHour(requestedWindowStart);
+        } else {
+            Instant candidateStart = WeatherCacheService.normalizeToQuarterHour(baseDeparture.minus(Duration.ofHours(2)));
+            Instant nowCeil = ceilToQuarterHour(Instant.now());
+            // Prevent proposing departure slots in the past if baseDeparture is recent or in the future
+            if (baseDeparture.isAfter(Instant.now().minus(Duration.ofHours(6))) && candidateStart.isBefore(nowCeil)) {
+                windowStart = nowCeil;
+            } else {
+                windowStart = candidateStart;
+            }
+        }
         Instant windowEnd = requestedWindowEnd != null
                 ? WeatherCacheService.normalizeToQuarterHour(requestedWindowEnd)
                 : WeatherCacheService.normalizeToQuarterHour(baseDeparture.plus(Duration.ofHours(10)));
@@ -202,9 +212,6 @@ public class RouteWeatherOptimizationService {
         double tau = scoringProfile == WeatherScoringService.ScoringActivityProfile.MOTORCYCLE
                 ? 12.0
                 : scoringProfile == WeatherScoringService.ScoringActivityProfile.BICYCLE ? 14.0 : 15.0;
-        double nightPenalty = scoringProfile == WeatherScoringService.ScoringActivityProfile.HIKING
-                ? 0.25
-                : scoringProfile == WeatherScoringService.ScoringActivityProfile.BICYCLE ? 0.55 : 0.65;
 
         List<DepartureSlotResultDto> rawSlots = new ArrayList<>(numDepartureSlots);
 
@@ -242,12 +249,9 @@ public class RouteWeatherOptimizationService {
             double thunderCap = hasThunderCap ? 50.0 : 100.0;
             double routeRaw = Math.min(bottleneckCap, Math.min(thunderCap, 0.35 * linearMean + 0.65 * softMin));
 
-            // Daylight evaluation
+            // Daylight evaluation (informational indicator for advantage summary)
             int arrivalSlotIdx = Math.min(t0 + totalSlotsOffset, totalGridSlots - 1);
             boolean reachesNightfall = !isDayArray[arrivalSlotIdx] || !isDayArray[t0];
-            if (reachesNightfall) {
-                routeRaw *= nightPenalty;
-            }
 
             int finalScore = (int) Math.round(Math.clamp(routeRaw, 0.0, 100.0));
             Instant depInstant = timeSlotInstants.get(t0);
@@ -527,6 +531,13 @@ public class RouteWeatherOptimizationService {
         if (b == null) return a;
         double diff = ((b - a + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
         return ((a + alpha * diff) % 360.0 + 360.0) % 360.0;
+    }
+
+    public static Instant ceilToQuarterHour(Instant timestamp) {
+        Objects.requireNonNull(timestamp, "timestamp must not be null");
+        long epochSeconds = timestamp.getEpochSecond();
+        long ceiledSeconds = ((epochSeconds + 899L) / 900L) * 900L;
+        return Instant.ofEpochSecond(ceiledSeconds);
     }
 
     private static WeatherValues fallbackWeatherValues() {

@@ -156,6 +156,29 @@ export default function SavedRouteDetailPage() {
         }
     }
 
+    function handleReplan(): void {
+        if (!route) return
+        navigate('/planner', {
+            state: {
+                replanRoute: {
+                    start: {
+                        placeId: `saved-start-${route.id}`,
+                        displayName: route.start.label,
+                        latitude: route.start.latitude,
+                        longitude: route.start.longitude,
+                    },
+                    destination: {
+                        placeId: `saved-dest-${route.id}`,
+                        displayName: route.destination.label,
+                        latitude: route.destination.latitude,
+                        longitude: route.destination.longitude,
+                    },
+                    activityProfile: route.activityProfile.code,
+                },
+            },
+        })
+    }
+
     const notFound =
         extractGraphQlErrorCodes(error).includes(
             'SAVED_ROUTE_NOT_FOUND',
@@ -167,7 +190,7 @@ export default function SavedRouteDetailPage() {
 
     return (
         <div className={styles.page}>
-            <div className={listStyles.actions}>
+            <div className={listStyles.detailNav}>
                 <Link
                     to="/saved-routes"
                     className={listStyles.primaryLink}
@@ -176,6 +199,17 @@ export default function SavedRouteDetailPage() {
                     {' '}
                     Alle gespeicherten Routen
                 </Link>
+
+                {route && (
+                    <button
+                        type="button"
+                        className={listStyles.replanButton}
+                        onClick={handleReplan}
+                    >
+                        <span aria-hidden="true">↻</span>
+                        <span>Route neu planen</span>
+                    </button>
+                )}
             </div>
 
             {loading && !route && (
@@ -440,6 +474,15 @@ export default function SavedRouteDetailPage() {
                         )}
 
                         <div className={listStyles.actions}>
+                            <button
+                                type="button"
+                                className={listStyles.replanButton}
+                                onClick={handleReplan}
+                            >
+                                <span aria-hidden="true">↻</span>
+                                <span>Route neu planen</span>
+                            </button>
+
                             <FavoriteButton
                                 routeId={route.id}
                                 routeName={route.name}

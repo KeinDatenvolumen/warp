@@ -366,4 +366,44 @@ describe('RoutePlannerPage', () => {
         expect(await screen.findByText(/melde dich an/i)).toBeInTheDocument()
         expect(screen.queryByLabelText('Name der Route')).not.toBeInTheDocument()
     })
+
+    it('zeigt eine verständliche Fehlermeldung bei nicht verifizierter E-Mail statt technischer Kommunikationsfehler', async () => {
+        useAuthMock.mockReturnValue({ isAuthenticated: true })
+        startCalculationMock.mockResolvedValue({
+            data: {
+                startRouteCalculation: {
+                    calculation: null,
+                    errors: [
+                        {
+                            code: 'EMAIL_NOT_VERIFIED',
+                            field: null,
+                            message: 'Die E-Mail-Adresse ist noch nicht verifiziert.',
+                        },
+                    ],
+                },
+            },
+        })
+
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(screen.getByRole('button', { name: /Fahrrad/ }))
+
+        await user.type(screen.getByLabelText('Startpunkt'), 'Mosbach')
+        await user.click(await screen.findByRole('button', { name: 'Mosbach' }))
+
+        await user.type(screen.getByLabelText('Zielpunkt'), 'Mergentheim')
+        await user.click(await screen.findByRole('button', { name: 'Bad Mergentheim' }))
+
+        await user.click(screen.getByRole('button', { name: 'Route berechnen' }))
+
+        expect(
+            await screen.findByText(
+                'Dein Account ist noch nicht verifiziert. Bitte bestätige den Aktivierungslink in deinem E-Mail-Postfach, um Routen berechnen zu können.',
+            ),
+        ).toBeInTheDocument()
+        expect(
+            screen.queryByText(/Kommunikationsfehlers/i),
+        ).not.toBeInTheDocument()
+    })
 })
