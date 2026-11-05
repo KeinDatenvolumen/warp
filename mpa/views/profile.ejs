@@ -7,8 +7,8 @@
     <div class="profile-header-card">
       <div class="profile-avatar-large">👤</div>
       <div class="profile-header-text">
-        <span class="profile-badge">Benutzerprofil (GraphQL)</span>
-        <h1 class="profile-name"><%= user.name %></h1>
+        <span class="profile-badge">Interessenten- & Community-Touchpoint</span>
+        <h1 class="profile-name">Willkommen, <%= user.name %>!</h1>
         <p class="profile-email"><%= user.email %></p>
       </div>
     </div>
@@ -16,69 +16,115 @@
     <%- include('partials/alerts') %>
 
     <div class="profile-grid">
-      <!-- Kontoinformationen -->
+      <!-- Dein Profil & Mitgliedschaft -->
       <section class="card profile-info-card">
         <div class="card-header">
-          <h2>Kontodaten</h2>
-          <span class="badge badge-graphql">Geladen per GraphQL</span>
+          <h2>Dein Mitgliedsstatus</h2>
+          <% if (user.emailVerified) { %>
+            <span class="badge badge-success">✓ Bestätigt</span>
+          <% } else { %>
+            <span class="badge badge-warning">⏳ E-Mail unbestätigt</span>
+          <% } %>
         </div>
         <div class="card-body">
           <dl class="data-list">
             <div class="data-item">
-              <dt>Vollständiger Name</dt>
+              <dt>Name</dt>
               <dd><strong><%= user.name %></strong></dd>
             </div>
             <div class="data-item">
               <dt>E-Mail-Adresse</dt>
-              <dd>
-                <span><%= user.email %></span>
-                <% if (user.emailVerified) { %>
-                  <span class="badge badge-success">✓ Bestätigt</span>
-                <% } else { %>
-                  <span class="badge badge-warning">⏳ Nicht bestätigt</span>
-                <% } %>
-              </dd>
-            </div>
-            <div class="data-item">
-              <dt>Benutzer-ID</dt>
-              <dd><code><%= user.id %></code></dd>
+              <dd><%= user.email %></dd>
             </div>
             <div class="data-item">
               <dt>Mitglied seit</dt>
               <dd><%= formattedCreatedAt %></dd>
             </div>
+            <div class="data-item">
+              <dt>Sitzungsdauer</dt>
+              <dd>Sicher angemeldet bis <%= formattedExpiresAt %></dd>
+            </div>
           </dl>
+          <div class="profile-card-footer text-muted">
+            <small>Konto-ID: <%= user.id %> • Anbindung über WaRP GraphQL Gateway</small>
+          </div>
         </div>
       </section>
 
-      <!-- Sitzungsinformationen -->
+      <!-- Aktueller Projekt-Status -->
       <section class="card profile-session-card">
         <div class="card-header">
-          <h2>Aktive Sitzung</h2>
-          <span class="badge badge-info">Sicher</span>
+          <h2>Projekt-Status & Roadmap</h2>
+          <span class="badge badge-info">Version 1.0 Live</span>
         </div>
         <div class="card-body">
-          <dl class="data-list">
-            <div class="data-item">
-              <dt>Sitzungs-Status</dt>
-              <dd><span class="badge badge-success">● Aktiv</span></dd>
-            </div>
-            <div class="data-item">
-              <dt>Angemeldet am</dt>
-              <dd><%= formattedSessionCreatedAt %></dd>
-            </div>
-            <div class="data-item">
-              <dt>Sitzung gültig bis</dt>
-              <dd><strong><%= formattedExpiresAt %></strong></dd>
-            </div>
-            <div class="data-item">
-              <dt>Sicherheitsmerkmale</dt>
-              <dd>HttpOnly Cookie, SameSite Lax</dd>
-            </div>
-          </dl>
+          <p style="font-size: 0.95rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+            Hier erfährst du, woran das WaRP-Team aktuell arbeitet und welche Neuerungen für dich als Interessent und Nutzer anstehen:
+          </p>
+          <ul class="roadmap-list">
+            <li class="roadmap-item">
+              <span>✅</span>
+              <div>
+                <strong>DWD & Open-Meteo Integration:</strong>
+                Präzise Wetterdaten entlang des gesamten Routenverlaufs.
+              </div>
+            </li>
+            <li class="roadmap-item">
+              <span>✅</span>
+              <div>
+                <strong>KI-Wetterberater:</strong>
+                Empfehlungen für Bekleidung und Ausrüstung in natürlicher Sprache.
+              </div>
+            </li>
+            <li class="roadmap-item">
+              <span>🚀</span>
+              <div>
+                <strong>In Planung:</strong>
+                Schutzhütten-POIs, Offline-Karten und mobile App-Unterstützung.
+              </div>
+            </li>
+          </ul>
         </div>
       </section>
     </div>
+
+    <!-- Vollbreiter Touchpoint für Interessenten & Partner -->
+    <section class="touchpoint-card card">
+      <div class="card-header">
+        <h2>Möglichkeiten für Interessenten, Partner & Tester</h2>
+        <span class="badge badge-graphql">Community & Co-Creation</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 1rem; color: var(--color-text); margin-bottom: 1.5rem; line-height: 1.5;">
+          WaRP versteht sich als offene Plattform für innovative Mobilitätslösungen. Als registrierter Interessent hast du exklusive Möglichkeiten, die Zukunft wetterbewusster Routenplanung aktiv mitzugestalten:
+        </p>
+
+        <div class="touchpoint-columns">
+          <div class="touchpoint-col">
+            <h3><span>🧪</span> Early Access</h3>
+            <p>
+              Probiere neue Routen- und Wetterbewertungsalgorithmen noch vor dem offiziellen Release auf deinen Lieblingstouren aus.
+            </p>
+          </div>
+          <div class="touchpoint-col">
+            <h3><span>💬</span> Feedback & Ideen</h3>
+            <p>
+              Fehlen dir bestimmte Wetterkriterien wie UV-Index oder Windschatten? Teile deine Ideen direkt mit unserem Entwicklungsteam.
+            </p>
+          </div>
+          <div class="touchpoint-col">
+            <h3><span>🤝</span> Kooperationen</h3>
+            <p>
+              Interessant für Tourismusregionen, Sportvereine und Navigationsplattformen: Wir bieten Schnittstellen und Know-how für Kooperationen.
+            </p>
+          </div>
+        </div>
+
+        <div class="contact-highlight-box">
+          <strong>Direkter Draht zum Entwicklungsteam:</strong> Du möchtest dich mit uns austauschen, hast Anregungen oder Interesse an einer Zusammenarbeit? Erreiche uns jederzeit unter <code>team@warp-routing.local</code> oder informiere dich in unserem Projekt-Repository.
+        </div>
+      </div>
+    </section>
 
     <!-- Quick Links & Actions -->
     <div class="profile-actions-card">
@@ -88,7 +134,7 @@
           🗺️ Zum Routenplaner (SPA) öffnen ↗
         </a>
         <a href="/" class="btn btn-outline btn-lg">
-          🏠 Zurück zur Übersicht
+          🏠 Zurück zur Projektübersicht
         </a>
         <form action="/logout" method="POST" class="inline-form">
           <button type="submit" class="btn btn-danger btn-lg">

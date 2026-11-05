@@ -8,11 +8,12 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="hero-badge">WaRP Multi-Page Application</div>
+      <div class="hero-badge">Projektinitiative WaRP • Smarte Outdoor-Mobilität</div>
       <h1 class="hero-title">Weather-Aware Route Planner</h1>
       <p class="hero-subtitle">
-        Plane und verwalte deine Routen abgestimmt auf das Wetter.
-        Schnell, sicher und direkt mit unserem Backend verbunden.
+        Warum sollte das Wetter deine Pläne durchkreuzen? WaRP verbindet meteorologische Präzisionsdaten
+        mit dynamischer Streckenberechnung für Radfahrer, Motorradfahrer und Wanderer –
+        für maximale Sicherheit, weniger Regenschauer und das optimale Abfahrtszeitfenster.
       </p>
 
       <% if (locals.isAuthenticated && user) { %>
@@ -20,10 +21,10 @@
           <div class="greeting-avatar">👤</div>
           <div class="greeting-content">
             <h2>Willkommen zurück, <%= user.name %>!</h2>
-            <p>Angemeldet mit <code><%= user.email %></code></p>
+            <p>Angemeldet mit <code><%= user.email %></code> • Entdecke die Projektvision oder starte direkt eine Tour.</p>
           </div>
           <div class="greeting-actions">
-            <a href="/profile" class="btn btn-primary">Mein Profil ansehen</a>
+            <a href="/profile" class="btn btn-primary">Mein Profil & Touchpoint</a>
             <a href="<%= routePlannerUrl %>" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
               Zum Routenplaner ↗
             </a>
@@ -31,33 +32,146 @@
         </div>
       <% } else { %>
         <div class="hero-cta-group">
-          <a href="/login" class="btn btn-primary btn-lg">Jetzt Anmelden</a>
-          <a href="/register" class="btn btn-outline btn-lg">Konto erstellen</a>
-          <a href="<%= routePlannerUrl %>" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
-            Routenplaner starten ↗
+          <a href="<%= routePlannerUrl %>" class="btn btn-accent btn-lg" target="_blank" rel="noopener noreferrer">
+            Routenplaner direkt testen ↗
           </a>
+          <a href="/register" class="btn btn-primary btn-lg">Konto erstellen</a>
+          <a href="/login" class="btn btn-outline btn-lg">Anmelden</a>
         </div>
       <% } %>
     </section>
 
-    <!-- Routenplaner Card -->
+    <!-- Unsere Motivation -->
+    <section class="section-container" id="motivation">
+      <div class="section-header">
+        <span class="section-eyebrow">Unsere Motivation</span>
+        <h2>Warum herkömmliche Navis bei Wetterumschwüngen versagen</h2>
+        <p class="section-desc">
+          Jeder Outdoor-Begeisterte kennt das Dilemma: Die Tour startet bei blauem Himmel, doch zwei Stunden
+          später überrascht eine Regenfront oder tückische Sturmböen machen die Weiterfahrt unsicher.
+        </p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">🌧️</div>
+          <h3>Starre Routenführung</h3>
+          <p>
+            Klassische Routenplaner kennen nur Start, Ziel und Straßennetze. Wie sich das Wetter entlang deiner Tour über die nächsten Stunden verändert, bleibt völlig unberücksichtigt.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">📱</div>
+          <h3>App-Chaos unterwegs</h3>
+          <p>
+            Wer auf Nummer sicher gehen will, jongliert mühsam zwischen Navigations-Apps, Regenradaren und Windprognosen. Die Abfahrtszeit bleibt dabei oft ein riskantes Glücksspiel.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">💡</div>
+          <h3>Wetter als aktiver Faktor</h3>
+          <p>
+            WaRP schließt diese Lücke: Wir berechnen die Wetterbedingungen genau für den Moment, in dem du einen Streckenabschnitt passierst – für planbare und entspannte Touren.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Unsere Vision -->
+    <section class="section-container">
+      <div class="section-header">
+        <span class="section-eyebrow">Unsere Vision</span>
+        <h2>Vorausschauende Mobilität für alle Outdoor-Begeisterten</h2>
+        <p class="section-desc">
+          Wir wollen Outdoor-Mobilität sicherer, verlässlicher und unbeschwerter machen – ganz gleich, wie das Wetter spielt.
+        </p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">🛡️</div>
+          <h3>Sicherheit voranbringen</h3>
+          <p>
+            Kritische Wetterphänomene wie Aquaplaning-Risiko, Sturmböen oder plötzliche Kälteeinbrüche frühzeitig erkennen und durch smarte Alternativrouten umgehen.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">⏱️</div>
+          <h3>Das perfekte Zeitfenster</h3>
+          <p>
+            Oft entscheidet eine halbe Stunde über Sonnenschein oder Dauerregen. Unser intelligenter Zeitschieber ermittelt den besten Startzeitpunkt im Handumdrehen.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🤝</div>
+          <h3>Offen & Individualisiert</h3>
+          <p>
+            Ob sportliches Rennrad, kurvige Motorradstrecke oder alpine Wanderroute: WaRP passt sich den individuellen Anforderungen deines Fortbewegungsmittels an.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Was kann unser Produkt? (Produktfunktionen) -->
+    <section class="section-container">
+      <div class="section-header">
+        <span class="section-eyebrow">Produktfunktionen</span>
+        <h2>Was kann unser Produkt?</h2>
+        <p class="section-desc">
+          Modernste Wettermodelle, intelligente Algorithmen und praktische Werkzeuge für deine Streckenplanung:
+        </p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">🎯</div>
+          <h3>101-Punkte Wetter-Score</h3>
+          <p>
+            Ein transparenter Score von 0 bis 100 fasst Temperatur, Niederschlag, Wind und Sichtbedingungen entlang deiner Route verständlich zusammen.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">⏰</div>
+          <h3>Intelligenter Abfahrtszeit-Schieber</h3>
+          <p>
+            Erkunde Startzeiten im 15-Minuten-Raster für bis zu ±2 Stunden. So siehst du sofort, ob eine frühere oder spätere Abfahrt das Wetter spürbar verbessert.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🤖</div>
+          <h3>KI-gestützter Wetterberater</h3>
+          <p>
+            Unser digitaler Assistent bewertet die meteorologische Lage verständlich in Klartext und gibt dir wertvolle Empfehlungen zu Kleidung und Ausrüstung.
+          </p>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">💾</div>
+          <h3>Routen speichern & GPX-Export</h3>
+          <p>
+            Plane im Voraus, sichere deine Lieblingsrouten in deinem Konto und exportiere sie als standardisierte GPX-Datei für dein Fahrrad-Navi, Smartwatch oder Motorrad.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interaktiver Routenplaner Teaser Card -->
     <section class="planner-feature-card">
-      <div class="planner-card-badge">Interaktive Anwendung</div>
+      <div class="planner-card-badge">Live erleben</div>
       <div class="planner-card-grid">
         <div class="planner-card-text">
-          <h2>Interaktiver Routenplaner (SPA)</h2>
+          <h2>Der interaktive Routenplaner</h2>
           <p>
-            Der vollwertige Routenplaner läuft als Single-Page Application (SPA) mit interaktiver Karte,
-            Echtzeit-Wetteranalyse entlang deiner Route, Höhenprofilen und KI-gestützter Beratung.
+            Erlebe die Zukunft des Routenplanens direkt im Browser: Interaktive Karte, Höhenprofil,
+            dynamischer Zeitschieber und KI-Wetteranalyse in Echtzeit.
           </p>
           <ul class="feature-bullets">
-            <li>🗺️ Interaktive Kartenansicht mit Wegpunkten und Geocoding</li>
-            <li>⛅ Dynamischer Wetter-Score auf Basis des DWD-Wettermodells</li>
-            <li>⏰ 30-Minuten-Abfahrtszeitfenster für optimale Reisezeiten</li>
-            <li>🤖 KI-Wetterberater mit kontextbezogenen Reiseempfehlungen</li>
+            <li>🗺️ Interaktive Kartenansicht mit Wegpunkten und weltweitem Geocoding</li>
+            <li>⛅ Streckenbezogene Wetterprognosen im 15-Minuten-Intervall</li>
+            <li>📊 Höhenprofil und detaillierte Wetterabschnitte auf einen Blick</li>
+            <li>🤖 Kontextbezogene KI-Reiseberatung für jede geplante Tour</li>
           </ul>
           <a href="<%= routePlannerUrl %>" class="btn btn-accent btn-lg" target="_blank" rel="noopener noreferrer">
-            Zum interaktiven Routenplaner (SPA) öffnen ↗
+            Routenplaner jetzt starten ↗
           </a>
         </div>
         <div class="planner-card-visual">
@@ -66,14 +180,14 @@
               <span class="dot dot-red"></span>
               <span class="dot dot-yellow"></span>
               <span class="dot dot-green"></span>
-              <span class="mockup-title">WaRP Route Planner SPA</span>
+              <span class="mockup-title">WaRP Live Route Planner</span>
             </div>
             <div class="mockup-body">
               <div class="mockup-row">
                 <span class="badge badge-success">Wetter-Score: 88 / 100</span>
                 <span class="badge badge-info">Fahrrad-Profil</span>
               </div>
-              <p class="mockup-text">Optimale Route berechnet • Keine Unwetterwarnungen</p>
+              <p class="mockup-text">Optimale Startzeit: 14:15 Uhr • Trockene Abschnitte auf 94 % der Strecke</p>
               <div class="mockup-progress"></div>
             </div>
           </div>
@@ -81,13 +195,13 @@
       </div>
     </section>
 
-    <!-- Activity Profiles Section (GraphQL-powered) -->
+    <!-- Aktivitätsprofile Section -->
     <section class="section-container">
       <div class="section-header">
-        <span class="section-eyebrow">GraphQL Backend</span>
-        <h2>Verfügbare Aktivitätsprofile</h2>
+        <span class="section-eyebrow">Für wen ist WaRP gedacht?</span>
+        <h2>Maßgeschneiderte Aktivitätsprofile</h2>
         <p class="section-desc">
-          Die folgenden Aktivitätsprofile werden dynamisch per <strong>GraphQL</strong> vom BFF geladen:
+          Jedes Fortbewegungsmittel hat spezifische Wetteranforderungen. WaRP berücksichtigt diese Unterschiede direkt im Bewertungsmodell:
         </p>
       </div>
 
@@ -106,16 +220,15 @@
               <% } %>
             </div>
             <h3 class="profile-card-title"><%= profile.displayName %></h3>
-            <p class="profile-card-code">Code: <code><%= profile.code %></code></p>
             <p class="profile-card-text">
               <% if (profile.code === 'BICYCLE') { %>
-                Angepasste Wetterbewertung für Radfahrer mit besonderem Fokus auf Wind und Niederschlag.
+                Für Rennrad, Gravel und Alltagsradler: Windrichtung, Gegenwind-Prognose und Niederschlag fließen stark in die Routenbewertung ein.
               <% } else if (profile.code === 'MOTORCYCLE') { %>
-                Berücksichtigt nasse Kurven, Sichtweiten und Sturmböen für sicheres Motorradfahren.
+                Für Motorrad- und Kurvenliebhaber: Priorisiert Grip, Sichtweiten und meidet gefährliche Fahrbahnnässe sowie Sturmböen.
               <% } else if (profile.code === 'HIKING') { %>
-                Optimiert für Fußgänger und Wanderer mit Schutz vor plötzlichen Wetterumschwüngen.
+                Für Wanderer und Outdoorsportler: Fokus auf Temperaturstürze, Gewitterrisiko und Schutz vor ungemütlichen Wetterwechseln im Gelände.
               <% } else { %>
-                Zentral konfiguriertes Aktivitätsprofil im WaRP-System.
+                Optimiertes Profil für maßgeschneiderte Tourenplanung im WaRP-System.
               <% } %>
             </p>
           </div>
@@ -123,28 +236,14 @@
       </div>
     </section>
 
-    <!-- MPA Architecture Info Section -->
-    <section class="section-container info-section">
+    <!-- Über das Projekt -->
+    <section class="section-container">
       <div class="section-header">
-        <span class="section-eyebrow">Architektur</span>
-        <h2>WaRP Multi-Page Application (MPA)</h2>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-icon">⚡</div>
-          <h3>Server-Side Rendering</h3>
-          <p>Klassische Multi-Page Architektur mit Node.js und Express für blitzschnelle Ladezeiten und geringen Client-Overhead.</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon">🔮</div>
-          <h3>GraphQL-Integration</h3>
-          <p>Effiziente Datenabfrage über den GraphQL-Vertrag des Backend-for-Frontend (BFF).</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon">🔒</div>
-          <h3>Sichere Sitzungen</h3>
-          <p>Zentrale Authentifizierung über HttpOnly-Cookies mit SameSite- und HTTPS-Schutz.</p>
-        </div>
+        <span class="section-eyebrow">Über das Projekt</span>
+        <h2>Entstehung an der DHBW Mosbach</h2>
+        <p class="section-desc">
+          WaRP wurde als innovatives Mobilitätsprojekt im Rahmen des Moduls Fortgeschrittene Systementwicklung an der DHBW Mosbach ins Leben gerufen. Unser Anspruch: Komplexe meteorologische Datenmodelle verständlich und nützlich für jeden Outdoor-Sportler nutzbar zu machen.
+        </p>
       </div>
     </section>
   </div>

@@ -155,6 +155,25 @@ services:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
 
+  mpa:
+    build:
+      context: .
+      dockerfile: mpa/Dockerfile.dev
+    working_dir: /app
+    environment:
+      PORT: "8085"
+      BFF_URL: "http://bff-service:8080"
+      ROUTE_PLANNER_URL: "http://localhost:5173/route-planner"
+    init: true
+    ports:
+      - "8085:8085"
+    depends_on:
+      - bff-service
+    restart: unless-stopped
+    volumes:
+      - ./mpa:/app
+      - mpa-node-modules:/app/node_modules
+
   identity-db:
     image: postgres:18-alpine
     environment:
@@ -288,6 +307,7 @@ volumes:
   storage-build:
 
   frontend-node-modules:
+  mpa-node-modules:
 
   identity-db-data:
   routing-db-data:
