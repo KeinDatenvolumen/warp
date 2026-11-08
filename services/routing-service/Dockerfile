@@ -1,4 +1,8 @@
-# [KI-Log Nr. KI-04] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): GraphQL BFF & Apollo Client (WARP-003/004)
+# [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-018] (73ce21c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: update Dockerfiles, unpriviliged User (WARP-002)
+# [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 FROM gradle:9.8.0-jdk21 AS build
 
 WORKDIR /workspace

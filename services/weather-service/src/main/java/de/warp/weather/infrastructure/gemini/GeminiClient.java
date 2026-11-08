@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.infrastructure.gemini;
 
 import org.slf4j.Logger;
@@ -129,11 +131,23 @@ public class GeminiClient {
         if (responseRoot == null) {
             throw new IllegalStateException("Empty response from Gemini API");
         }
+        JsonNode blockReason = responseRoot.path("promptFeedback").path("blockReason");
+        if (!blockReason.isMissingNode() && !blockReason.asString("").isBlank()) {
+            throw new IllegalStateException("Gemini request was blocked by safety filters: " + blockReason.asString(""));
+        }
         JsonNode candidates = responseRoot.path("candidates");
         if (!candidates.isArray() || candidates.isEmpty()) {
             throw new IllegalStateException("Gemini API returned no candidates");
         }
-        JsonNode parts = candidates.get(0).path("content").path("parts");
+        JsonNode firstCandidate = candidates.get(0);
+        String finishReason = firstCandidate.path("finishReason").asString("");
+        if ("SAFETY".equalsIgnoreCase(finishReason)) {
+            throw new IllegalStateException("Gemini candidate blocked by safety filter");
+        }
+        if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
+            LOGGER.warn("Gemini candidate response truncated due to MAX_TOKENS");
+        }
+        JsonNode parts = firstCandidate.path("content").path("parts");
         if (!parts.isArray() || parts.isEmpty()) {
             throw new IllegalStateException("Gemini API candidate contains no parts");
         }
@@ -152,7 +166,15 @@ public class GeminiClient {
         if (text.isBlank()) {
             throw new IllegalStateException("Gemini API returned blank text part");
         }
-        JsonNode parsedJson = objectMapper.readTree(text);
+        JsonNode parsedJson;
+        try {
+            parsedJson = objectMapper.readTree(text);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Gemini API returned invalid JSON: " + ex.getMessage(), ex);
+        }
+        if (!parsedJson.isObject()) {
+            throw new IllegalStateException("Gemini API returned non-object JSON structure");
+        }
         return new GeminiStructuredOutput(parsedJson, modelUsed);
     }
 

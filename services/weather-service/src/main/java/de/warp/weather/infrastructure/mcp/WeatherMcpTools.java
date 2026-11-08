@@ -1,3 +1,6 @@
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.infrastructure.mcp;
 
 import de.warp.weather.application.WeatherScoringService;
@@ -92,19 +95,19 @@ public class WeatherMcpTools {
                 double wetRoadPct = cond != null && cond.wetRoadIndex() != null ? cond.wetRoadIndex() * 100.0 : 0.0;
 
                 Map<String, Object> hidden = new LinkedHashMap<>();
-                hidden.put("apparentTemperatureCelsius", round1(cond != null ? cond.apparentTemperatureCelsius() : t2m));
+                hidden.put("apparentTemperatureCelsius", round1(cond != null && cond.apparentTemperatureCelsius() != null ? cond.apparentTemperatureCelsius() : t2m));
                 hidden.put("relativeHumidityPercent", round1(rh));
                 hidden.put("dewPointCelsius", round1(dewPoint));
                 hidden.put("dewPointSpreadCelsius", round1(dewSpread));
                 hidden.put("wetRoadIndexPercent", round1(wetRoadPct));
                 hidden.put("windGustsKmh", round1(windGusts));
                 hidden.put("gustDeltaKmh", round1(Math.max(0.0, windGusts - windSpeed)));
-                hidden.put("soilTemperature0cmCelsius", round1(cond != null ? cond.soilTemperatureCelsius() : t2m));
-                hidden.put("visibilityMeters", round1(cond != null ? cond.visibilityMeters() : 24000.0));
-                hidden.put("capeJoulesPerKg", round1(cond != null ? cond.capeJkg() : 0.0));
-                hidden.put("shortwaveRadiationWm2", round1(cond != null ? cond.shortwaveRadiationWm2() : 0.0));
-                hidden.put("uvIndex", round1(cond != null ? cond.uvIndex() : 2.0));
-                hidden.put("snowfallCm", round1(cond != null ? cond.snowfallCm() : 0.0));
+                hidden.put("soilTemperature0cmCelsius", round1(cond != null && cond.soilTemperatureCelsius() != null ? cond.soilTemperatureCelsius() : t2m));
+                hidden.put("visibilityMeters", round1(cond != null && cond.visibilityMeters() != null ? cond.visibilityMeters() : 24000.0));
+                hidden.put("capeJoulesPerKg", round1(cond != null && cond.capeJkg() != null ? cond.capeJkg() : 0.0));
+                hidden.put("shortwaveRadiationWm2", round1(cond != null && cond.shortwaveRadiationWm2() != null ? cond.shortwaveRadiationWm2() : 0.0));
+                hidden.put("uvIndex", round1(cond != null && cond.uvIndex() != null ? cond.uvIndex() : 2.0));
+                hidden.put("snowfallCm", round1(cond != null && cond.snowfallCm() != null ? cond.snowfallCm() : 0.0));
 
                 Map<String, Object> segEntry = new LinkedHashMap<>();
                 segEntry.put("segmentIndex", seg.segmentIndex());

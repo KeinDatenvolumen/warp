@@ -1,12 +1,18 @@
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-242] (a913a41) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: optimiere Routenplaner, Abfahrtszeit-Slider und gespeicherte Routen (WARP-014)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.application;
 
 import de.warp.weather.api.dto.DepartureSlotResultDto;
 import de.warp.weather.api.dto.OptimalWindowSummaryDto;
 import de.warp.weather.api.dto.RouteWeatherOptimizationRequest;
 import de.warp.weather.api.dto.RouteWeatherOptimizationResponse;
+import de.warp.weather.application.cache.CacheFreshnessPolicy;
+import de.warp.weather.application.hazard.WeatherHazardDetector;
 import de.warp.weather.application.port.WeatherProvider;
-import de.warp.weather.domain.model.ForecastLocation;
-import de.warp.weather.domain.model.ForecastPeriod;
+import de.warp.weather.application.scoring.OptimizationScoringRules;
+import de.warp.weather.application.slot.DepartureSlotGenerator;
 import de.warp.weather.domain.model.RouteSnapshot;
 import de.warp.weather.domain.model.WeatherCondition;
 import de.warp.weather.domain.model.WeatherForecastBundle;
@@ -25,11 +31,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity Gemini 3.8 Flash High): Single-Fetch Optimierung & Gleichstandsregel
 @Service
 public class RouteWeatherOptimizationService {
 
@@ -37,22 +41,48 @@ public class RouteWeatherOptimizationService {
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm").withZone(DISPLAY_ZONE);
 
-    private static final Duration WET_ROAD_LOOKBACK = Duration.ofHours(2);
-    private static final int WET_ROAD_INTERVALS = 8;
-
     private final RouteSegmenter routeSegmenter;
     private final WeatherProvider weatherProvider;
     private final WeatherScoringService weatherScoringService;
+
+    private final DepartureSlotGenerator departureSlotGenerator;
+    private final OptimizationScoringRules scoringRules;
+    private final WeatherHazardDetector hazardDetector;
+    private final CacheFreshnessPolicy cacheFreshnessPolicy;
 
     @Autowired
     public RouteWeatherOptimizationService(
             RouteSegmenter routeSegmenter,
             WeatherProvider weatherProvider,
-            WeatherScoringService weatherScoringService
+            WeatherScoringService weatherScoringService,
+            DepartureSlotGenerator departureSlotGenerator,
+            OptimizationScoringRules scoringRules,
+            WeatherHazardDetector hazardDetector,
+            CacheFreshnessPolicy cacheFreshnessPolicy
     ) {
         this.routeSegmenter = Objects.requireNonNull(routeSegmenter);
         this.weatherProvider = Objects.requireNonNull(weatherProvider);
         this.weatherScoringService = Objects.requireNonNull(weatherScoringService);
+        this.departureSlotGenerator = Objects.requireNonNull(departureSlotGenerator);
+        this.scoringRules = Objects.requireNonNull(scoringRules);
+        this.hazardDetector = Objects.requireNonNull(hazardDetector);
+        this.cacheFreshnessPolicy = Objects.requireNonNull(cacheFreshnessPolicy);
+    }
+
+    public RouteWeatherOptimizationService(
+            RouteSegmenter routeSegmenter,
+            WeatherProvider weatherProvider,
+            WeatherScoringService weatherScoringService
+    ) {
+        this(
+                routeSegmenter,
+                weatherProvider,
+                weatherScoringService,
+                new DepartureSlotGenerator(new CacheFreshnessPolicy()),
+                new OptimizationScoringRules(),
+                new WeatherHazardDetector(),
+                new CacheFreshnessPolicy()
+        );
     }
 
     public RouteWeatherOptimizationResponse optimizeDeparture(
@@ -70,9 +100,7 @@ public class RouteWeatherOptimizationService {
     ) {
         Objects.requireNonNull(routeSnapshot, "routeSnapshot must not be null");
 
-        // 1. Segmentation
-        List<RouteSegmenter.PlannedRouteSegment> plannedSegments =
-                routeSegmenter.segmentRoute(routeSnapshot);
+        List<RouteSegmenter.PlannedRouteSegment> plannedSegments = routeSegmenter.segmentRoute(routeSnapshot);
         int numSegments = plannedSegments.size();
         if (numSegments == 0) {
             throw new IllegalArgumentException("Route contains no segments");
@@ -83,87 +111,15 @@ public class RouteWeatherOptimizationService {
                 WeatherScoringService.ScoringActivityProfile.fromCode(profileCode);
         double fallbackSpeedKmh = routeSnapshot.activityProfile().averageSpeedKmh();
 
-        double totalDurationSec = 0.0;
-        double[] segmentDurationsMin = new double[numSegments];
-        for (int i = 0; i < numSegments; i++) {
-            double durSec = plannedSegments.get(i).segmentDurationSeconds();
-            if (durSec <= 0.0) {
-                durSec = (routeSnapshot.durationSeconds() > 0 ? routeSnapshot.durationSeconds() : 3600.0) / numSegments;
-            }
-            totalDurationSec += durSec;
-            segmentDurationsMin[i] = durSec / 60.0;
-        }
-
-        double totalDurationMin = Math.max(1.0, totalDurationSec / 60.0);
-        int totalSlotsOffset = (int) Math.ceil(totalDurationMin / 15.0);
-
-        // Precompute slot offsets delta_i (in 15-min increments) and segment weights
-        int[] segmentSlotOffsets = new int[numSegments];
-        double[] segmentWeights = new double[numSegments];
-        double accMin = 0.0;
-        for (int i = 0; i < numSegments; i++) {
-            double midSegmentMin = accMin + segmentDurationsMin[i] / 2.0;
-            segmentSlotOffsets[i] = (int) Math.round(midSegmentMin / 15.0);
-            segmentWeights[i] = segmentDurationsMin[i] / totalDurationMin;
-            accMin += segmentDurationsMin[i];
-        }
-
-        // 2. Resolve Window [windowStart, windowEnd]
-        Instant baseDeparture = routeSnapshot.departureTime() != null
-                ? routeSnapshot.departureTime()
-                : Instant.now();
-        Instant windowStart;
-        if (requestedWindowStart != null) {
-            windowStart = WeatherCacheService.normalizeToQuarterHour(requestedWindowStart);
-        } else {
-            Instant candidateStart = WeatherCacheService.normalizeToQuarterHour(baseDeparture.minus(Duration.ofHours(2)));
-            Instant nowCeil = ceilToQuarterHour(Instant.now());
-            // Prevent proposing departure slots in the past if baseDeparture is recent or in the future
-            if (baseDeparture.isAfter(Instant.now().minus(Duration.ofHours(6))) && candidateStart.isBefore(nowCeil)) {
-                windowStart = nowCeil;
-            } else {
-                windowStart = candidateStart;
-            }
-        }
-        Instant windowEnd = requestedWindowEnd != null
-                ? WeatherCacheService.normalizeToQuarterHour(requestedWindowEnd)
-                : WeatherCacheService.normalizeToQuarterHour(baseDeparture.plus(Duration.ofHours(10)));
-
-        if (!windowEnd.isAfter(windowStart)) {
-            windowEnd = windowStart.plus(Duration.ofHours(4));
-        }
-
-        // Limit window to at most 48 hours (192 slots)
-        if (Duration.between(windowStart, windowEnd).toHours() > 48) {
-            windowEnd = windowStart.plus(Duration.ofHours(48));
-        }
-
-        int numDepartureSlots = (int) (Duration.between(windowStart, windowEnd).toMinutes() / 15) + 1;
-        int totalGridSlots = numDepartureSlots + totalSlotsOffset + 2;
-
-        List<Instant> timeSlotInstants = new ArrayList<>(totalGridSlots);
-        for (int g = 0; g < totalGridSlots; g++) {
-            timeSlotInstants.add(windowStart.plus(Duration.ofMinutes(15L * g)));
-        }
-
-        // 3. Single-Fetch Open-Meteo Bulk Request for all N segments
-        ForecastPeriod fetchPeriod = new ForecastPeriod(
-                windowStart.minus(WET_ROAD_LOOKBACK),
-                timeSlotInstants.get(totalGridSlots - 1).plus(Duration.ofHours(1))
+        DepartureSlotGenerator.SlotGridContext grid = departureSlotGenerator.generateSlotGrid(
+                routeSnapshot,
+                plannedSegments,
+                requestedWindowStart,
+                requestedWindowEnd,
+                Instant.now()
         );
 
-        List<ForecastLocation> locations = new ArrayList<>(numSegments);
-        for (int i = 0; i < numSegments; i++) {
-            RouteSegmenter.PlannedRouteSegment seg = plannedSegments.get(i);
-            locations.add(new ForecastLocation(
-                    "seg_" + i,
-                    seg.waypointLatitude(),
-                    seg.waypointLongitude(),
-                    null
-            ));
-        }
-
-        WeatherForecastBundle forecastBundle = weatherProvider.getForecast(locations, fetchPeriod);
+        WeatherForecastBundle forecastBundle = weatherProvider.getForecast(grid.locations(), grid.fetchPeriod());
         Map<String, WeatherForecastSeries> seriesByLocation = new HashMap<>();
         if (forecastBundle != null && forecastBundle.locations() != null) {
             for (WeatherForecastLocation loc : forecastBundle.locations()) {
@@ -173,7 +129,7 @@ public class RouteWeatherOptimizationService {
             }
         }
 
-        // 4. Precompute N x T matrices
+        int totalGridSlots = grid.totalGridSlots();
         int[][] segmentScoreMatrix = new int[numSegments][totalGridSlots];
         String[][] segmentReasonMatrix = new String[numSegments][totalGridSlots];
         boolean[][] segmentThunderMatrix = new boolean[numSegments][totalGridSlots];
@@ -185,9 +141,9 @@ public class RouteWeatherOptimizationService {
             WeatherForecastSeries series = seriesByLocation.get("seg_" + i);
 
             for (int g = 0; g < totalGridSlots; g++) {
-                Instant slotTime = timeSlotInstants.get(g);
+                Instant slotTime = grid.timeSlotInstants().get(g);
                 WeatherValues values = resolveWeatherValues(series, slotTime);
-                double wetRoad = computeWetRoadIndex(series, slotTime, values);
+                double wetRoad = hazardDetector.computeWetRoadIndex(series, slotTime, values);
                 WeatherCondition condition = WeatherCacheService.toWeatherCondition(values, wetRoad);
 
                 WeatherScoringService.SegmentScoreBreakdown breakdown =
@@ -208,11 +164,8 @@ public class RouteWeatherOptimizationService {
             }
         }
 
-        // 5. Sliding-Window Trace over M candidate departure times
-        double tau = scoringProfile == WeatherScoringService.ScoringActivityProfile.MOTORCYCLE
-                ? 12.0
-                : scoringProfile == WeatherScoringService.ScoringActivityProfile.BICYCLE ? 14.0 : 15.0;
-
+        double tau = scoringRules.resolveProfileTau(scoringProfile);
+        int numDepartureSlots = grid.numDepartureSlots();
         List<DepartureSlotResultDto> rawSlots = new ArrayList<>(numDepartureSlots);
 
         for (int t0 = 0; t0 < numDepartureSlots; t0++) {
@@ -223,7 +176,7 @@ public class RouteWeatherOptimizationService {
             double linearMean = 0.0;
 
             for (int i = 0; i < numSegments; i++) {
-                int slotIdx = Math.min(t0 + segmentSlotOffsets[i], totalGridSlots - 1);
+                int slotIdx = Math.min(t0 + grid.segmentSlotOffsets()[i], totalGridSlots - 1);
                 int s = segmentScoreMatrix[i][slotIdx];
                 segScores.add(s);
                 segReasons.add(segmentReasonMatrix[i][slotIdx]);
@@ -234,28 +187,19 @@ public class RouteWeatherOptimizationService {
                 if (s < minSegScore) {
                     minSegScore = s;
                 }
-                linearMean += segmentWeights[i] * s;
+                linearMean += grid.segmentWeights()[i] * s;
             }
 
-            // Pessimistic Soft-Minimum (LSE shifted by minSegScore for numerical stability)
-            double expSum = 0.0;
-            for (int i = 0; i < numSegments; i++) {
-                int s = segScores.get(i);
-                expSum += segmentWeights[i] * Math.exp(-(s - minSegScore) / tau);
-            }
-            double softMin = minSegScore - tau * Math.log(Math.max(1e-15, expSum));
+            double softMin = scoringRules.calculatePessimisticSoftMinimum(
+                    segScores, grid.segmentWeights(), minSegScore, tau
+            );
+            int finalScore = scoringRules.calculateSlotRouteScore(linearMean, softMin, minSegScore, hasThunderCap);
 
-            double bottleneckCap = minSegScore + 0.45 * Math.sqrt(minSegScore * (100.0 - minSegScore));
-            double thunderCap = hasThunderCap ? 50.0 : 100.0;
-            double routeRaw = Math.min(bottleneckCap, Math.min(thunderCap, 0.35 * linearMean + 0.65 * softMin));
-
-            // Daylight evaluation (informational indicator for advantage summary)
-            int arrivalSlotIdx = Math.min(t0 + totalSlotsOffset, totalGridSlots - 1);
+            int arrivalSlotIdx = Math.min(t0 + grid.totalSlotsOffset(), totalGridSlots - 1);
             boolean reachesNightfall = !isDayArray[arrivalSlotIdx] || !isDayArray[t0];
 
-            int finalScore = (int) Math.round(Math.clamp(routeRaw, 0.0, 100.0));
-            Instant depInstant = timeSlotInstants.get(t0);
-            Instant arrInstant = timeSlotInstants.get(arrivalSlotIdx);
+            Instant depInstant = grid.timeSlotInstants().get(t0);
+            Instant arrInstant = grid.timeSlotInstants().get(arrivalSlotIdx);
 
             rawSlots.add(new DepartureSlotResultDto(
                     depInstant.toString(),
@@ -272,90 +216,18 @@ public class RouteWeatherOptimizationService {
             ));
         }
 
-        // 6. Gaussian Smoothing [0.20, 0.60, 0.20] & Robust Optimum Detection
-        int bestIdx = 0;
-        double maxRobust = -1.0;
-        int worstIdx = 0;
-        int minScore = 101;
+        OptimizationScoringRules.SmoothedSlotsResult smoothedResult =
+                scoringRules.applyGaussianSmoothingAndOptimaDetection(rawSlots);
 
-        for (int m = 0; m < rawSlots.size(); m++) {
-            int prev = rawSlots.get(Math.max(0, m - 1)).routeScore();
-            int curr = rawSlots.get(m).routeScore();
-            int next = rawSlots.get(Math.min(rawSlots.size() - 1, m + 1)).routeScore();
+        int bestIdx = smoothedResult.bestSlotIndex();
+        int worstIdx = smoothedResult.worstSlotIndex();
+        List<DepartureSlotResultDto> processedSlots = smoothedResult.slots();
 
-            double robust = Math.round((0.20 * prev + 0.60 * curr + 0.20 * next) * 10.0) / 10.0;
-            DepartureSlotResultDto existing = rawSlots.get(m);
-            rawSlots.set(m, new DepartureSlotResultDto(
-                    existing.departureIso(),
-                    existing.departureTime(),
-                    existing.arrivalIso(),
-                    existing.arrivalTime(),
-                    existing.routeScore(),
-                    robust,
-                    existing.hasThunderCap(),
-                    existing.reachesNightfall(),
-                    existing.segmentScores(),
-                    existing.segmentReasons(),
-                    ""
-            ));
+        DepartureSlotResultDto bestSlot = processedSlots.get(bestIdx);
+        DepartureSlotResultDto worstSlot = processedSlots.get(worstIdx);
 
-            if (robust > maxRobust) {
-                maxRobust = robust;
-                bestIdx = m;
-            }
-
-            if (curr < minScore) {
-                minScore = curr;
-                worstIdx = m;
-            }
-        }
-
-        // 7. Stable Window & Summary Text
-        DepartureSlotResultDto bestSlot = rawSlots.get(bestIdx);
-        DepartureSlotResultDto worstSlot = rawSlots.get(worstIdx);
-
-        int stableStartIdx = bestIdx;
-        int stableEndIdx = bestIdx;
-        int scoreThreshold = Math.max(50, bestSlot.routeScore() - 6);
-
-        while (stableStartIdx > 0 && rawSlots.get(stableStartIdx - 1).routeScore() >= scoreThreshold) {
-            stableStartIdx--;
-        }
-        while (stableEndIdx < rawSlots.size() - 1 && rawSlots.get(stableEndIdx + 1).routeScore() >= scoreThreshold) {
-            stableEndIdx++;
-        }
-
-        String stableWindowStr = String.format(
-                Locale.ROOT,
-                "%s – %s",
-                rawSlots.get(stableStartIdx).departureTime(),
-                rawSlots.get(stableEndIdx).departureTime()
-        );
-
-        int deltaPoints = bestSlot.routeScore() - worstSlot.routeScore();
-        String advantageExplanation;
-        if (worstSlot.hasThunderCap() && !bestSlot.hasThunderCap()) {
-            advantageExplanation = String.format(
-                    Locale.GERMAN,
-                    "+%d Punkte ggü. %s Uhr (umgeht Gewitterfront)",
-                    deltaPoints,
-                    worstSlot.departureTime()
-            );
-        } else if (worstSlot.reachesNightfall() && !bestSlot.reachesNightfall()) {
-            advantageExplanation = String.format(
-                    Locale.GERMAN,
-                    "+%d Punkte ggü. %s Uhr (nutzt volles Tageslicht)",
-                    deltaPoints,
-                    worstSlot.departureTime()
-            );
-        } else {
-            advantageExplanation = String.format(
-                    Locale.GERMAN,
-                    "+%d Punkte ggü. %s Uhr (optimale Wetterkonditionen)",
-                    deltaPoints,
-                    worstSlot.departureTime()
-            );
-        }
+        String stableWindowStr = scoringRules.calculateStableWindow(processedSlots, bestIdx);
+        String advantageExplanation = scoringRules.buildAdvantageExplanation(bestSlot, worstSlot);
 
         OptimalWindowSummaryDto summary = new OptimalWindowSummaryDto(
                 bestSlot.departureTime(),
@@ -367,14 +239,10 @@ public class RouteWeatherOptimizationService {
                 worstSlot.routeScore()
         );
 
-        // Assign delta explanation per slot
-        for (int m = 0; m < rawSlots.size(); m++) {
-            DepartureSlotResultDto slot = rawSlots.get(m);
-            int diffToWorst = slot.routeScore() - worstSlot.routeScore();
-            String deltaText = diffToWorst > 0
-                    ? String.format(Locale.GERMAN, "+%d Pkt. ggü. %s Uhr", diffToWorst, worstSlot.departureTime())
-                    : "Tiefstwert im Zeitfenster";
-            rawSlots.set(m, new DepartureSlotResultDto(
+        for (int m = 0; m < processedSlots.size(); m++) {
+            DepartureSlotResultDto slot = processedSlots.get(m);
+            String deltaText = scoringRules.buildSlotDeltaExplanation(slot.routeScore(), worstSlot);
+            processedSlots.set(m, new DepartureSlotResultDto(
                     slot.departureIso(),
                     slot.departureTime(),
                     slot.arrivalIso(),
@@ -392,7 +260,7 @@ public class RouteWeatherOptimizationService {
         return new RouteWeatherOptimizationResponse(
                 bestIdx,
                 summary,
-                rawSlots
+                processedSlots
         );
     }
 
@@ -490,36 +358,6 @@ public class RouteWeatherOptimizationService {
         );
     }
 
-    private double computeWetRoadIndex(WeatherForecastSeries series, Instant slotTime, WeatherValues currentValues) {
-        if (series == null) return 0.0;
-
-        double temp = currentValues.temperatureCelsius() != null ? currentValues.temperatureCelsius() : 18.0;
-        double rad = currentValues.shortwaveRadiationWattsPerSquareMeter() != null ? currentValues.shortwaveRadiationWattsPerSquareMeter() : 150.0;
-        double rh = currentValues.relativeHumidityPercent() != null ? currentValues.relativeHumidityPercent() : 60.0;
-        double tauDry = WeatherScoringService.calculateDryingTimeConstantHours(temp, rad, rh);
-
-        List<WeatherForecastTimeStep> steps = series.minutely15() != null && !series.minutely15().isEmpty()
-                ? series.minutely15()
-                : series.hourly();
-
-        if (steps == null || steps.isEmpty()) return 0.0;
-
-        boolean isHourly = steps == series.hourly();
-        double pAcc = 0.0;
-        for (int k = 0; k <= WET_ROAD_INTERVALS; k++) {
-            Instant target = slotTime.minus(Duration.ofMinutes(15L * k));
-            WeatherForecastTimeStep closest = selectClosest(steps, target);
-            long diffMin = Math.abs(Duration.between(closest.time(), target).toMinutes());
-            if (diffMin <= (isHourly ? 45 : 15) && closest.values().precipitationMillimeters() != null) {
-                double p15 = closest.values().precipitationMillimeters();
-                if (isHourly) p15 /= 4.0;
-                pAcc += Math.max(0.0, p15) * Math.exp(-(0.25 * k) / tauDry);
-            }
-        }
-
-        return Math.clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
-    }
-
     private static Double lerp(Double a, Double b, double alpha) {
         if (a == null) return b;
         if (b == null) return a;
@@ -534,10 +372,7 @@ public class RouteWeatherOptimizationService {
     }
 
     public static Instant ceilToQuarterHour(Instant timestamp) {
-        Objects.requireNonNull(timestamp, "timestamp must not be null");
-        long epochSeconds = timestamp.getEpochSecond();
-        long ceiledSeconds = ((epochSeconds + 899L) / 900L) * 900L;
-        return Instant.ofEpochSecond(ceiledSeconds);
+        return new CacheFreshnessPolicy().ceilToQuarterHour(timestamp);
     }
 
     private static WeatherValues fallbackWeatherValues() {

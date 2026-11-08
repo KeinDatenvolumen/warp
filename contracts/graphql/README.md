@@ -1,4 +1,8 @@
-<!-- [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019) -->
+<!-- [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003) -->
+<!-- [KI-Log Nr. KI-061] (39758b1) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: define activity profile GraphQL contract (WARP-011) -->
+<!-- [KI-Log Nr. KI-074] (cfd4246) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: expose individual activity profile query (WARP-033) -->
+<!-- [KI-Log Nr. KI-145] (821b60d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: hide weather query interval from users and use km (hiking 2, bicycle 5, motorcycle 15) (WARP-033) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
 # WaRP GraphQL-Vertrag
 
 Dieses Verzeichnis enthält den öffentlichen GraphQL-Vertrag zwischen dem

@@ -1,4 +1,4 @@
-# [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034)
+# [KI-Log Nr. KI-244] (9292c4d) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): integriere MPA in docker-compose.dev & neugestalte Projekt-Touchpoint-Seiten (WARP-034)
 FROM node:22.20.0-alpine
 
 WORKDIR /app

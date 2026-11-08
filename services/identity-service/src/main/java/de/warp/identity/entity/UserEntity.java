@@ -1,4 +1,10 @@
-// [KI-Log Nr. KI-07] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Benutzerregistrierung & Validierung (WARP-005)
+// [KI-Log Nr. KI-051] (cfd2cd9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat/warp-005: implement user registration with Tests
+// [KI-Log Nr. KI-152] (2436af2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-165] (fdf6e6e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-192] (6763409) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-008): implement password reset
+// [KI-Log Nr. KI-202] (d555a4e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add user lookup and account change endpoints to identity service (WARP-033)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 
     package de.warp.identity.entity;
 
@@ -23,6 +29,9 @@ import java.time.Instant;
 
         @Column(name = "email", nullable = false, length = 320)
         private String email;
+
+        @Column(name = "pending_email", length = 320)
+        private String pendingEmail;
 
         @Column(name = "password_hash", nullable = false, length = 255)
         private String passwordHash;
@@ -69,6 +78,10 @@ import java.time.Instant;
             return email;
         }
 
+        public String getPendingEmail() {
+            return pendingEmail;
+        }
+
         public String getPasswordHash() {
             return passwordHash;
         }
@@ -82,7 +95,21 @@ import java.time.Instant;
         }
 
         public void markEmailAsVerified() {
+            if (this.pendingEmail != null && !this.pendingEmail.isBlank()) {
+                this.email = this.pendingEmail;
+                this.pendingEmail = null;
+            }
             this.emailVerified = true;
+        }
+
+        public void requestEmailChange(String newEmail) {
+            if (newEmail == null || newEmail.isBlank()) {
+                throw new IllegalArgumentException(
+                        "email darf nicht leer sein"
+                );
+            }
+
+            this.pendingEmail = newEmail;
         }
 
         public void changeEmail(String newEmail) {
@@ -93,6 +120,7 @@ import java.time.Instant;
             }
 
             this.email = newEmail;
+            this.pendingEmail = null;
             this.emailVerified = false;
         }
 

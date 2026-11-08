@@ -1,4 +1,14 @@
-# [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-057] (efe88f9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add mailpit and improved status request (WARP-001)
+# [KI-Log Nr. KI-122] (bb6781c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix geocoding architecture and validation (WARP-010)
+# [KI-Log Nr. KI-136] (b99ef77) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix geocoding architecture and validation (WARP-010)
+# [KI-Log Nr. KI-153] (6e9f413) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 configure OpenRouteService client
+# [KI-Log Nr. KI-169] (1b02585) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 configure OpenRouteService client
+# [KI-Log Nr. KI-182] (0927937) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: some minor changes to security, rebasing (WARP-033)
+# [KI-Log Nr. KI-230] (5ebbae2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-035 Configure Caffeine caches
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+# [KI-Log Nr. KI-240] (ddfe6f7) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): fix(flyway): disable validate-on-migrate and ignore mismatched checksums (WARP-002)
+# [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 spring:
   application:
     name: routing-service
@@ -63,6 +73,10 @@ management:
       enabled: true
 
 warp:
+  security:
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN:local_internal_service_token_change_me}
+    dev-token-enabled: ${WARP_DEV_TOKEN_ENABLED:true}
+
   geocoding:
     maptiler:
       base-url: ${MAPTILER_GEOCODING_BASE_URL:https://api.maptiler.com}

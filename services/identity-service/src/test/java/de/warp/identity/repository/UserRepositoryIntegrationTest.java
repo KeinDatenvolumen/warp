@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-051] (cfd2cd9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat/warp-005: implement user registration with Tests
+// [KI-Log Nr. KI-104] (2e8b6e1) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: improve SessionAuthenticationFilter and Tests (WARP-006)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 package de.warp.identity.repository;
 
 import de.warp.identity.entity.UserEntity;

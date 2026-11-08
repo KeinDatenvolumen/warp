@@ -1,4 +1,7 @@
-<!-- [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034) -->
+<!-- [KI-Log Nr. KI-228] (7235e0b) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): implement basic multi-page application with auth, profile, and GraphQL integration (WARP-034) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
+<!-- [KI-Log Nr. KI-244] (9292c4d) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): integriere MPA in docker-compose.dev & neugestalte Projekt-Touchpoint-Seiten (WARP-034) -->
+<!-- [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034) -->
 <%- include('partials/header') %>
 <%- include('partials/navbar') %>
 
@@ -12,7 +15,7 @@
       <h1 class="hero-title">Weather-Aware Route Planner</h1>
       <p class="hero-subtitle">
         Warum sollte das Wetter deine Pläne durchkreuzen? WaRP verbindet meteorologische Präzisionsdaten
-        mit dynamischer Streckenberechnung für Radfahrer, Motorradfahrer und Wanderer –
+        mit zeit- und ortsgenauer Streckenbewertung für Radfahrer, Motorradfahrer und Wanderer –
         für maximale Sicherheit, weniger Regenschauer und das optimale Abfahrtszeitfenster.
       </p>
 
@@ -24,7 +27,7 @@
             <p>Angemeldet mit <code><%= user.email %></code> • Entdecke die Projektvision oder starte direkt eine Tour.</p>
           </div>
           <div class="greeting-actions">
-            <a href="/profile" class="btn btn-primary">Mein Profil & Touchpoint</a>
+            <a href="/profile" class="btn btn-primary">Mein Profil</a>
             <a href="<%= routePlannerUrl %>" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
               Zum Routenplaner ↗
             </a>
@@ -92,7 +95,7 @@
           <div class="info-icon">🛡️</div>
           <h3>Sicherheit voranbringen</h3>
           <p>
-            Kritische Wetterphänomene wie Aquaplaning-Risiko, Sturmböen oder plötzliche Kälteeinbrüche frühzeitig erkennen und durch smarte Alternativrouten umgehen.
+            Kritische Wetterphänomene wie Nässerisiko, Sturmböen oder plötzliche Kälteeinbrüche frühzeitig erkennen und durch das optimale Abfahrtszeitfenster gezielt umgehen.
           </p>
         </div>
         <div class="info-card">
@@ -161,13 +164,13 @@
         <div class="planner-card-text">
           <h2>Der interaktive Routenplaner</h2>
           <p>
-            Erlebe die Zukunft des Routenplanens direkt im Browser: Interaktive Karte, Höhenprofil,
-            dynamischer Zeitschieber und KI-Wetteranalyse in Echtzeit.
+            Erlebe wetterbewusste Tourenplanung direkt im Browser: Interaktive Karte, detaillierter Wetterverlauf
+            entlang der Strecke, Abfahrtszeit-Optimierung und KI-Wetteranalyse.
           </p>
           <ul class="feature-bullets">
-            <li>🗺️ Interaktive Kartenansicht mit Wegpunkten und weltweitem Geocoding</li>
-            <li>⛅ Streckenbezogene Wetterprognosen im 15-Minuten-Intervall</li>
-            <li>📊 Höhenprofil und detaillierte Wetterabschnitte auf einen Blick</li>
+            <li>🗺️ Interaktive Kartenansicht mit farbcodierten Wetterabschnitten</li>
+            <li>⛅ Streckenbezogene Wetterprognosen und Abfahrtszeit-Vergleich im 15-Minuten-Raster</li>
+            <li>📊 Detaillierter Wetterverlauf (Temperatur, Wind, Niederschlag) für jeden Streckenabschnitt</li>
             <li>🤖 Kontextbezogene KI-Reiseberatung für jede geplante Tour</li>
           </ul>
           <a href="<%= routePlannerUrl %>" class="btn btn-accent btn-lg" target="_blank" rel="noopener noreferrer">

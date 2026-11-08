@@ -1,4 +1,7 @@
-// [KI-Log Nr. KI-11] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): E-Mail-Verifikations-Flow (WARP-007)
+// [KI-Log Nr. KI-152] (2436af2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-165] (fdf6e6e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.identity.service;
 
 import de.warp.identity.entity.EmailVerificationTokenEntity;
@@ -236,6 +239,45 @@ class EmailVerificationServiceTest {
         );
 
         assertThat(token.getUsedAt()).isNull();
+    }
+
+    @Test
+    void shouldConfirmPendingEmailChangeForAlreadyVerifiedUserAndEvictSessionCache() {
+        CachedSessionService cachedSessionService = mock(CachedSessionService.class);
+        de.warp.identity.repository.UserRepository userRepository =
+                mock(de.warp.identity.repository.UserRepository.class);
+        EmailVerificationService serviceWithCache = new EmailVerificationService(
+                tokenRepository,
+                tokenGenerator,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                userRepository,
+                cachedSessionService
+        );
+
+        UserEntity user = createUser();
+        user.markEmailAsVerified();
+        user.requestEmailChange("neu@example.com");
+
+        String plainToken = "token-fuer-email-wechsel";
+        EmailVerificationTokenEntity token = createToken(
+                user,
+                plainToken,
+                NOW.plusSeconds(3600),
+                null
+        );
+
+        when(tokenRepository.findByTokenHash(tokenGenerator.hash(plainToken)))
+                .thenReturn(Optional.of(token));
+        when(userRepository.existsByEmailIgnoreCase("neu@example.com"))
+                .thenReturn(false);
+
+        serviceWithCache.confirmEmail(plainToken);
+
+        assertThat(user.getEmail()).isEqualTo("neu@example.com");
+        assertThat(user.getPendingEmail()).isNull();
+        assertThat(user.isEmailVerified()).isTrue();
+        assertThat(token.getUsedAt()).isEqualTo(NOW);
+        verify(cachedSessionService).evictAllSessions();
     }
 
     private UserEntity createUser() {

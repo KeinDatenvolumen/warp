@@ -1,4 +1,7 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
+// [KI-Log Nr. KI-195] (d93a0ce) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement route weather segmentation, 60m cache, scoring and BFF integration (WARP-014)
+// [KI-Log Nr. KI-223] (03c6e45) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement 101-step perceptual score scale, map casing, dynamic bottleneck badges and meteogram dock (WARP-014)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.application;
 
 import de.warp.weather.application.WeatherScoringService.ScoringActivityProfile;
@@ -259,5 +262,105 @@ class WeatherScoringServiceTest {
             idx++;
         }
         return list;
+    }
+
+    @Test
+    void testCalculateIceAndSnowCapExhaustive() {
+        // freezing rain wmo codes
+        for (int wmo : List.of(56, 57, 66, 67)) {
+            assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.MOTORCYCLE, wmo, 0.0, 5.0, 5.0, 0.0, 10.0)).isEqualTo(0.0);
+            assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.BICYCLE, wmo, 0.0, 5.0, 5.0, 0.0, 10.0)).isEqualTo(5.0);
+            assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.HIKING, wmo, 0.0, 5.0, 5.0, 0.0, 10.0)).isEqualTo(20.0);
+        }
+
+        // black ice risk
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.MOTORCYCLE, 0, 0.30, 0.0, 5.0, 0.0, 10.0)).isEqualTo(0.0);
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.BICYCLE, 0, 0.30, 5.0, -1.0, 0.0, 10.0)).isEqualTo(5.0);
+
+        // snow code 71 (light snow)
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.MOTORCYCLE, 71, 0.0, 5.0, 5.0, 0.0, 10.0)).isEqualTo(5.0);
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.BICYCLE, 71, 0.0, 5.0, 5.0, 0.0, 10.0)).isEqualTo(15.0);
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.HIKING, 71, 0.0, 5.0, 5.0, 0.0, 20.0)).isEqualTo(65.0);
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.HIKING, 71, 0.0, 5.0, 5.0, 0.0, 40.0)).isEqualTo(35.0);
+
+        // snow codes 75 and 86 (heavy snow)
+        for (int wmo : List.of(75, 86)) {
+            assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.HIKING, wmo, 0.0, 5.0, 5.0, 0.0, 20.0)).isEqualTo(15.0);
+            assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.BICYCLE, wmo, 0.0, 5.0, 5.0, 0.0, 20.0)).isEqualTo(5.0);
+        }
+
+        // other snow code (e.g. 73)
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.HIKING, 73, 0.0, 5.0, 5.0, 0.0, 20.0)).isEqualTo(35.0);
+
+        // pSnow > 0 with non-snow wmo
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.MOTORCYCLE, 0, 0.0, 5.0, 5.0, 1.0, 10.0)).isEqualTo(5.0);
+
+        // no ice or snow
+        assertThat(WeatherScoringService.calculateIceAndSnowCap(ScoringActivityProfile.MOTORCYCLE, 0, 0.0, 15.0, 15.0, 0.0, 10.0)).isEqualTo(100.0);
+    }
+
+    @Test
+    void testCalculateThunderstormCapExhaustive() {
+        // severe thunderstorm 96/99
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.MOTORCYCLE, 96, 0.0, 0.0, null)).isEqualTo(5.0);
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.BICYCLE, 99, 0.0, 0.0, null)).isEqualTo(5.0);
+
+        // moderate thunderstorm 95
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.HIKING, 95, 0.0, 0.0, null)).isEqualTo(10.0);
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.MOTORCYCLE, 95, 0.0, 0.0, null)).isEqualTo(15.0);
+
+        // latent thunder risk: wmo 82
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.BICYCLE, 82, 0.0, 0.0, null)).isEqualTo(50.0);
+
+        // latent thunder risk: CAPE >= 600 and pPrecip > 0.30
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.BICYCLE, 0, 1200.0, 0.50, null)).isLessThan(50.0);
+
+        // latent thunder risk: thunderstormProbabilityPercent >= threshold
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.BICYCLE, 0, 0.0, 0.0, 60.0)).isEqualTo(50.0);
+
+        // no thunder risk
+        assertThat(scoringService.calculateThunderstormCap(ScoringActivityProfile.BICYCLE, 0, 0.0, 0.0, null)).isEqualTo(100.0);
+    }
+
+    @Test
+    void testDryingTimeConstantEdgeCases() {
+        // extreme low temperature and radiation
+        double tauCold = WeatherScoringService.calculateDryingTimeConstantHours(-5.0, 0.0, 95.0);
+        assertThat(tauCold).isGreaterThan(4.0);
+
+        // high temperature and high radiation
+        double tauHot = WeatherScoringService.calculateDryingTimeConstantHours(35.0, 800.0, 30.0);
+        assertThat(tauHot).isLessThan(1.0);
+
+        // fallback wet road index
+        assertThat(WeatherScoringService.estimateFallbackWetRoadIndex(0.0, 20.0, 200.0, 50.0)).isEqualTo(0.0);
+        assertThat(WeatherScoringService.estimateFallbackWetRoadIndex(5.0, 20.0, 200.0, 50.0)).isGreaterThan(0.0);
+    }
+
+    @Test
+    void testCalculateOverallScoreWithVariousDurations() {
+        WeatherCondition cond = new WeatherCondition(
+                10.0, 180.0, 15.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 20.0, 50.0, 8.0, 400.0, 18.0, 30000.0, 20.0, 3.0, 1
+        );
+        List<WeatherSegment> segs = List.of(
+                new WeatherSegment(0, Instant.now(), 80, "#52B788", 0, cond, List.of()),
+                new WeatherSegment(1, Instant.now().plusSeconds(900), 60, "#F26419", 5000, cond, List.of())
+        );
+
+        // segmentDurationsSeconds == null -> uniform weights
+        WeatherScoringService.OverallScoreResult r1 = scoringService.calculateOverallScore(segs, "BICYCLE", null);
+        assertThat(r1.overallScore()).isEqualTo(68);
+
+        // segmentDurationsSeconds mismatch size -> uniform weights
+        WeatherScoringService.OverallScoreResult r2 = scoringService.calculateOverallScore(segs, "BICYCLE", List.of(100.0));
+        assertThat(r2.overallScore()).isEqualTo(68);
+
+        // totalDuration == 0.0 -> uniform weights
+        WeatherScoringService.OverallScoreResult r3 = scoringService.calculateOverallScore(segs, "BICYCLE", List.of(0.0, 0.0));
+        assertThat(r3.overallScore()).isEqualTo(68);
+
+        // normal durations
+        WeatherScoringService.OverallScoreResult r4 = scoringService.calculateOverallScore(segs, "BICYCLE", List.of(1800.0, 600.0));
+        assertThat(r4.overallScore()).isGreaterThan(68);
     }
 }

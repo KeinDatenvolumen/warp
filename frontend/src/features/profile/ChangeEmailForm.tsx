@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-205] (13504a4) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: build profile page with account data, email and password change (WARP-033)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 import {
     type ChangeEvent,
     type FormEvent,
@@ -115,9 +117,9 @@ export default function ChangeEmailForm({
         <section className={styles.section} aria-labelledby="change-email-title">
             <h2 id="change-email-title">E-Mail-Adresse ändern</h2>
             <p className={styles.sectionDescription}>
-                Nach der Änderung musst du die neue Adresse über einen Link in
-                der Bestätigungs-E-Mail bestätigen. Bis dahin kannst du keine
-                Routen berechnen oder speichern.
+                Wir senden einen Bestätigungslink an deine neue E-Mail-Adresse.
+                Deine aktuelle E-Mail-Adresse bleibt aktiv, bis du auf den Link
+                in deinem Postfach geklickt hast.
             </p>
 
             <form
@@ -191,8 +193,10 @@ export default function ChangeEmailForm({
 
                 {isSuccessful && (
                     <p className={styles.successMessage} role="status">
-                        Deine E-Mail-Adresse wurde geändert. Wir haben dir eine
-                        Bestätigungs-E-Mail an die neue Adresse geschickt.
+                        Wir haben dir eine Bestätigungs-E-Mail an die neue
+                        Adresse geschickt. Deine E-Mail-Adresse wird erst
+                        geändert, sobald du auf den Bestätigungslink in der
+                        E-Mail geklickt hast.
                     </p>
                 )}
 

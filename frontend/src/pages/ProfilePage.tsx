@@ -1,4 +1,11 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-032] (783455d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add application pages and routing (WARP-004)
+// [KI-Log Nr. KI-039] (b0345ea) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add application pages and routing (WARP-004)
+// [KI-Log Nr. KI-049] (358799f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: modular approach to styling (WARP-004)
+// [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001)
+// [KI-Log Nr. KI-205] (13504a4) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: build profile page with account data, email and password change (WARP-033)
+// [KI-Log Nr. KI-207] (dc7f723) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add appearance settings to the profile page (WARP-033)
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import {useQuery} from '@apollo/client/react'
 
 import {CURRENT_USER_QUERY} from '../api/currentUserQuery'

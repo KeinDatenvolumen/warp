@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Wetter- & Routen-Plattform
+// [KI-Log Nr. KI-202] (d555a4e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add user lookup and account change endpoints to identity service (WARP-033)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.identity.service;
 
 import de.warp.identity.dto.ChangeEmailRequest;
@@ -121,7 +123,7 @@ public class UserAccountService {
             throw new EmailAlreadyExistsException();
         }
 
-        user.changeEmail(newEmail);
+        user.requestEmailChange(newEmail);
 
         try {
             userRepository.saveAndFlush(user);

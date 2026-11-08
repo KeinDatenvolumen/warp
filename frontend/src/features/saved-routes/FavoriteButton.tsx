@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
+// [KI-Log Nr. KI-198] (884c88d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add favorite API operations and toggle button (WARP-022)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import {useMutation} from '@apollo/client/react'
 import {extractGraphQlErrorCodes} from '../../api/graphqlErrors'
 import {UPDATE_SAVED_ROUTE_MUTATION} from '../../api/savedRoutesApi'

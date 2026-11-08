@@ -1,7 +1,12 @@
-// [KI-Log Nr. KI-02] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Monorepo-Setup, Gradle & Docker (WARP-001)
+// [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001)
+// [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 plugins {
     id 'org.springframework.boot' version '4.1.1' apply false
 }
+
+apply plugin: 'jacoco'
 
 allprojects {
     group = 'de.warp'
@@ -14,6 +19,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
 
     java {
         toolchain {
@@ -21,7 +27,96 @@ subprojects {
         }
     }
 
+    jacoco {
+        toolVersion = "0.8.12"
+    }
+
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        finalizedBy 'jacocoTestReport'
     }
+
+    tasks.named('jacocoTestReport') {
+        dependsOn tasks.named('test')
+        reports {
+            xml.required = true
+            html.required = true
+            csv.required = true
+        }
+    }
+
+    tasks.matching { it.name == 'check' }.configureEach {
+        dependsOn tasks.matching { it.name == 'jacocoTestCoverageVerification' }
+    }
+}
+
+def javaSubprojects = subprojects.findAll { it.file('src/main/java').exists() }
+
+tasks.register('jacocoRootReport', JacocoReport) {
+    description = 'Generates an aggregate code coverage report for all services'
+    group = 'Verification'
+    dependsOn javaSubprojects.collect { it.tasks.matching { t -> t.name == 'test' } }
+
+    executionData.setFrom(files(javaSubprojects.collect { it.tasks.named('jacocoTestReport').get().executionData }))
+    sourceDirectories.setFrom(files(javaSubprojects.collect { it.sourceSets.main.allSource.srcDirs }))
+    classDirectories.setFrom(files(javaSubprojects.collect {
+        it.fileTree(dir: "${it.layout.buildDirectory.get()}/classes/java/main", exclude: [
+            '**/dto/**',
+            '**/entity/**',
+            '**/*Config*',
+            '**/*Properties*',
+            '**/*Application*'
+        ])
+    }))
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/root/html')
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/root/jacocoRootReport.xml')
+        csv.outputLocation = layout.buildDirectory.file('reports/jacoco/root/jacocoRootReport.csv')
+    }
+}
+
+tasks.register('jacocoRootCoverageVerification', JacocoCoverageVerification) {
+    description = 'Verifies aggregate code coverage for the entire project'
+    group = 'Verification'
+    dependsOn 'jacocoRootReport'
+
+    executionData.setFrom(files(javaSubprojects.collect { it.tasks.named('jacocoTestReport').get().executionData }))
+    sourceDirectories.setFrom(files(javaSubprojects.collect { it.sourceSets.main.allSource.srcDirs }))
+    classDirectories.setFrom(files(javaSubprojects.collect {
+        it.fileTree(dir: "${it.layout.buildDirectory.get()}/classes/java/main", exclude: [
+            '**/dto/**',
+            '**/entity/**',
+            '**/*Config*',
+            '**/*Properties*',
+            '**/*Application*'
+        ])
+    }))
+
+    violationRules {
+        // Gesamtprojekt Gate: Line Coverage >= 80%, Branch Coverage >= 65%
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.65
+            }
+        }
+    }
+}
+
+tasks.register('check') {
+    group = 'Verification'
+    description = 'Runs all checks including subprojects checks and Jacoco root coverage verification'
+    dependsOn subprojects.collect { it.tasks.matching { t -> t.name == 'check' } }
+    dependsOn 'jacocoRootCoverageVerification'
 }

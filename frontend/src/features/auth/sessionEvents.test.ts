@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-121] (34d35e2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: detect invalid sessions globally in the GraphQL client (WARP-006)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import {describe, expect, it, vi} from 'vitest'
 import {
     notifySessionInvalid,

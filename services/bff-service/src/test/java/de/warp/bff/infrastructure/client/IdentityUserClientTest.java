@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Wetter- & Routen-Plattform
+// [KI-Log Nr. KI-203] (e8a363f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add user lookup and account change endpoints to identity service (WARP-033)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.bff.infrastructure.client;
 
 import de.warp.bff.api.dto.FieldErrorResponse;
@@ -159,5 +161,108 @@ class IdentityUserClientTest {
         assertThatThrownBy(
                 () -> client.changeEmail("usr_1", "neu@example.de", "pw")
         ).isInstanceOf(DownstreamServiceUnavailableException.class);
+    }
+
+    @Test
+    void shouldChangeEmailSuccessfully() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1/email-changes"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("""
+                        {
+                          "newEmail": "neu@example.de",
+                          "password": "pw"
+                        }
+                        """))
+                .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+        client.changeEmail("usr_1", "neu@example.de", "pw");
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldHandleGetUserServerError() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1"))
+                .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        assertThatThrownBy(() -> client.getUser("usr_1"))
+                .isInstanceOf(DownstreamServiceUnavailableException.class);
+    }
+
+    @Test
+    void shouldMapNotFoundOnPasswordChangeToSessionInvalidException() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1/password-changes"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThatThrownBy(() -> client.changePassword("usr_1", "alt", "neu"))
+                .isInstanceOf(SessionInvalidException.class);
+    }
+
+    @Test
+    void shouldMapPasswordRequirementsNotMetTo422() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1/password-changes"))
+                .andRespond(
+                        withStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                                .body("{\"status\":422,\"code\":\"PASSWORD_REQUIREMENTS_NOT_MET\"}")
+                );
+
+        assertThatThrownBy(() -> client.changePassword("usr_1", "alt", "short"))
+                .isInstanceOfSatisfying(
+                        AccountChangeRejectedException.class,
+                        ex -> {
+                            assertThat(ex.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+                            assertThat(ex.getCode()).isEqualTo("PASSWORD_REQUIREMENTS_NOT_MET");
+                            assertThat(ex.getFieldErrors())
+                                    .extracting(FieldErrorResponse::field)
+                                    .containsExactly("newPassword");
+                        }
+                );
+    }
+
+    @Test
+    void shouldMapInvalidAccountChangeRequestWithFieldErrors() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1/email-changes"))
+                .andRespond(
+                        withStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                                .body("""
+                                {
+                                  "status": 422,
+                                  "code": "INVALID_ACCOUNT_CHANGE_REQUEST",
+                                  "fieldErrors": [
+                                    {"field": "newEmail", "code": "INVALID_EMAIL", "message": "msg"},
+                                    {"field": "newEmail", "code": "EMAIL_UNCHANGED", "message": "msg"},
+                                    {"field": "newPassword", "code": "PASSWORD_UNCHANGED", "message": "msg"},
+                                    {"field": "unknownField", "code": "UNKNOWN_CODE", "message": "msg"}
+                                  ]
+                                }
+                                """)
+                );
+
+        assertThatThrownBy(() -> client.changeEmail("usr_1", "invalid", "pw"))
+                .isInstanceOfSatisfying(
+                        AccountChangeRejectedException.class,
+                        ex -> {
+                            assertThat(ex.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+                            assertThat(ex.getCode()).isEqualTo("INVALID_ACCOUNT_CHANGE_REQUEST");
+                            assertThat(ex.getFieldErrors()).hasSize(3);
+                            assertThat(ex.getFieldErrors())
+                                    .extracting(FieldErrorResponse::field)
+                                    .containsExactly("newEmail", "newEmail", "newPassword");
+                        }
+                );
+    }
+
+    @Test
+    void shouldHandleMalformedResponseBodyInProblemGracefully() {
+        mockServer.expect(requestTo("/internal/v1/users/usr_1/password-changes"))
+                .andRespond(
+                        withStatus(HttpStatus.BAD_GATEWAY)
+                                .contentType(MediaType.TEXT_HTML)
+                                .body("<html>Bad Gateway</html>")
+                );
+
+        assertThatThrownBy(() -> client.changePassword("usr_1", "alt", "neu"))
+                .isInstanceOf(DownstreamServiceUnavailableException.class);
     }
 }

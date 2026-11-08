@@ -1,3 +1,7 @@
+// [KI-Log Nr. KI-236] (201cf90) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-035): add in-memory caching
+// [KI-Log Nr. KI-237] (d313c4e) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-035 improve code, implement best practises
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.identity.service;
 
 import de.warp.identity.exceptions.SessionNotFoundException;
@@ -41,5 +45,13 @@ public class CachedSessionService {
             String tokenHash
     ) {
         // Die Annotation entfernt den Cache-Eintrag.
+    }
+
+    @CacheEvict(
+            cacheNames = SESSION_CACHE,
+            allEntries = true
+    )
+    public void evictAllSessions() {
+        // Die Annotation entfernt alle gecachten Session-Lookups (z. B. nach E-Mail-Verifikation).
     }
 }

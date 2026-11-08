@@ -1,7 +1,11 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-167] (af1ca24) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: add frontend email verification (WARP-007)
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 import {
     type ChangeEvent,
     type FormEvent,
+    useContext,
     useEffect,
     useRef,
     useState,
@@ -14,6 +18,8 @@ import {
 } from '../api/emailVerificationApi'
 import {ApiRequestError} from '../api/restClient'
 import Loader from '../components/ui/Loader/Loader'
+import {AuthContext} from '../features/auth/AuthContext'
+import {notifySessionUpdated} from '../features/auth/sessionEvents'
 import {
     mapConfirmError,
     mapResendError,
@@ -31,6 +37,9 @@ type VerificationState =
 
 export default function EmailVerificationPage() {
     const [searchParams] = useSearchParams()
+    const auth = useContext(AuthContext)
+    const refreshSessionRef = useRef(auth?.refreshSession)
+    refreshSessionRef.current = auth?.refreshSession
 
     const token =
         searchParams.get('token')?.trim() || ''
@@ -79,7 +88,9 @@ export default function EmailVerificationPage() {
         verificationStartedRef.current = token
 
         void confirmEmail(token)
-            .then(() => {
+            .then(async () => {
+                notifySessionUpdated()
+                await refreshSessionRef.current?.()
                 setState({
                     status: 'success',
                 })
@@ -213,20 +224,27 @@ export default function EmailVerificationPage() {
                             role="status"
                         >
                             <p>
-                                Deine E-Mail-Adresse wurde
-                                erfolgreich bestätigt. Dein
-                                Konto ist jetzt vollständig
-                                aktiviert und du kannst dich
-                                anmelden.
+                                {auth?.isAuthenticated
+                                    ? 'Deine E-Mail-Adresse wurde erfolgreich bestätigt. Deine aktuelle Sitzung ist sofort freigeschaltet – du kannst direkt Routen planen und speichern.'
+                                    : 'Deine E-Mail-Adresse wurde erfolgreich bestätigt. Dein Konto ist jetzt vollständig aktiviert und du kannst dich anmelden.'}
                             </p>
                         </div>
 
-                        <Link
-                            to="/login"
-                            className={styles.button}
-                        >
-                            Zum Login
-                        </Link>
+                        {auth?.isAuthenticated ? (
+                            <Link
+                                to="/route-planner"
+                                className={styles.button}
+                            >
+                                Zum Routenplaner
+                            </Link>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className={styles.button}
+                            >
+                                Zum Login
+                            </Link>
+                        )}
                     </div>
                 )}
 

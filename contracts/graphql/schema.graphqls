@@ -1,4 +1,21 @@
-# [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
+# [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003)
+# [KI-Log Nr. KI-061] (39758b1) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: define activity profile GraphQL contract (WARP-011)
+# [KI-Log Nr. KI-065] (73f94e9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add activity profile selection to route planner (WARP-033)
+# [KI-Log Nr. KI-067] (2717eed) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add place search GraphQL contract (WARP-010)
+# [KI-Log Nr. KI-074] (cfd4246) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: expose individual activity profile query (WARP-033)
+# [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+# [KI-Log Nr. KI-130] (54c5475) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add place search GraphQL contract (WARP-010)
+# [KI-Log Nr. KI-145] (821b60d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: hide weather query interval from users and use km (hiking 2, bicycle 5, motorcycle 15) (WARP-033)
+# [KI-Log Nr. KI-161] (078f95b) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 expose routing engine profile in activity profiles
+# [KI-Log Nr. KI-177] (c0720fe) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 expose routing engine profile in activity profiles
+# [KI-Log Nr. KI-182] (0927937) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: some minor changes to security, rebasing (WARP-033)
+# [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend
+# [KI-Log Nr. KI-195] (d93a0ce) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement route weather segmentation, 60m cache, scoring and BFF integration (WARP-014)
+# [KI-Log Nr. KI-197] (4959084) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: sort favorites first in saved route list (WARP-022)
+# [KI-Log Nr. KI-201] (d4bce5b) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): docs: describe profile and account change contracts (WARP-001)
+# [KI-Log Nr. KI-223] (03c6e45) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement 101-step perceptual score scale, map casing, dynamic bottleneck badges and meteogram dock (WARP-014)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+# [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 """
 WaRP GraphQL-Schema.
 
@@ -124,6 +141,7 @@ type CurrentSession {
     userId: ID!
     createdAt: DateTime!
     expiresAt: DateTime!
+    emailVerified: Boolean!
 }
 
 """

@@ -1,4 +1,7 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-127] (2b97154) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add logout action with loading state, error handling and redirect (WARP-006)
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 /**
  * @vitest-environment jsdom
  */
@@ -211,6 +214,36 @@ describe('AppLayout', () => {
                 expect(
                     within(navigation).queryByRole('link', {
                         name: 'Anmelden',
+                    }),
+                ).not.toBeInTheDocument()
+            },
+        )
+
+        it(
+            'blendet Gespeicherte Routen für angemeldete, aber nicht verifizierte Benutzer aus',
+            async () => {
+                renderLayout({
+                    ...authValue('authenticated'),
+                    session: {
+                        userId: 'usr_unverified',
+                        createdAt: '2026-10-18T08:00:00Z',
+                        expiresAt: '2026-10-25T08:00:00Z',
+                        emailVerified: false,
+                    },
+                })
+                const user = userEvent.setup()
+
+                const navigation = await openNavigation(user)
+
+                expect(
+                    within(navigation).getByRole('link', {
+                        name: 'Profil',
+                    }),
+                ).toBeInTheDocument()
+
+                expect(
+                    within(navigation).queryByRole('link', {
+                        name: 'Gespeicherte Routen',
                     }),
                 ).not.toBeInTheDocument()
             },

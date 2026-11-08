@@ -1,4 +1,7 @@
-<!-- [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034) -->
+<!-- [KI-Log Nr. KI-228] (7235e0b) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): implement basic multi-page application with auth, profile, and GraphQL integration (WARP-034) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
+<!-- [KI-Log Nr. KI-244] (9292c4d) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): integriere MPA in docker-compose.dev & neugestalte Projekt-Touchpoint-Seiten (WARP-034) -->
+<!-- [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034) -->
 <%- include('partials/header') %>
 <%- include('partials/navbar') %>
 
@@ -7,7 +10,7 @@
     <div class="profile-header-card">
       <div class="profile-avatar-large">👤</div>
       <div class="profile-header-text">
-        <span class="profile-badge">Interessenten- & Community-Touchpoint</span>
+        <span class="profile-badge">Persönlicher Mitgliederbereich</span>
         <h1 class="profile-name">Willkommen, <%= user.name %>!</h1>
         <p class="profile-email"><%= user.email %></p>
       </div>
@@ -45,42 +48,39 @@
               <dd>Sicher angemeldet bis <%= formattedExpiresAt %></dd>
             </div>
           </dl>
-          <div class="profile-card-footer text-muted">
-            <small>Konto-ID: <%= user.id %> • Anbindung über WaRP GraphQL Gateway</small>
-          </div>
         </div>
       </section>
 
       <!-- Aktueller Projekt-Status -->
       <section class="card profile-session-card">
         <div class="card-header">
-          <h2>Projekt-Status & Roadmap</h2>
-          <span class="badge badge-info">Version 1.0 Live</span>
+          <h2>Projekt-Status & Ausblick</h2>
+          <span class="badge badge-info">Aktuell</span>
         </div>
         <div class="card-body">
           <p style="font-size: 0.95rem; color: var(--color-text-muted); margin-bottom: 1rem;">
-            Hier erfährst du, woran das WaRP-Team aktuell arbeitet und welche Neuerungen für dich als Interessent und Nutzer anstehen:
+            Hier erfährst du, woran das WaRP-Team aktuell arbeitet und welche Neuerungen für dich als Nutzer bereitstehen:
           </p>
           <ul class="roadmap-list">
             <li class="roadmap-item">
               <span>✅</span>
               <div>
-                <strong>DWD & Open-Meteo Integration:</strong>
-                Präzise Wetterdaten entlang des gesamten Routenverlaufs.
+                <strong>Präzise Strecken-Wetterprognose:</strong>
+                Zeit- und ortsgenaue Wetterdaten entlang des gesamten Routenverlaufs.
               </div>
             </li>
             <li class="roadmap-item">
               <span>✅</span>
               <div>
                 <strong>KI-Wetterberater:</strong>
-                Empfehlungen für Bekleidung und Ausrüstung in natürlicher Sprache.
+                Empfehlungen für Bekleidung, Ausrüstung und kritische Streckenabschnitte in verständlicher Sprache.
               </div>
             </li>
             <li class="roadmap-item">
               <span>🚀</span>
               <div>
-                <strong>In Planung:</strong>
-                Schutzhütten-POIs, Offline-Karten und mobile App-Unterstützung.
+                <strong>Ausblick:</strong>
+                Schutzhütten entlang der Strecke, erweiterte Pausenplanung und mobile Unterstützung.
               </div>
             </li>
           </ul>
@@ -88,40 +88,40 @@
       </section>
     </div>
 
-    <!-- Vollbreiter Touchpoint für Interessenten & Partner -->
+    <!-- Vollbreiter Bereich für Interessenten & Partner -->
     <section class="touchpoint-card card">
       <div class="card-header">
         <h2>Möglichkeiten für Interessenten, Partner & Tester</h2>
-        <span class="badge badge-graphql">Community & Co-Creation</span>
+        <span class="badge badge-graphql">Community</span>
       </div>
       <div class="card-body">
         <p style="font-size: 1rem; color: var(--color-text); margin-bottom: 1.5rem; line-height: 1.5;">
-          WaRP versteht sich als offene Plattform für innovative Mobilitätslösungen. Als registrierter Interessent hast du exklusive Möglichkeiten, die Zukunft wetterbewusster Routenplanung aktiv mitzugestalten:
+          WaRP versteht sich als offene Plattform für wetterbewusste Tourenplanung. Als registriertes Mitglied kannst du die Weiterentwicklung aktiv begleiten:
         </p>
 
         <div class="touchpoint-columns">
           <div class="touchpoint-col">
-            <h3><span>🧪</span> Early Access</h3>
+            <h3><span>🧪</span> Neue Funktionen testen</h3>
             <p>
-              Probiere neue Routen- und Wetterbewertungsalgorithmen noch vor dem offiziellen Release auf deinen Lieblingstouren aus.
+              Probiere neue Funktionen zur Wetter- und Abfahrtszeitbewertung frühzeitig auf deinen eigenen Lieblingstouren aus.
             </p>
           </div>
           <div class="touchpoint-col">
             <h3><span>💬</span> Feedback & Ideen</h3>
             <p>
-              Fehlen dir bestimmte Wetterkriterien wie UV-Index oder Windschatten? Teile deine Ideen direkt mit unserem Entwicklungsteam.
+              Fehlen dir bestimmte Wetterkriterien oder Hinweise für deine Sportart? Teile deine Erfahrungen direkt mit unserem Team.
             </p>
           </div>
           <div class="touchpoint-col">
             <h3><span>🤝</span> Kooperationen</h3>
             <p>
-              Interessant für Tourismusregionen, Sportvereine und Navigationsplattformen: Wir bieten Schnittstellen und Know-how für Kooperationen.
+              Interessant für Tourismusregionen, Radsport- und Wandervereine: Gemeinsam machen wir Outdoor-Touren sicherer und besser planbar.
             </p>
           </div>
         </div>
 
         <div class="contact-highlight-box">
-          <strong>Direkter Draht zum Entwicklungsteam:</strong> Du möchtest dich mit uns austauschen, hast Anregungen oder Interesse an einer Zusammenarbeit? Erreiche uns jederzeit unter <code>team@warp-routing.local</code> oder informiere dich in unserem Projekt-Repository.
+          <strong>Direkter Kontakt zum Team:</strong> Du möchtest dich mit uns austauschen, hast Anregungen oder Interesse an einer Zusammenarbeit? Erreiche uns jederzeit unter <code>team@warp-routing.local</code>.
         </div>
       </div>
     </section>
@@ -131,7 +131,7 @@
       <h2>Aktionen</h2>
       <div class="profile-actions-grid">
         <a href="<%= routePlannerUrl %>" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
-          🗺️ Zum Routenplaner (SPA) öffnen ↗
+          🗺️ Zum Routenplaner öffnen ↗
         </a>
         <a href="/" class="btn btn-outline btn-lg">
           🏠 Zurück zur Projektübersicht

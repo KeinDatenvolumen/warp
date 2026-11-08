@@ -1,4 +1,19 @@
-// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+// [KI-Log Nr. KI-052] (bbb7cce) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add responsive map to route planner (WARP-009)
+// [KI-Log Nr. KI-053] (5c398f2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: update map style, api key name and deplyoment (WARP-009)
+// [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001)
+// [KI-Log Nr. KI-101] (c1e1a5c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: implement MapTiler place geocoding (WARP-010)
+// [KI-Log Nr. KI-102] (0693a2c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: display start and destination markers (WARP-010)
+// [KI-Log Nr. KI-129] (d52e1bc) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: improve handling of first search and set min length to 3 in the routing service (WARP-010)
+// [KI-Log Nr. KI-133] (943d006) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: implement MapTiler place geocoding (WARP-010)
+// [KI-Log Nr. KI-134] (dc8fd2f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: display start and destination markers (WARP-010)
+// [KI-Log Nr. KI-139] (7de7075) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: improve handling of first search and set min length to 3 in the routing service (WARP-010)
+// [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend
+// [KI-Log Nr. KI-188] (c4f557c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-013): route calculation, departure time selection, and result display
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-223] (03c6e45) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement 101-step perceptual score scale, map casing, dynamic bottleneck badges and meteogram dock (WARP-014)
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 import {
     useEffect,
     useMemo,
@@ -800,7 +815,11 @@ export default function RouteMap({
                                                     .weather
                                                     .precipitationProbabilityPercent !=
                                                 null
-                                                    ? ` (${activeHoveredSegment.weather.precipitationProbabilityPercent}%)`
+                                                    ? ` (${Math.round(
+                                                        activeHoveredSegment
+                                                            .weather
+                                                            .precipitationProbabilityPercent,
+                                                    )}%)`
                                                     : ''}
                                             </div>
                                         )}

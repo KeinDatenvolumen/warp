@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-20] KI-generiert (Google Antigravity Gemini 3.8 Flash High) für serverseitig gerenderte MPA (WARP-034)
+// [KI-Log Nr. KI-228] (7235e0b) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): implement basic multi-page application with auth, profile, and GraphQL integration (WARP-034)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import { app } from './app.js'
 import { config } from './config.js'
 

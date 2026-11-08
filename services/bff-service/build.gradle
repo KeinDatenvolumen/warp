@@ -1,4 +1,13 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001)
+// [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+// [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003)
+// [KI-Log Nr. KI-096] (77d0318) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: add public BFF login endpoint
+// [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+// [KI-Log Nr. KI-152] (2436af2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-165] (fdf6e6e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-007): implement email verification flow
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -49,6 +58,74 @@ tasks.named('test') {
             'warp.security.internal-service-token',
             'test-internal-service-token'
     )
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+    violationRules {
+        // Kritische Optimierungs-Services / Controller (Refactoring Scope): Line >= 85%, Branch >= 80%, Complexity >= 75%
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.bff.api.controller.RouteWeatherOptimizationController',
+                'de.warp.bff.application.service.RouteWeatherOptimizationService'
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.85
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+
+        // Maximale nicht abgedeckte Komplexität <= 10 für neu extrahierte Klasse & schlanken Controller
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.bff.api.controller.RouteWeatherOptimizationController',
+                'de.warp.bff.application.service.RouteWeatherOptimizationService'
+            ]
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'MISSEDCOUNT'
+                maximum = 10
+            }
+        }
+    }
 }
 
 springBoot {

@@ -1,4 +1,11 @@
-<!-- [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036) -->
+<!-- [KI-Log Nr. KI-001] (4f7cb2d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Initial commit (WARP-001) -->
+<!-- [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001) -->
+<!-- [KI-Log Nr. KI-009] (554b4fc) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add script to start every service + frontend (WARP-001) -->
+<!-- [KI-Log Nr. KI-026] (0f2ccbc) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: added documentation for local and productive postgresql databases (WARP-002) -->
+<!-- [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001) -->
+<!-- [KI-Log Nr. KI-228] (7235e0b) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): implement basic multi-page application with auth, profile, and GraphQL integration (WARP-034) -->
+<!-- [KI-Log Nr. KI-231] (80972f5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: decouple e-mail delivery from identity service via RabbitMQ (WARP-036) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
 # WaRP: Weather-aware Route Planning
 
 WaRP ist eine mobile Webanwendung zur wetterabhängigen Planung von Fahrrad-, Motorrad- und Wanderrouten. Geplante Routen werden mit räumlich und zeitlich passenden Wetterdaten verknüpft, über eine 101-stufige perzeptuelle Skala bewertet, per KI analysiert und benutzergebunden gespeichert.

@@ -1,4 +1,9 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-085] (d3fd446) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration API client (WARP-005)
+// [KI-Log Nr. KI-090] (52b5c38) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-108] (da79e47) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration API client (WARP-005)
+// [KI-Log Nr. KI-111] (2b00488) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-120] (61da337) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add session API with CSRF handling and Retry-After support (WARP-006)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import type {
     ApiErrorResponse,
     ApiFieldError

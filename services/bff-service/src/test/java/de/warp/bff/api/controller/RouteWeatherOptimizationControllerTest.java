@@ -1,19 +1,20 @@
-// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.bff.api.controller;
 
-import de.warp.bff.api.dto.ActivityProfileResponse;
-import de.warp.bff.application.service.ActivityProfileService;
-import de.warp.bff.infrastructure.routing.RoutingClient;
+import de.warp.bff.api.dto.RouteWeatherAiAnalysisApiRequest;
+import de.warp.bff.api.dto.RouteWeatherOptimizationApiRequest;
+import de.warp.bff.application.service.RouteWeatherOptimizationService;
+import de.warp.bff.application.service.SessionService;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.CriticalSectionHazardResponse;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.DepartureSlotResponse;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.HiddenParameterInsightResponse;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.OptimalWindowSummaryResponse;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.RouteWeatherAiAnalysisResponse;
 import de.warp.bff.infrastructure.weather.WeatherApiDtos.RouteWeatherOptimizationResponse;
-import de.warp.bff.infrastructure.weather.WeatherClient;
 import de.warp.bff.security.AuthenticatedSessionPrincipal;
 import de.warp.bff.security.LoginRateLimiter;
-import de.warp.bff.application.service.SessionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -32,6 +33,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -53,13 +55,7 @@ class RouteWeatherOptimizationControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private WeatherClient weatherClient;
-
-    @MockitoBean
-    private ActivityProfileService activityProfileService;
-
-    @MockitoBean
-    private RoutingClient routingClient;
+    private RouteWeatherOptimizationService optimizationService;
 
     @MockitoBean
     private SessionService sessionService;
@@ -69,17 +65,6 @@ class RouteWeatherOptimizationControllerTest {
 
     @Test
     void shouldReturnOptimizationResultWhenValidRequestProvided() throws Exception {
-        when(activityProfileService.getActivityProfile("BICYCLE")).thenReturn(
-                new ActivityProfileResponse(
-                        "BICYCLE",
-                        "Fahrrad",
-                        20.0,
-                        "bicycle",
-                        5,
-                        null
-                )
-        );
-
         DepartureSlotResponse slot1 = new DepartureSlotResponse(
                 "2026-05-16T08:00:00Z",
                 "08:00",
@@ -104,7 +89,7 @@ class RouteWeatherOptimizationControllerTest {
                 52
         );
 
-        when(weatherClient.optimizeDeparture(any())).thenReturn(
+        when(optimizationService.optimizeDeparture(anyString(), any(RouteWeatherOptimizationApiRequest.class))).thenReturn(
                 new RouteWeatherOptimizationResponse(
                         0,
                         summary,
@@ -139,7 +124,10 @@ class RouteWeatherOptimizationControllerTest {
     }
 
     @Test
-    void shouldReturnBadRequestWhenCoordinatesMissing() throws Exception {
+    void shouldReturnBadRequestWhenOptimizationServiceRejectsRequest() throws Exception {
+        when(optimizationService.optimizeDeparture(anyString(), any()))
+                .thenThrow(new IllegalArgumentException("Invalid input"));
+
         String jsonBody = """
                 {
                   "activityProfile": "BICYCLE"
@@ -149,6 +137,13 @@ class RouteWeatherOptimizationControllerTest {
         mockMvc.perform(post("/api/v1/routes/weather-optimization")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenRequestBodyMissingForOptimization() throws Exception {
+        mockMvc.perform(post("/api/v1/routes/weather-optimization")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -214,18 +209,7 @@ class RouteWeatherOptimizationControllerTest {
         );
 
         try {
-            when(activityProfileService.getActivityProfile("MOTORCYCLE")).thenReturn(
-                    new ActivityProfileResponse(
-                            "MOTORCYCLE",
-                            "Motorrad",
-                            80.0,
-                            "driving-car",
-                            10,
-                            null
-                    )
-            );
-
-            when(weatherClient.analyzeRouteWeatherAi(any())).thenReturn(
+            when(optimizationService.analyzeRouteWeatherAi(anyString(), any(RouteWeatherAiAnalysisApiRequest.class))).thenReturn(
                     new RouteWeatherAiAnalysisResponse(
                             "calc-123",
                             "MOTORCYCLE",
@@ -285,6 +269,36 @@ class RouteWeatherOptimizationControllerTest {
                     .andExpect(jsonPath("$.modelName").value("gemini-2.5-flash (MCP)"))
                     .andExpect(jsonPath("$.hiddenParameterInsights[0].parameterKey").value("WET_ROAD_INDEX"))
                     .andExpect(jsonPath("$.criticalSections[0].title").value("Seitenwindböen"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenAiServiceRejectsRequestOrBodyMissing() throws Exception {
+        AuthenticatedSessionPrincipal verifiedPrincipal = new AuthenticatedSessionPrincipal(
+                "usr-verified",
+                Instant.parse("2026-05-16T07:00:00Z"),
+                Instant.parse("2026-05-16T19:00:00Z"),
+                true
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+                UsernamePasswordAuthenticationToken.authenticated(verifiedPrincipal, null, List.of())
+        );
+
+        try {
+            when(optimizationService.analyzeRouteWeatherAi(anyString(), any()))
+                    .thenThrow(new IllegalArgumentException("Coordinates missing"));
+
+            String jsonBody = "{}";
+            mockMvc.perform(post("/api/v1/routes/weather-ai-analysis")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonBody))
+                    .andExpect(status().isBadRequest());
+
+            mockMvc.perform(post("/api/v1/routes/weather-ai-analysis")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
         } finally {
             SecurityContextHolder.clearContext();
         }

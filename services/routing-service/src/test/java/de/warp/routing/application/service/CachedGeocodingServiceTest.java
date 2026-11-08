@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
+// [KI-Log Nr. KI-236] (201cf90) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-035): add in-memory caching
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 package de.warp.routing.application.service;
 
 import de.warp.routing.domain.model.Place;

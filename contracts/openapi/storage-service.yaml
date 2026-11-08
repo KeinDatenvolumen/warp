@@ -1,4 +1,6 @@
-# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
+# [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend
+# [KI-Log Nr. KI-197] (4959084) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: sort favorites first in saved route list (WARP-022)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 openapi: 3.1.0
 info:
   title: Storage Service Internal API

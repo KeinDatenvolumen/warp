@@ -1,4 +1,15 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+// [KI-Log Nr. KI-087] (486dab2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration page and route (WARP-005)
+// [KI-Log Nr. KI-090] (52b5c38) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-091] (fc545e3) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: complete success response and automated coverage (WARP-005)
+// [KI-Log Nr. KI-094] (a3d7118) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: remove message field from registration response (WARP-005)
+// [KI-Log Nr. KI-109] (de61707) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration page and route (WARP-005)
+// [KI-Log Nr. KI-111] (2b00488) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-112] (88962a1) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: complete success response and automated coverage (WARP-005)
+// [KI-Log Nr. KI-115] (434109e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: remove message field from registration response (WARP-005)
+// [KI-Log Nr. KI-117] (76887ed) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: improve overall handling of registration (WARP-005)
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-242] (a913a41) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: optimiere Routenplaner, Abfahrtszeit-Slider und gespeicherte Routen (WARP-014)
 import {
     type ChangeEvent,
     type FormEvent,

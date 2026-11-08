@@ -1,4 +1,12 @@
-// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+// [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend
+// [KI-Log Nr. KI-186] (49cd50d) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Add routing calculation (WARP-001)
+// [KI-Log Nr. KI-188] (c4f557c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-013): route calculation, departure time selection, and result display
+// [KI-Log Nr. KI-189] (956513e) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): fix(route-planner): prevent stopPolling before lazy query execution (WARP-001)
+// [KI-Log Nr. KI-195] (d93a0ce) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement route weather segmentation, 60m cache, scoring and BFF integration (WARP-014)
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-242] (a913a41) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: optimiere Routenplaner, Abfahrtszeit-Slider und gespeicherte Routen (WARP-014)
+// [KI-Log Nr. KI-243] (298b526) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): fix: zeige klare Login-Aufforderung bei Routenberechnung fuer nicht angemeldete Nutzer (WARP-021)
 /**
  * @vitest-environment jsdom
  */

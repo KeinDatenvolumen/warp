@@ -1,4 +1,21 @@
-# [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036)
+# [KI-Log Nr. KI-014] (4741a73) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local dev environment with watcher (WARP-001)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003)
+# [KI-Log Nr. KI-057] (efe88f9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add mailpit and improved status request (WARP-001)
+# [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+# [KI-Log Nr. KI-101] (c1e1a5c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: implement MapTiler place geocoding (WARP-010)
+# [KI-Log Nr. KI-122] (bb6781c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix geocoding architecture and validation (WARP-010)
+# [KI-Log Nr. KI-133] (943d006) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: implement MapTiler place geocoding (WARP-010)
+# [KI-Log Nr. KI-136] (b99ef77) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix geocoding architecture and validation (WARP-010)
+# [KI-Log Nr. KI-155] (c0d4fb6) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 pass OpenRouteService key to routing container
+# [KI-Log Nr. KI-171] (652cd6c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 pass OpenRouteService key to routing container
+# [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend
+# [KI-Log Nr. KI-194] (7710846) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: initial commit for the weather service. first connection to openmeteo. (WARP-014)
+# [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+# [KI-Log Nr. KI-231] (80972f5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: decouple e-mail delivery from identity service via RabbitMQ (WARP-036)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+# [KI-Log Nr. KI-244] (9292c4d) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): integriere MPA in docker-compose.dev & neugestalte Projekt-Touchpoint-Seiten (WARP-034)
+# [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 name: warp-dev
 
 x-spring-service: &spring-service
@@ -51,6 +68,7 @@ services:
     environment:
       SERVICE_NAME: routing-service
       PORT: "8082"
+      WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
       MAPTILER_GEOCODING_API_KEY: ${MAPTILER_GEOCODING_API_KEY}
       OPENROUTESERVICE_API_KEY: ${OPENROUTESERVICE_API_KEY}
       DB_URL: jdbc:postgresql://routing-db:5432/${ROUTING_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
@@ -72,6 +90,7 @@ services:
     environment:
       SERVICE_NAME: weather-service
       PORT: "8083"
+      WARP_INTERNAL_SERVICE_TOKEN: ${WARP_INTERNAL_SERVICE_TOKEN}
       DB_URL: jdbc:postgresql://weather-db:5432/${WEATHER_DB_NAME}?connectTimeout=2&socketTimeout=2&tcpKeepAlive=true
       DB_USERNAME: ${WEATHER_DB_USER}
       DB_PASSWORD: ${WEATHER_DB_PASSWORD}

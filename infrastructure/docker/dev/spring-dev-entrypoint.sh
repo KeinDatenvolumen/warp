@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# [KI-Log Nr. KI-02] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Monorepo-Setup, Gradle & Docker (WARP-001)
+# [KI-Log Nr. KI-014] (4741a73) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local dev environment with watcher (WARP-001)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 set -Eeuo pipefail
 
 : "${SERVICE_NAME:?SERVICE_NAME muss gesetzt sein}"

@@ -1,4 +1,7 @@
-<!-- [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036) -->
+<!-- [KI-Log Nr. KI-014] (4741a73) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local dev environment with watcher (WARP-001) -->
+<!-- [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001) -->
+<!-- [KI-Log Nr. KI-231] (80972f5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: decouple e-mail delivery from identity service via RabbitMQ (WARP-036) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
 # WaRP-Entwicklungsumgebung mit Docker und Hot Reload
 
 Diese Dokumentation beschreibt die vollständige lokale Docker-Entwicklungsumgebung aus `docker-compose.dev.yaml`. Sie ist von den Produktions-Dockerfiles und der produktionsnahen `docker-compose.yaml` getrennt.

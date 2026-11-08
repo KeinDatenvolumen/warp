@@ -1,4 +1,10 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
+// [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001)
+// [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+// [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+// [KI-Log Nr. KI-017] (4f98c90) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: update build.gradle files to fix the test issues (WARP-002)
+// [KI-Log Nr. KI-194] (7710846) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: initial commit for the weather service. first connection to openmeteo. (WARP-014)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
     plugins {
         id 'java'
         id 'org.springframework.boot'
@@ -32,4 +38,149 @@
 
 springBoot {
     mainClass = 'de.warp.weather.WeatherServiceApplication'
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+    violationRules {
+        // Subproject Weather-Service Gate: Line >= 80%, Branch >= 65%
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.65
+            }
+        }
+
+        // Kritische Fachservices: Wetter-Scoring (Branch >= 80%, Complexity >= 75%)
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.weather.application.WeatherScoringService',
+                'de.warp.weather.application.scoring.OptimizationScoringRules',
+                'de.warp.weather.application.hazard.WeatherHazardDetector'
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+
+        // Kritische Fachservices: Cache (Branch >= 80%, Complexity >= 75%)
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.weather.application.WeatherCacheService',
+                'de.warp.weather.application.cache.CacheFreshnessPolicy'
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+
+        // Kritische Fachservices: Optimierung (Branch >= 80%, Complexity >= 75%)
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.weather.application.RouteWeatherOptimizationService',
+                'de.warp.weather.application.slot.DepartureSlotGenerator'
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+
+        // Geänderte / Neue Klassen: Line >= 85%, Branch >= 75%
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.weather.application.scoring.OptimizationScoringRules',
+                'de.warp.weather.application.cache.CacheFreshnessPolicy',
+                'de.warp.weather.application.hazard.WeatherHazardDetector',
+                'de.warp.weather.application.slot.DepartureSlotGenerator',
+                'de.warp.weather.application.ai.WeatherAiResponseValidator',
+                'de.warp.weather.application.ai.WeatherAiResultMapper'
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.85
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+
+        // Maximale nicht abgedeckte Komplexität <= 10 für neue/geänderte Fachklassen
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.weather.application.scoring.OptimizationScoringRules',
+                'de.warp.weather.application.cache.CacheFreshnessPolicy',
+                'de.warp.weather.application.hazard.WeatherHazardDetector',
+                'de.warp.weather.application.slot.DepartureSlotGenerator',
+                'de.warp.weather.application.ai.WeatherAiPromptBuilder',
+                'de.warp.weather.application.ai.WeatherAiResponseValidator',
+                'de.warp.weather.application.ai.WeatherAiResultMapper'
+            ]
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'MISSEDCOUNT'
+                maximum = 10
+            }
+        }
+    }
 }

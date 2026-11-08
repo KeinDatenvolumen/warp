@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-17] KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): Clientseitiger GPX-1.1-Export (WARP-032)
+// [KI-Log Nr. KI-208] (c29d799) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add GPX route export (WARP-032)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 import type { RouteGeometry } from '../../types/routeCalculation'
 
 export interface GpxExportRoute {

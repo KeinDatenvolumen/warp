@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.storage.config;
 
 import org.springframework.context.annotation.Bean;
@@ -23,7 +24,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of(LOCAL_SWAGGER_UI_URL, LOCAL_FRONTEND_URL));
+        config.setAllowedOriginPatterns(List.of(LOCAL_SWAGGER_UI_URL, LOCAL_FRONTEND_URL, "http://localhost:*", "http://127.0.0.1:*", "https://*.herokuapp.com"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setMaxAge(3600L);

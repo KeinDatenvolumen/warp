@@ -1,4 +1,7 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+// [KI-Log Nr. KI-117] (76887ed) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: improve overall handling of registration (WARP-005)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.bff.infrastructure.client;
 
 import de.warp.bff.application.exception.DownstreamServiceUnavailableException;
@@ -572,6 +575,94 @@ class IdentityClientTest {
         ).isInstanceOf(
                 DownstreamServiceUnavailableException.class
         );
+
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldRemoveTrailingSlashFromServiceUrl() {
+        RestClient.Builder restClientBuilder = RestClient.builder();
+        MockRestServiceServer localMockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
+
+        IdentityClient clientWithTrailingSlash = new IdentityClient(
+                restClientBuilder.build(),
+                JsonMapper.builder().build(),
+                "http://identity-service/"
+        );
+
+        localMockServer.expect(requestTo("http://identity-service/internal/v1/sessions/invalidation"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+        clientWithTrailingSlash.invalidateSession("token123");
+        localMockServer.verify();
+    }
+
+    @Test
+    void shouldMapGoneToSessionInvalidException() {
+        mockServer.expect(requestTo(IDENTITY_SERVICE_URL + "/internal/v1/sessions/validation"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.GONE));
+
+        assertThatThrownBy(() -> identityClient.validateSession("gone-token"))
+                .isInstanceOf(SessionInvalidException.class);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldRejectEmptySuccessfulRegisterResponse() {
+        mockServer.expect(requestTo(IDENTITY_SERVICE_URL + "/internal/v1/users"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("", MediaType.APPLICATION_JSON));
+
+        InternalRegistrationRequest request = new InternalRegistrationRequest(
+                "Max", "max@example.com", "Secret123456!"
+        );
+
+        assertThatThrownBy(() -> identityClient.register(request))
+                .isInstanceOf(DownstreamServiceUnavailableException.class);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldMapInvalidRegistrationRequestWithSupportedFieldErrors() {
+        mockServer.expect(requestTo(IDENTITY_SERVICE_URL + "/internal/v1/users"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(
+                        withStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                                .body("""
+                                {
+                                  "status": 422,
+                                  "code": "INVALID_REGISTRATION_REQUEST",
+                                  "fieldErrors": [
+                                    {"field": "name", "code": "RAW_NAME"},
+                                    {"field": "email", "code": "RAW_EMAIL"},
+                                    {"field": "password", "code": "RAW_PW"},
+                                    {"field": "unsupported", "code": "RAW_OTHER"}
+                                  ]
+                                }
+                                """)
+                );
+
+        InternalRegistrationRequest request = new InternalRegistrationRequest(
+                "Max", "max@example.com", "Secret123456!"
+        );
+
+        assertThatThrownBy(() -> identityClient.register(request))
+                .isInstanceOfSatisfying(
+                        RegistrationRejectedException.class,
+                        ex -> {
+                            assertThat(ex.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+                            assertThat(ex.getCode()).isEqualTo("INVALID_REGISTRATION_REQUEST");
+                            assertThat(ex.getFieldErrors()).hasSize(3);
+                            assertThat(ex.getFieldErrors())
+                                    .extracting(de.warp.bff.api.dto.FieldErrorResponse::field)
+                                    .containsExactly("name", "email", "password");
+                        }
+                );
 
         mockServer.verify();
     }

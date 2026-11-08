@@ -1,4 +1,20 @@
-// [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): UI-Redesign & Responsive Navigation (WARP-031)
+// [KI-Log Nr. KI-032] (783455d) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add application pages and routing (WARP-004)
+// [KI-Log Nr. KI-039] (b0345ea) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add application pages and routing (WARP-004)
+// [KI-Log Nr. KI-041] (95411c2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: rebase to live (WARP-004)
+// [KI-Log Nr. KI-046] (90625b3) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add global application navigation (WARP-004)
+// [KI-Log Nr. KI-047] (a05e6ff) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: only renders navigation tabs conditionally (WARP-004)
+// [KI-Log Nr. KI-049] (358799f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: modular approach to styling (WARP-004)
+// [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001)
+// [KI-Log Nr. KI-087] (486dab2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration page and route (WARP-005)
+// [KI-Log Nr. KI-090] (52b5c38) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-109] (de61707) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add registration page and route (WARP-005)
+// [KI-Log Nr. KI-111] (2b00488) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: registration error handling and design (WARP-005)
+// [KI-Log Nr. KI-127] (2b97154) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add logout action with loading state, error handling and redirect (WARP-006)
+// [KI-Log Nr. KI-210] (ce30513) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat(WARP-031): responsives Theme-Design für das Frontend umsetzen
+// [KI-Log Nr. KI-211] (d6d8b5b) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix(WARP-031): refine default theme and navigation design
+// [KI-Log Nr. KI-224] (b31c3e8) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix(WARP-031): fix navigation layering and dark mode contrast
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 import {useEffect, useRef, useState} from 'react'
 import {
     NavLink,
@@ -24,7 +40,8 @@ function navigationClassName({
 }
 
 export default function AppLayout() {
-    const {status, isAuthenticated, logout} = useAuth()
+    const {status, isAuthenticated, session, logout} = useAuth()
+    const isEmailVerified = session?.emailVerified ?? true
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -264,12 +281,14 @@ export default function AppLayout() {
 
                             {isAuthenticated && (
                                 <>
-                                    <NavLink
-                                        to="/saved-routes"
-                                        className={navigationClassName}
-                                    >
-                                        Gespeicherte Routen
-                                    </NavLink>
+                                    {isEmailVerified && (
+                                        <NavLink
+                                            to="/saved-routes"
+                                            className={navigationClassName}
+                                        >
+                                            Gespeicherte Routen
+                                        </NavLink>
+                                    )}
 
                                     <NavLink
                                         to="/profile"

@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.bff.graphql;
 
 import de.warp.bff.security.AuthenticatedSessionPrincipal;
@@ -24,14 +26,16 @@ public class SessionGraphQlController {
         return new CurrentSessionPayload(
                 principal.userId(),
                 principal.createdAt().atOffset(ZoneOffset.UTC),
-                principal.expiresAt().atOffset(ZoneOffset.UTC)
+                principal.expiresAt().atOffset(ZoneOffset.UTC),
+                principal.emailVerified()
         );
     }
 
     public record CurrentSessionPayload(
             String userId,
             OffsetDateTime createdAt,
-            OffsetDateTime expiresAt
+            OffsetDateTime expiresAt,
+            boolean emailVerified
     ) {
     }
 }

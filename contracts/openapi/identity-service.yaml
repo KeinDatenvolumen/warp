@@ -1,4 +1,5 @@
-# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+# [KI-Log Nr. KI-201] (d4bce5b) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): docs: describe profile and account change contracts (WARP-001)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 openapi: 3.1.0
 info:
   title: Identity Service Internal API

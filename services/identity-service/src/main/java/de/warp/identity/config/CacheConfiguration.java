@@ -1,4 +1,5 @@
-// [KI-Log Nr. KI-22] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): In-Memory-Caching mit Caffeine (WARP-035)
+// [KI-Log Nr. KI-230] (5ebbae2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-035 Configure Caffeine caches
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 package de.warp.identity.config;
 
 import org.springframework.cache.annotation.EnableCaching;

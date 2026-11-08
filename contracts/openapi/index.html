@@ -1,10 +1,11 @@
-<!-- [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
+<!-- [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034) -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WaRP – OpenAPI 3.1 API Dokumentation (Swagger UI)</title>
+  <title>WaRP – OpenAPI 3.1 Dokumentation (Swagger UI Hub)</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
   <style>
@@ -19,81 +20,2159 @@
       color: #fff;
       padding: 12px 24px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
       border-bottom: 2px solid #38bdf8;
     }
-    .topbar-banner h1 {
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-brand h1 {
       margin: 0;
       font-size: 1.15rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
-    .topbar-banner .badge {
-      font-size: 0.75rem;
+    .badge-cors {
+      font-size: 0.72rem;
       font-weight: 600;
-      background: rgba(56, 189, 248, 0.2);
-      color: #38bdf8;
-      padding: 4px 10px;
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      padding: 3px 8px;
       border-radius: 9999px;
-      border: 1px solid rgba(56, 189, 248, 0.4);
+      border: 1px solid rgba(34, 197, 94, 0.4);
     }
-    .topbar-banner a {
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .service-select-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .service-select {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .service-select:focus {
+      border-color: #7dd3fc;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+    }
+    .topbar-links {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .topbar-links a {
       color: #94a3b8;
       text-decoration: none;
       font-size: 0.85rem;
+      font-weight: 500;
       transition: color 0.15s;
     }
-    .topbar-banner a:hover {
+    .topbar-links a:hover {
       color: #38bdf8;
     }
-    /* Harmonize Swagger UI styling */
+    .info-banner {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 8px 24px;
+      font-size: 0.82rem;
+      border-bottom: 1px solid #bae6fd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .info-banner a {
+      color: #0284c7;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    /* Harmonize Swagger UI */
     .swagger-ui .topbar {
-      background-color: #1e293b;
-      border-bottom: 1px solid #334155;
+      display: none !important;
     }
     .swagger-ui .info {
-      margin: 24px 0 16px 0;
+      margin: 20px 0 16px 0;
     }
   </style>
 </head>
 <body>
   <div class="topbar-banner">
-    <h1>🧭 WaRP – Weather-aware Route Planning <span class="badge">OpenAPI 3.1</span></h1>
-    <a href="../graphql/README.md" target="_blank">GraphQL Schema &rarr;</a>
+    <div class="topbar-brand">
+      <h1>🧭 WaRP API Hub <span class="badge-cors">CORS-frei (Offline-fähig)</span></h1>
+    </div>
+    <div class="topbar-controls">
+      <span class="service-select-label">Service wählen:</span>
+      <select id="service-select" class="service-select">
+        <option value="bff">BFF Service (Public REST API - Port 8080)</option>
+        <option value="identity">Identity Service (Internal API - Port 8081)</option>
+        <option value="routing">Routing Service (Internal API - Port 8082)</option>
+        <option value="weather">Weather Service & MCP (Internal API - Port 8083)</option>
+        <option value="storage">Storage Service (Internal API - Port 8084)</option>
+      </select>
+    </div>
+    <div class="topbar-links">
+      <a href="../API_DESIGN.md" target="_blank">📋 API Design Template (Folie 25) &rarr;</a>
+      <a href="http://localhost:8088" target="_blank" title="Live Docker-Container">🌐 Docker Swagger (Port 8088) &rarr;</a>
+      <a href="../graphql/README.md" target="_blank">GraphQL Schema &rarr;</a>
+    </div>
   </div>
+
+  <div class="info-banner">
+    <span>
+      💡 <strong>Hinweis zur CORS-Freiheit:</strong> Diese Datei bettet die OpenAPI-Spezifikationen direkt ein. Sie funktioniert sowohl beim Öffnen via <code>file://</code> als auch über beliebige Webserver ohne Cross-Origin-Blockaden.
+    </span>
+    <span>
+      Live-Endpunkte: <code>http://localhost:8080</code> (BFF), <code>8081</code> (ID), <code>8082</code> (Routing), <code>8083</code> (Weather), <code>8084</code> (Storage)
+    </span>
+  </div>
+
   <div id="swagger-ui"></div>
 
-  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js" crossorigin></script>
-  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js" crossorigin></script>
+  <!-- Eingebettete OpenAPI 3.1 Spezifikationen (verhindert CORS-Fehler bei file:// Zugriffen) -->
+  <script type="text/yaml" id="spec-yaml-bff" data-name="BFF Service (Public REST API - Port 8080)">
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: WaRP BFF Public REST API
+  version: 1.0.0
+  description: >
+    Öffentlicher REST-Vertrag des Backend-for-Frontend (BFF) für Systemstatus,
+    CSRF-Schutz, Benutzerregistrierung, Cookie-basierte Sitzungsverwaltung (An- und Abmeldung),
+    E-Mail-Verifikation, Passwort-Zurücksetzung, Kontoänderungen sowie Abfahrtszeit-Optimierung
+    und KI-Wetteranalyse. Fachliche Abfragen und Routen-Mutationen laufen ergänzend über
+    den GraphQL-Endpunkt POST /graphql (siehe contracts/graphql/schema.graphqls).
+servers:
+  - url: http://localhost:8080
+    description: Lokaler BFF-Service
+
+paths:
+  /api/v1/system/health:
+    get:
+      summary: Zusammengefasster Systemstatus aller WaRP-Services
+      operationId: getSystemHealth
+      responses:
+        '200':
+          description: Alle Services erreichbar (UP)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+        '503':
+          description: Mindestens ein nachgelagerter Service nicht erreichbar (DEGRADED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealthResponse'
+
+  /api/v1/csrf:
+    get:
+      summary: CSRF-Token für zustandsverändernde REST- und GraphQL-Anfragen abrufen
+      operationId: getCsrfToken
+      responses:
+        '200':
+          description: Aktuelles CSRF-Token samt Header- und Parameternamen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfTokenResponse'
+
+  /api/v1/users:
+    post:
+      summary: Neues Benutzerkonto registrieren
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: Benutzerkonto erstellt; Bestätigungs-E-Mail wird zugestellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUserResponse'
+        '409':
+          description: EMAIL_ALREADY_EXISTS
+        '422':
+          description: VALIDATION_FAILED
+
+  /api/v1/sessions:
+    post:
+      summary: Anmelden und HttpOnly-Session-Cookie setzen
+      description: >
+        Authentifiziert den Benutzer über den Identity-Service (mit Rate-Limiting
+        gegen Brute-Force-Angriffe) und setzt bei Erfolg das HttpOnly-Session-Cookie.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '204':
+          description: Anmeldung erfolgreich; Set-Cookie Header enthält das Session-Cookie
+        '401':
+          description: INVALID_CREDENTIALS
+        '429':
+          description: RATE_LIMIT_EXCEEDED (inkl. Retry-After Header)
+
+  /api/v1/sessions/current:
+    delete:
+      summary: Aktuelle Sitzung beenden (Abmelden)
+      description: >
+        Invalidiert die Sitzung im Identity-Service (inkl. Cache-Eviction) und
+        löscht das Session-Cookie im Browser. Erfordert ein gültiges CSRF-Token.
+      operationId: logout
+      responses:
+        '204':
+          description: Sitzung beendet und Cookie gelöscht
+
+  /api/v1/email-verifications/confirm:
+    post:
+      summary: E-Mail-Adresse mit Token bestätigen
+      operationId: confirmEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse erfolgreich verifiziert
+        '400':
+          description: INVALID_EMAIL_VERIFICATION_TOKEN
+
+  /api/v1/email-verifications/resend:
+    post:
+      summary: Bestätigungs-E-Mail erneut anfordern
+      operationId: resendEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '204':
+          description: Anfrage entgegengenommen
+
+  /api/v1/password-resets/send:
+    post:
+      summary: E-Mail zum Zurücksetzen des Passworts anfordern
+      operationId: sendPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '204':
+          description: Anfrage entgegengenommen
+
+  /api/v1/password-resets/confirm:
+    post:
+      summary: Neues Passwort mit Reset-Token festlegen
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPasswordResetRequest'
+      responses:
+        '204':
+          description: Passwort erfolgreich geändert
+        '400':
+          description: INVALID_PASSWORD_RESET_TOKEN
+        '422':
+          description: PASSWORD_REQUIREMENTS_NOT_MET
+
+  /api/v1/users/me/password-changes:
+    post:
+      summary: Eigenes Passwort ändern (authentifiziert)
+      operationId: changeOwnPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Passwort wurde geändert
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD
+        '422':
+          description: PASSWORD_REQUIREMENTS_NOT_MET oder INVALID_ACCOUNT_CHANGE_REQUEST
+
+  /api/v1/users/me/email-changes:
+    post:
+      summary: Eigene E-Mail-Adresse ändern (authentifiziert)
+      operationId: changeOwnEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse geändert; neue Bestätigungs-E-Mail versendet
+        '401':
+          description: NOT_AUTHENTICATED
+        '403':
+          description: INVALID_PASSWORD
+        '409':
+          description: EMAIL_ALREADY_EXISTS
+        '422':
+          description: INVALID_ACCOUNT_CHANGE_REQUEST
+
+  /api/v1/routes/weather-optimization:
+    post:
+      summary: Optimales Abfahrtszeitfenster für eine berechnete Route ermitteln
+      operationId: optimizeRouteWeather
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherOptimizationApiRequest'
+      responses:
+        '200':
+          description: Zeitfenster-Slots mit Wetterscores und optimalem Startzeitpunkt
+
+  /api/v1/routes/weather-ai-analysis:
+    post:
+      summary: KI-gestützte Wetteranalyse über Google Gemini & MCP-Tools anfordern
+      description: >
+        Erfordert eine authentifizierte Sitzung und eine bestätigte E-Mail-Adresse.
+        Orchestriert Routen-, Profil- und Wetterdaten und ruft die KI-Analyse im
+        Weather-Service auf.
+      operationId: analyzeRouteWeatherAi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherAiAnalysisApiRequest'
+      responses:
+        '200':
+          description: Strukturierte KI-Wetteranalyse
+        '401':
+          description: SESSION_INVALID
+        '403':
+          description: EMAIL_NOT_VERIFIED
+
+components:
+  schemas:
+    SystemHealthResponse:
+      type: object
+      required: [status, checkedAt, healthyServices, totalServices, services]
+      properties:
+        status: { type: string, enum: [UP, DEGRADED] }
+        checkedAt: { type: string, format: date-time }
+        healthyServices: { type: integer }
+        totalServices: { type: integer }
+        services:
+          type: array
+          items:
+            type: object
+            required: [service, status, reachable, responseTimeMs]
+            properties:
+              service: { type: string }
+              status: { type: string }
+              reachable: { type: boolean }
+              responseTimeMs: { type: integer }
+
+    CsrfTokenResponse:
+      type: object
+      required: [token, headerName, parameterName]
+      properties:
+        token: { type: string }
+        headerName: { type: string }
+        parameterName: { type: string }
+
+    RegisterUserRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12 }
+
+    RegisteredUserResponse:
+      type: object
+      required: [id, name, email, emailVerified, createdAt, message]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        message: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    ConfirmEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+
+    EmailOnlyRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    ConfirmPasswordResetRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string, minLength: 12 }
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 12 }
+
+    ChangeEmailRequest:
+      type: object
+      required: [newEmail, password]
+      properties:
+        newEmail: { type: string, format: email }
+        password: { type: string }
+
+    RouteWeatherOptimizationApiRequest:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: number }
+        distanceMeters: { type: number }
+        activityProfile: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }
+        windowStart: { type: string, format: date-time }
+        windowEnd: { type: string, format: date-time }
+
+    RouteWeatherAiAnalysisApiRequest:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: number }
+        distanceMeters: { type: number }
+        activityProfile: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+        startLabel: { type: string }
+        destinationLabel: { type: string }
+        userPrompt: { type: string }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }
+
+  </script>
+
+  <script type="text/yaml" id="spec-yaml-identity" data-name="Identity Service (Internal API - Port 8081)">
+# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033)
+openapi: 3.1.0
+info:
+  title: Identity Service Internal API
+  version: 1.0.0
+  description: >
+    Interner REST-Vertrag des Identity-Service für Benutzerregistrierung,
+    Sitzungsverwaltung (mit Caffeine In-Memory-Cache für Session-Lookups),
+    E-Mail-Verifikation, Passwort-Zurücksetzung (mit asynchronem E-Mail-Versand
+    über RabbitMQ) sowie Kontodaten- und Passwort-/E-Mail-Änderungen.
+servers:
+  - url: http://localhost:8081
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://identity-service:8081
+    description: Interner Docker-/Cluster-Dienst
+
+security:
+  - InternalServiceToken: []
+
+paths:
+  /internal/v1/users:
+    post:
+      summary: Neues Benutzerkonto registrieren
+      description: >
+        Erstellt ein neues Benutzerkonto mit BCrypt-Passwort-Hash und reiht nach
+        erfolgreichem Datenbank-Commit asynchron einen Bestätigungs-E-Mail-Auftrag
+        in RabbitMQ (warp.mail.send) ein.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: Benutzer erfolgreich angelegt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUserResponse'
+        '409':
+          description: E-Mail-Adresse bereits vergeben (EMAIL_ALREADY_EXISTS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Eingabevalidierung fehlgeschlagen
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /internal/v1/users/{userId}:
+    get:
+      summary: Benutzerdaten lesen
+      operationId: getUser
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Benutzerdaten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/UserNotFound'
+
+  /internal/v1/users/{userId}/password-changes:
+    post:
+      summary: Passwort ändern
+      operationId: changePassword
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Passwort wurde geändert
+        '403':
+          description: Aktuelles Passwort ist falsch (INVALID_PASSWORD)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/UserNotFound'
+        '422':
+          description: >
+            PASSWORD_REQUIREMENTS_NOT_MET oder
+            INVALID_ACCOUNT_CHANGE_REQUEST (z. B. PASSWORD_UNCHANGED)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /internal/v1/users/{userId}/email-changes:
+    post:
+      summary: E-Mail-Adresse ändern
+      operationId: changeEmail
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '204':
+          description: >
+            Adresse geändert, emailVerified ist false,
+            Bestätigungs-E-Mail an die neue Adresse versendet
+        '403':
+          description: Passwort ist falsch (INVALID_PASSWORD)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/UserNotFound'
+        '409':
+          description: Adresse bereits vergeben (EMAIL_ALREADY_EXISTS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: >
+            INVALID_ACCOUNT_CHANGE_REQUEST (INVALID_EMAIL, EMAIL_UNCHANGED)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /internal/v1/sessions:
+    post:
+      summary: Neue Sitzung erstellen (Anmeldung)
+      description: >
+        Prüft die Anmeldedaten zeitkonstant gegen Timing-Angriffe, erzeugt einen
+        kryptographisch sicheren Session-Token und persistiert dessen SHA-256-Hash.
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Sitzung erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedSessionResponse'
+        '401':
+          description: Ungültige Zugangsdaten (INVALID_CREDENTIALS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /internal/v1/sessions/validation:
+    post:
+      summary: Sitzungs-Token validieren
+      description: >
+        Validiert ein Sitzungs-Token anhand seines SHA-256-Hashes.
+        Der Lookup erfolgt über den lokalen Caffeine In-Memory-Cache
+        (session-lookups, TTL 5m, max. 10.000 Einträge, sync=true) auf Basis
+        eines unveränderlichen CachedSession-Records.
+      operationId: validateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionTokenRequest'
+      responses:
+        '200':
+          description: Sitzung ist gültig
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Sitzung abgelaufen oder invalidiert (SESSION_EXPIRED)
+        '404':
+          description: Sitzung nicht gefunden (SESSION_NOT_FOUND)
+
+  /internal/v1/sessions/invalidation:
+    post:
+      summary: Sitzung invalidieren (Abmeldung)
+      description: >
+        Markiert die Sitzung in der Datenbank als invalidiert und entfernt den
+        Eintrag sofort per @CacheEvict aus dem Caffeine In-Memory-Cache.
+      operationId: invalidateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionTokenRequest'
+      responses:
+        '204':
+          description: Sitzung invalidiert und Cache-Eintrag entfernt
+
+  /internal/v1/email-verifications/confirm:
+    post:
+      summary: E-Mail-Adresse mit Verifikations-Token bestätigen
+      operationId: confirmEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailVerificationRequest'
+      responses:
+        '204':
+          description: E-Mail-Adresse erfolgreich bestätigt
+        '400':
+          description: Token ungültig, abgelaufen oder bereits verwendet (INVALID_EMAIL_VERIFICATION_TOKEN)
+
+  /internal/v1/email-verifications/resend:
+    post:
+      summary: Bestätigungs-E-Mail erneut anfordern
+      operationId: resendEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerificationRequest'
+      responses:
+        '204':
+          description: Bestätigungs-E-Mail wurde erneut eingereiht
+
+  /internal/v1/password-resets/send:
+    post:
+      summary: Passwort-Zurücksetzungs-E-Mail anfordern
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendPasswordResetRequest'
+      responses:
+        '204':
+          description: Anfrage verarbeitet (verrät nicht, ob die E-Mail existiert)
+
+  /internal/v1/password-resets/confirm:
+    post:
+      summary: Neues Passwort mit Reset-Token setzen
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPasswordResetRequest'
+      responses:
+        '204':
+          description: Passwort erfolgreich zurückgesetzt
+        '400':
+          description: Reset-Token ungültig oder abgelaufen (INVALID_PASSWORD_RESET_TOKEN)
+        '422':
+          description: Passwortanforderungen nicht erfüllt (PASSWORD_REQUIREMENTS_NOT_MET)
+
+components:
+  securitySchemes:
+    InternalServiceToken:
+      type: apiKey
+      in: header
+      name: X-WaRP-Service-Token
+      description: "Interner Service-Token für Microservice-Kommunikation (lokal: local_internal_service_token_change_me)"
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    UserNotFound:
+      description: Benutzer existiert nicht (USER_NOT_FOUND)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12 }
+    RegisteredUserResponse:
+      type: object
+      required: [id, name, email, emailVerified, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    User:
+      type: object
+      required: [id, name, email, emailVerified, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 12 }
+    ChangeEmailRequest:
+      type: object
+      required: [newEmail, password]
+      properties:
+        newEmail: { type: string }
+        password: { type: string }
+    CreateSessionRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    CreatedSessionResponse:
+      type: object
+      required: [sessionToken, userId, createdAt, expiresAt]
+      properties:
+        sessionToken: { type: string }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    SessionTokenRequest:
+      type: object
+      required: [sessionToken]
+      properties:
+        sessionToken: { type: string }
+    SessionResponse:
+      type: object
+      required: [id, userId, createdAt, expiresAt, emailVerified]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        emailVerified: { type: boolean }
+    ConfirmEmailVerificationRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    ResendEmailVerificationRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    SendPasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    ConfirmPasswordResetRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string, minLength: 12 }
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        instance: { type: string }
+        correlationId: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+              message: { type: string }
+
+  </script>
+
+  <script type="text/yaml" id="spec-yaml-routing" data-name="Routing Service (Internal API - Port 8082)">
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: Routing Service Internal API
+  version: 1.0.0
+  description: >
+    Interner REST-Vertrag des Routing-Service für zentral verwaltete Aktivitätsprofile,
+    Geocodierung (Ortssuche mit Caffeine In-Memory-Cache) und asynchrone Routenberechnungen
+    über OpenRouteService.
+servers:
+  - url: http://localhost:8082
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://routing-service:8082
+    description: Interner Docker-/Cluster-Dienst
+
+paths:
+  /internal/v1/activity-profiles:
+    get:
+      summary: Alle zentral konfigurierten Aktivitätsprofile abrufen
+      operationId: listActivityProfiles
+      responses:
+        '200':
+          description: Liste aller Aktivitätsprofile inkl. interner Routing- und Wetterparameter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityProfileResponse'
+
+  /internal/v1/activity-profiles/{code}:
+    get:
+      summary: Einzelnes Aktivitätsprofil anhand des Codes abrufen
+      operationId: getActivityProfile
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ActivityProfileCode'
+      responses:
+        '200':
+          description: Gefundenes Aktivitätsprofil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityProfileResponse'
+        '400':
+          description: Ungültiger Profilcode
+
+  /internal/v1/places:
+    get:
+      summary: Orte und Adressen per Geocodierung suchen
+      description: >
+        Sucht passende Orte über die MapTiler Geocoding API.
+        Suchbegriffe werden getrimmt und in Kleinbuchstaben normalisiert.
+        Ergebnisse werden für 24 Stunden im lokalen Caffeine In-Memory-Cache
+        (geocoding-results, max. 5.000 Einträge, sync=true) zwischengespeichert.
+      operationId: searchPlaces
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 200
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+      responses:
+        '200':
+          description: Gefundene Orte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceSearchResponse'
+        '503':
+          description: Externer Geocoding-Dienst nicht verfügbar (GEOCODING_SERVICE_UNAVAILABLE)
+
+  /internal/v1/route-calculations:
+    post:
+      summary: Asynchrone Routenberechnung starten
+      description: >
+        Nimmt einen Berechnungsauftrag entgegen, speichert ihn mit Status PENDING
+        und startet die Berechnung über OpenRouteService asynchron im Hintergrund.
+        Wiederholte Aufrufe mit demselben Idempotency-Key liefern denselben Auftrag.
+      operationId: startRouteCalculation
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRouteCalculationRequest'
+      responses:
+        '202':
+          description: Berechnungsauftrag angenommen
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Pfad zur Abfrage des Berechnungsstatus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteCalculationAcceptedResponse'
+        '400':
+          description: Ungültige Eingabedaten (INVALID_ROUTE_CALCULATION_REQUEST)
+
+  /internal/v1/route-calculations/{calculationId}:
+    get:
+      summary: Status und Ergebnis einer Routenberechnung abrufen
+      operationId: getRouteCalculation
+      parameters:
+        - name: calculationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Aktueller Zustand und ggf. Geometrie/Segmente der Routenberechnung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteCalculationResponse'
+        '404':
+          description: Routenberechnung nicht gefunden oder gehört anderem Benutzer (ROUTE_CALCULATION_NOT_FOUND)
+
+components:
+  schemas:
+    ActivityProfileCode:
+      type: string
+      enum: [BICYCLE, MOTORCYCLE, HIKING]
+
+    ActivityProfileResponse:
+      type: object
+      required:
+        - code
+        - displayName
+        - averageSpeedKmh
+        - routingProfile
+        - weatherQueryIntervalKm
+        - wayPreferences
+      properties:
+        code:
+          $ref: '#/components/schemas/ActivityProfileCode'
+        displayName:
+          type: string
+        averageSpeedKmh:
+          type: number
+        routingProfile:
+          type: string
+          enum: [CYCLING_REGULAR, DRIVING_CAR, FOOT_HIKING]
+        weatherQueryIntervalKm:
+          type: integer
+        wayPreferences:
+          type: object
+          properties:
+            preferScenicRoutes: { type: boolean }
+            avoidHighways: { type: boolean }
+            avoidTollRoads: { type: boolean }
+            avoidUnpavedRoads: { type: boolean }
+            preferCycleways: { type: boolean }
+            preferHikingTrails: { type: boolean }
+
+    Place:
+      type: object
+      required: [placeId, displayName, latitude, longitude]
+      properties:
+        placeId: { type: string }
+        displayName: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+
+    PlaceSearchResponse:
+      type: object
+      required: [places]
+      properties:
+        places:
+          type: array
+          items:
+            $ref: '#/components/schemas/Place'
+
+    RoutePointRequest:
+      type: object
+      required: [label, latitude, longitude]
+      properties:
+        label: { type: string }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+
+    ActivityProfileSnapshotRequest:
+      type: object
+      required: [code, displayName, averageSpeedKmh, routingProfile, weatherQueryIntervalKm]
+      properties:
+        code: { type: string }
+        displayName: { type: string }
+        averageSpeedKmh: { type: number }
+        routingProfile: { type: string }
+        weatherQueryIntervalKm: { type: integer }
+
+    StartRouteCalculationRequest:
+      type: object
+      required: [requestedByUserId, start, destination, departureTime, activityProfile]
+      properties:
+        requestedByUserId: { type: string }
+        start:
+          $ref: '#/components/schemas/RoutePointRequest'
+        destination:
+          $ref: '#/components/schemas/RoutePointRequest'
+        departureTime:
+          type: string
+          format: date-time
+        activityProfile:
+          $ref: '#/components/schemas/ActivityProfileSnapshotRequest'
+
+    RouteCalculationAcceptedResponse:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id: { type: string }
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        createdAt:
+          type: string
+          format: date-time
+
+    RouteCalculationResponse:
+      type: object
+      required: [id, status, start, destination, activityProfile, departureTime, createdAt]
+      properties:
+        id: { type: string }
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        start:
+          $ref: '#/components/schemas/RoutePointRequest'
+        destination:
+          $ref: '#/components/schemas/RoutePointRequest'
+        activityProfile:
+          $ref: '#/components/schemas/ActivityProfileSnapshotRequest'
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        distanceMeters:
+          type: number
+        durationSeconds:
+          type: number
+        geometry:
+          type: object
+          properties:
+            type: { type: string, enum: [LineString] }
+            coordinates:
+              type: array
+              items:
+                type: array
+                items: { type: number }
+        createdAt:
+          type: string
+          format: date-time
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+
+  </script>
+
+  <script type="text/yaml" id="spec-yaml-weather" data-name="Weather Service & MCP (Internal API - Port 8083)">
+# [KI-Log Nr. KI-25] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Projekt-Dokumentation & QS
+openapi: 3.1.0
+info:
+  title: Weather Service Internal API & MCP Server
+  version: 1.0.0
+  description: >
+    Interner REST- und JSON-RPC-Vertrag des Weather-Service für stündliche
+    Open-Meteo-Wetterprognosen, 101-stufige perzeptuelle Routen-Wetterbewertungen,
+    Abfahrtszeit-Optimierung, KI-gestützte Wetteranalyse (Google Gemini) sowie
+    den integrierten Model Context Protocol (MCP) JSON-RPC 2.0 Server.
+servers:
+  - url: http://localhost:8083
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://weather-service:8083
+    description: Interner Docker-/Cluster-Dienst
+
+paths:
+  /internal/v1/weather/forecast:
+    get:
+      summary: Stündliche Wettervorhersage für einen Standort abrufen
+      operationId: getForecast
+      parameters:
+        - name: locationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: latitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: longitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: elevationMeters
+          in: query
+          required: false
+          schema: { type: number }
+        - name: start
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: end
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Stündliches Wettervorhersage-Bündel von Open-Meteo
+
+  /internal/v1/weather/evaluations:
+    post:
+      summary: Wetterbewertung entlang einer berechneten Route erstellen
+      description: >
+        Interpoliert Raum-Zeit-Wegpunkte entlang der Routengeometrie gemäß
+        Aktivitätsprofil, ruft Wetterdaten ab, berechnet den 101-stufigen
+        Wetterscore inkl. Gewitter-Deckelung (thunderstormCap) und persistiert
+        das Ergebnis.
+      operationId: evaluateRouteWeather
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRouteWeatherRequest'
+      responses:
+        '200':
+          description: Persistierte Wetterbewertung der Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+
+  /internal/v1/weather/evaluations/{evaluationId}:
+    get:
+      summary: Wetterbewertung anhand ihrer ID abrufen
+      operationId: getEvaluation
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Gefundene Wetterbewertung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+        '404':
+          description: Wetterbewertung nicht gefunden
+
+  /internal/v1/weather/evaluations/by-route/{routeCalculationId}:
+    get:
+      summary: Wetterbewertung zu einer Routenberechnungs-ID abrufen
+      operationId: getEvaluationByRoute
+      parameters:
+        - name: routeCalculationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Gefundene Wetterbewertung zur Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherEvaluationResponse'
+        '404':
+          description: Keine Wetterbewertung für diese Routenberechnung vorhanden
+
+  /internal/v1/weather/optimization:
+    post:
+      summary: Optimales Abfahrtszeitfenster für eine Route berechnen
+      description: >
+        Simuliert verschiedene Abfahrtszeitpunkte innerhalb eines Zeitfensters
+        und ermittelt den optimalen Startzeitpunkt mit dem höchsten Wetterscore.
+      operationId: optimizeDeparture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherOptimizationRequest'
+      responses:
+        '200':
+          description: Berechnete Zeitfenster-Slots und optimales Abfahrtsfenster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteWeatherOptimizationResponse'
+
+  /internal/v1/weather/ai-analysis:
+    post:
+      summary: KI-gestützte Wetteranalyse über Google Gemini & MCP-Tools erstellen
+      description: >
+        Nutzt Google Gemini zusammen mit den registrierten MCP-Wetter-Tools, um
+        Gefahrenabschnitte, verdeckte Wetterparameter, Ausrüstungsempfehlungen
+        und ein optimales Startzeitfenster zu analysieren.
+      operationId: analyzeRouteWeatherAi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteWeatherAiAnalysisRequest'
+      responses:
+        '200':
+          description: Strukturierte KI-Wetteranalyse inkl. Tool-Call-Protokoll
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteWeatherAiAnalysisResponse'
+
+  /internal/v1/weather/mcp:
+    post:
+      summary: Model Context Protocol (MCP) JSON-RPC 2.0 Server-Endpunkt
+      description: >
+        Standardkonformer MCP-Endpunkt (Protokollversion 2024-11-05).
+        Unterstützt die Methoden initialize, tools/list und tools/call für
+        spezialisierte Wetteranalyse-Tools.
+      operationId: handleMcpJsonRpc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpJsonRpcRequest'
+      responses:
+        '200':
+          description: JSON-RPC 2.0 Antwort (result oder error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpJsonRpcResponse'
+
+components:
+  schemas:
+    RouteSnapshotDto:
+      type: object
+      required: [routeCalculationId, departureTime, durationSeconds, distanceMeters, coordinates, activityProfile]
+      properties:
+        routeCalculationId: { type: string }
+        departureTime: { type: string, format: date-time }
+        durationSeconds: { type: integer }
+        distanceMeters: { type: integer }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items: { type: number }
+        activityProfile:
+          type: object
+          required: [code, averageSpeedKmh, weatherQueryIntervalKm]
+          properties:
+            code: { type: string, enum: [BICYCLE, MOTORCYCLE, HIKING] }
+            averageSpeedKmh: { type: number }
+            weatherQueryIntervalKm: { type: integer }
+
+    EvaluateRouteWeatherRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+
+    WeatherEvaluationResponse:
+      type: object
+      required:
+        - evaluationId
+        - routeCalculationId
+        - status
+        - departureTime
+        - overallScore
+        - scoreVersion
+        - thunderstormCapApplied
+        - segments
+      properties:
+        evaluationId: { type: string }
+        routeCalculationId: { type: string }
+        status: { type: string, enum: [COMPLETED, FAILED] }
+        departureTime: { type: string, format: date-time }
+        overallScore: { type: integer, minimum: 0, maximum: 100 }
+        scoreVersion: { type: string }
+        thunderstormCapApplied: { type: boolean }
+        weatherDataGeneratedAt: { type: string, format: date-time }
+        weatherDataExpiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        segments:
+          type: array
+          items:
+            type: object
+            properties:
+              segmentIndex: { type: integer }
+              distanceFromStartMeters: { type: integer }
+              expectedArrivalTime: { type: string, format: date-time }
+              score: { type: integer, minimum: 0, maximum: 100 }
+              color: { type: string }
+              limitingFactor: { type: string }
+              reasonLabel: { type: string }
+
+    RouteWeatherOptimizationRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        windowStart: { type: string, format: date-time }
+        windowEnd: { type: string, format: date-time }
+
+    RouteWeatherOptimizationResponse:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        currentDepartureTime: { type: string, format: date-time }
+        currentScore: { type: integer }
+        optimalDepartureTime: { type: string, format: date-time }
+        optimalScore: { type: integer }
+        scoreImprovement: { type: integer }
+        slots:
+          type: array
+          items:
+            type: object
+            properties:
+              departureTime: { type: string, format: date-time }
+              arrivalTime: { type: string, format: date-time }
+              overallScore: { type: integer }
+              color: { type: string }
+              limitingFactor: { type: string }
+              thunderstormCapApplied: { type: boolean }
+
+    RouteWeatherAiAnalysisRequest:
+      type: object
+      required: [requestedByUserId, route]
+      properties:
+        requestedByUserId: { type: string }
+        route:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        startLabel: { type: string }
+        destinationLabel: { type: string }
+        userPrompt: { type: string }
+
+    RouteWeatherAiAnalysisResponse:
+      type: object
+      properties:
+        routeCalculationId: { type: string }
+        activityProfile: { type: string }
+        overallScore: { type: integer }
+        verdictLevel: { type: string }
+        headline: { type: string }
+        summary: { type: string }
+        tacticalAdvice:
+          type: array
+          items: { type: string }
+        gearRecommendations:
+          type: array
+          items: { type: string }
+        mcpToolsInvoked:
+          type: array
+          items: { type: string }
+        aiPowered: { type: boolean }
+        modelUsed: { type: string }
+        generatedAt: { type: string, format: date-time }
+
+    McpJsonRpcRequest:
+      type: object
+      required: [jsonrpc, method]
+      properties:
+        jsonrpc: { type: string, enum: ['2.0'] }
+        id: {}
+        method: { type: string, enum: [initialize, tools/list, tools/call] }
+        params: { type: object }
+
+    McpJsonRpcResponse:
+      type: object
+      required: [jsonrpc]
+      properties:
+        jsonrpc: { type: string, enum: ['2.0'] }
+        id: {}
+        result: { type: object }
+        error:
+          type: object
+          properties:
+            code: { type: integer }
+            message: { type: string }
+
+  </script>
+
+  <script type="text/yaml" id="spec-yaml-storage" data-name="Storage Service (Internal API - Port 8084)">
+# [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Favoriten-Funktion für gespeicherte Routen (WARP-022)
+openapi: 3.1.0
+info:
+  title: Storage Service Internal API
+  version: 1.0.0
+  description: >
+    Interner REST-Vertrag für den Storage Service. Verwaltet benutzergebundene
+    gespeicherte Routen inklusive Geometrie-Snapshots, Aktivitätsprofil-Snapshots
+    und Wetterscores. (Zentrale Aktivitätsprofile werden über den Routing-Service
+    bereitgestellt; siehe routing-service.yaml.)
+servers:
+  - url: http://localhost:8084
+    description: Lokale Instanz / Port-Forwarding (Swagger UI & lokales Testen)
+  - url: http://storage-service:8084
+    description: Interner Docker-/Cluster-Dienst
+
+security:
+  - InternalServiceToken: []
+
+paths:
+  /internal/v1/users/{userId}/saved-routes:
+    post:
+      summary: Berechnete Route als Snapshot benutzergebunden speichern
+      operationId: createSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9._:-]{1,100}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedRouteRequest'
+      responses:
+        '201':
+          description: Route erfolgreich neu gespeichert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '200':
+          description: Idempotente Wiederholung liefert bestehende Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      summary: Gespeicherte Routen des Benutzers paginiert auflisten
+      description: >
+        Favoriten stehen zuerst, danach folgen die übrigen Routen.
+        Innerhalb beider Gruppen werden die neuesten Routen zuerst geliefert.
+      operationId: listSavedRoutes
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+        - name: favorite
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Paginierte Liste der Routen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRoutePageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /internal/v1/users/{userId}/saved-routes/{routeId}:
+    get:
+      summary: Eigene gespeicherte Route im Detail abrufen
+      operationId: getSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '200':
+          description: Detailansicht der Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Route nicht gefunden oder gehört anderem Benutzer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Namen und/oder Favoritenstatus einer Route aktualisieren
+      operationId: updateSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSavedRouteRequest'
+      responses:
+        '200':
+          description: Aktualisierte Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedRouteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Eigene gespeicherte Route endgültig löschen
+      operationId: deleteSavedRoute
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/UserIdHeader'
+        - $ref: '#/components/parameters/RouteIdPath'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ServiceTokenHeader'
+      responses:
+        '204':
+          description: Route erfolgreich gelöscht
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    InternalServiceToken:
+      type: apiKey
+      in: header
+      name: X-WaRP-Service-Token
+      description: "Interner Service-Token für Microservice-Kommunikation (lokal: local_internal_service_token_change_me)"
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    RouteIdPath:
+      name: routeId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    UserIdHeader:
+      name: X-User-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+    CorrelationIdHeader:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+    ServiceTokenHeader:
+      name: X-WaRP-Service-Token
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Ungültige Syntax
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    Unauthorized:
+      description: Fehlender oder ungültiger Service-Token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    Forbidden:
+      description: Benutzerkontext passt nicht zur Anfrage
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    NotFound:
+      description: Gespeicherte Route wurde nicht gefunden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    UnprocessableContent:
+      description: Fachliche Validierungsfehler
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InternalServerError:
+      description: Unerwarteter interner Serverfehler
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+
+  schemas:
+    ActivityProfileResponse:
+      type: object
+      required: [code, displayName, routingProfile]
+      properties:
+        code:
+          type: string
+          enum: [BICYCLE, MOTORCYCLE, HIKING]
+        displayName:
+          type: string
+        routingProfile:
+          type: string
+
+    PlaceDto:
+      type: object
+      required: [label, latitude, longitude]
+      properties:
+        label:
+          type: string
+          maxLength: 255
+        latitude:
+          type: number
+          minimum: -90.0
+          maximum: 90.0
+        longitude:
+          type: number
+          minimum: -180.0
+          maximum: 180.0
+
+    GeoJsonLineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          enum: [LineString]
+        coordinates:
+          type: array
+          items:
+            type: array
+            minItems: 2
+            maxItems: 3
+            items:
+              type: number
+
+    SegmentWeatherDto:
+      type: object
+      properties:
+        windSpeedKmh:
+          type: number
+          minimum: 0.0
+        windDirectionDegrees:
+          type: number
+          minimum: 0.0
+          maximum: 360.0
+        precipitationProbabilityPercent:
+          type: number
+          minimum: 0.0
+          maximum: 100.0
+        precipitationMm:
+          type: number
+          minimum: 0.0
+        thunderstormProbabilityPercent:
+          type: number
+          minimum: 0.0
+          maximum: 100.0
+
+    WeatherSegmentDto:
+      type: object
+      required: [segmentIndex, expectedArrivalTime, score, color]
+      properties:
+        segmentIndex:
+          type: integer
+          minimum: 0
+        expectedArrivalTime:
+          type: string
+          format: date-time
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        weather:
+          $ref: '#/components/schemas/SegmentWeatherDto'
+        geometry:
+          $ref: '#/components/schemas/GeoJsonLineString'
+
+    RouteSnapshotDto:
+      type: object
+      required:
+        - start
+        - destination
+        - activityProfileCode
+        - departureTime
+        - arrivalTime
+        - distanceMeters
+        - durationSeconds
+        - geometry
+      properties:
+        routeCalculationId:
+          type: string
+          maxLength: 40
+        start:
+          $ref: '#/components/schemas/PlaceDto'
+        destination:
+          $ref: '#/components/schemas/PlaceDto'
+        activityProfileCode:
+          type: string
+          enum: [BICYCLE, MOTORCYCLE, HIKING]
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        distanceMeters:
+          type: integer
+          minimum: 0
+        durationSeconds:
+          type: integer
+          minimum: 0
+        geometry:
+          $ref: '#/components/schemas/GeoJsonLineString'
+
+    WeatherSnapshotDto:
+      type: object
+      required: [overallScore, scoreVersion, thunderstormCapApplied, segments]
+      properties:
+        weatherEvaluationId:
+          type: string
+          maxLength: 40
+        overallScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        scoreVersion:
+          type: string
+          maxLength: 20
+        thunderstormCapApplied:
+          type: boolean
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherSegmentDto'
+
+    CreateSavedRouteRequest:
+      type: object
+      required: [name, routeSnapshot, weatherSnapshot]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        favorite:
+          type: boolean
+          default: false
+        routeSnapshot:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        weatherSnapshot:
+          $ref: '#/components/schemas/WeatherSnapshotDto'
+
+    UpdateSavedRouteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        favorite:
+          type: boolean
+
+    SavedRouteSummaryResponse:
+      type: object
+      required:
+        - id
+        - name
+        - start
+        - destination
+        - activityProfileCode
+        - weatherScore
+        - favorite
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        start:
+          $ref: '#/components/schemas/PlaceDto'
+        destination:
+          $ref: '#/components/schemas/PlaceDto'
+        activityProfileCode:
+          type: string
+        weatherScore:
+          type: integer
+        favorite:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SavedRouteResponse:
+      type: object
+      required:
+        - id
+        - name
+        - favorite
+        - routeSnapshot
+        - weatherSnapshot
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        favorite:
+          type: boolean
+        routeSnapshot:
+          $ref: '#/components/schemas/RouteSnapshotDto'
+        weatherSnapshot:
+          $ref: '#/components/schemas/WeatherSnapshotDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SavedRoutePageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedRouteSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    FieldErrorResponse:
+      type: object
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    ApiErrorResponse:
+      type: object
+      required: [type, title, status, code, detail, instance, correlationId]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        instance:
+          type: string
+        correlationId:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldErrorResponse'
+
+  </script>
+
+  <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+
   <script>
-    window.onload = () => {
+    const serviceKeys = ['bff', 'identity', 'routing', 'weather', 'storage'];
+    const parsedSpecs = {};
+
+    function initSpecs() {
+      for (const key of serviceKeys) {
+        const el = document.getElementById('spec-yaml-' + key);
+        if (el && typeof jsyaml !== 'undefined') {
+          try {
+            parsedSpecs[key] = jsyaml.load(el.textContent);
+          } catch (err) {
+            console.error('Fehler beim Parsen der Spezifikation ' + key + ':', err);
+          }
+        }
+      }
+    }
+
+    function renderSwagger(serviceKey) {
+      const select = document.getElementById('service-select');
+      if (select && select.value !== serviceKey) {
+        select.value = serviceKey;
+      }
+
+      const spec = parsedSpecs[serviceKey];
+      if (!spec) {
+        console.error('Keine geparste Spezifikation gefunden für:', serviceKey);
+        return;
+      }
+
       window.ui = SwaggerUIBundle({
-        urls: [
-          { url: "./bff-service.yaml", name: "BFF Service (Public REST API - Port 8080)" },
-          { url: "./identity-service.yaml", name: "Identity Service (Internal API - Port 8081)" },
-          { url: "./routing-service.yaml", name: "Routing Service (Internal API - Port 8082)" },
-          { url: "./weather-service.yaml", name: "Weather Service & MCP (Internal API - Port 8083)" },
-          { url: "./storage-service.yaml", name: "Storage Service (Internal API - Port 8084)" }
-        ],
-        "urls.primaryName": "BFF Service (Public REST API - Port 8080)",
+        spec: spec,
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
           SwaggerUIBundle.presets.apis,
           SwaggerUIStandalonePreset
         ],
-        plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
-        ],
-        layout: "StandaloneLayout",
+        layout: "BaseLayout",
         docExpansion: "list",
         filter: true,
         showExtensions: true,
         showCommonExtensions: true,
         tryItOutEnabled: true
+      });
+    }
+
+    window.onload = () => {
+      initSpecs();
+
+      // Prüfen, ob ein Hash übergeben wurde (z.B. #identity oder #weather)
+      let initialKey = 'bff';
+      const hashKey = window.location.hash.replace('#', '').toLowerCase();
+      if (serviceKeys.includes(hashKey)) {
+        initialKey = hashKey;
+      }
+
+      renderSwagger(initialKey);
+
+      const select = document.getElementById('service-select');
+      if (select) {
+        select.addEventListener('change', (e) => {
+          const chosen = e.target.value;
+          window.location.hash = '#' + chosen;
+          renderSwagger(chosen);
+        });
+      }
+
+      window.addEventListener('hashchange', () => {
+        const currentHash = window.location.hash.replace('#', '').toLowerCase();
+        if (serviceKeys.includes(currentHash)) {
+          renderSwagger(currentHash);
+        }
       });
     };
   </script>

@@ -1,4 +1,14 @@
-# [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+# [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001)
+# [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-057] (efe88f9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add mailpit and improved status request (WARP-001)
+# [KI-Log Nr. KI-194] (7710846) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: initial commit for the weather service. first connection to openmeteo. (WARP-014)
+# [KI-Log Nr. KI-195] (d93a0ce) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement route weather segmentation, 60m cache, scoring and BFF integration (WARP-014)
+# [KI-Log Nr. KI-223] (03c6e45) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement 101-step perceptual score scale, map casing, dynamic bottleneck badges and meteogram dock (WARP-014)
+# [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+# [KI-Log Nr. KI-240] (ddfe6f7) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): fix(flyway): disable validate-on-migrate and ignore mismatched checksums (WARP-002)
+# [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 spring:
   application:
     name: weather-service
@@ -28,6 +38,10 @@ spring:
       - "*:mismatched"
 
 warp:
+  security:
+    internal-service-token: ${WARP_INTERNAL_SERVICE_TOKEN:local_internal_service_token_change_me}
+    dev-token-enabled: ${WARP_DEV_TOKEN_ENABLED:true}
+
   weather:
     open-meteo:
       base-url: ${OPEN_METEO_BASE_URL:https://api.open-meteo.com}
@@ -50,8 +64,8 @@ warp:
       api-key: ${GEMINI_API_KEY:}
       model: ${GEMINI_MODEL:gemini-3.5-flash}
       fallback-model: ${GEMINI_FALLBACK_MODEL:gemini-3.6-flash}
-      connect-timeout: ${GEMINI_CONNECT_TIMEOUT:3s}
-      read-timeout: ${GEMINI_READ_TIMEOUT:20s}
+      connect-timeout: ${GEMINI_CONNECT_TIMEOUT:2s}
+      read-timeout: ${GEMINI_READ_TIMEOUT:8s}
       temperature: ${GEMINI_TEMPERATURE:0.2}
 
 server:

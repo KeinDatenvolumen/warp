@@ -1,4 +1,13 @@
-<!-- [KI-Log Nr. KI-18] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Profilseite & Theme-System (WARP-033) -->
+<!-- [KI-Log Nr. KI-033] (7bdabfa) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add graphql to backend and frontend. Initialize dict for SPA (WARP-003) -->
+<!-- [KI-Log Nr. KI-059] (2c55674) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add typescript to frontend, migration from javascript to typescript. update of documentation (WARP-001) -->
+<!-- [KI-Log Nr. KI-093] (4dbe140) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: document registration tests (WARP-005) -->
+<!-- [KI-Log Nr. KI-114] (16755c9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: document registration tests (WARP-005) -->
+<!-- [KI-Log Nr. KI-117] (76887ed) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: improve overall handling of registration (WARP-005) -->
+<!-- [KI-Log Nr. KI-128] (3075757) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): docs: document login, session status, CSRF handling and logout dialog (WARP-006) -->
+<!-- [KI-Log Nr. KI-184] (d5e294c) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(WARP-020, WARP-021): implement saved routes backend and frontend -->
+<!-- [KI-Log Nr. KI-199] (76b1abf) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: highlight favorites and add favorites filter to saved routes (WARP-022) -->
+<!-- [KI-Log Nr. KI-206] (d2ddaae) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add theme structure with three color profiles and light/dark mode (WARP-033) -->
+<!-- [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034) -->
 # WaRP-Frontend
 
 Das WaRP-Frontend ist die browserbasierte Benutzeroberfläche von **WaRP (Weather-aware Route Planning)**. Die Anwendung wird mit React, TypeScript und Vite entwickelt und kommuniziert ausschließlich über den BFF-Service mit dem Backend.
@@ -245,7 +254,7 @@ Die aktive Route wird in der Navigation hervorgehoben. Abhängig vom Sitzungssta
 ### Ablauf
 
 1. Beim Start der Anwendung fragt der `AuthProvider` die Sitzung über die GraphQL-Query `currentSession` ab.
-2. Die Anmeldung erfolgt über `POST /api/v1/sessions`. Der BFF setzt das Session-Cookie (`HttpOnly`, `Secure`, `SameSite=Lax`).
+2. Die Anmeldung erfolgt über `POST /api/v1/sessions`. Der BFF setzt das Session-Cookie (`HttpOnly`, `Secure`, `SameSite=None`).
 3. Danach wird `currentSession` erneut abgefragt. Erst diese Antwort setzt den Status auf `authenticated`.
 4. Die Abmeldung erfolgt nach einer Rückfrage („Wirklich abmelden?“) über `DELETE /api/v1/sessions/current`. Danach werden Status und Apollo-Cache zurückgesetzt und zur Startseite weitergeleitet.
 

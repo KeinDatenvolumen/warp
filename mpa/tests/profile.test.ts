@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-20] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Multi-Page Application mit Express & EJS (WARP-034)
+// [KI-Log Nr. KI-228] (7235e0b) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(mpa): implement basic multi-page application with auth, profile, and GraphQL integration (WARP-034)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 import request from 'supertest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { app } from '../src/app.js'
@@ -38,8 +40,8 @@ describe('GET /profile (Profilseite)', () => {
     expect(res.status).toBe(200)
     expect(res.text).toContain('Erika Musterfrau')
     expect(res.text).toContain('erika@example.com')
-    expect(res.text).toContain('usr-999')
-    expect(res.text).toContain('GraphQL')
+    expect(res.text).not.toContain('usr-999')
+    expect(res.text).not.toContain('GraphQL')
     expect(res.text).toContain('Bestätigt')
   })
 })

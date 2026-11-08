@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-19] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Change Request Ereigniskarte 12 (MCP & Gemini)
+// [KI-Log Nr. KI-226] (15ee1f2) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feature/WARP-014 add mcp/ai integration, better frontend, rebasing with life
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.infrastructure.gemini;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -31,10 +33,10 @@ public record GeminiProperties(
             fallbackModel = "gemini-3.6-flash";
         }
         if (connectTimeout == null) {
-            connectTimeout = Duration.ofSeconds(3);
+            connectTimeout = Duration.ofSeconds(2);
         }
         if (readTimeout == null) {
-            readTimeout = Duration.ofSeconds(20);
+            readTimeout = Duration.ofSeconds(8);
         }
         if (temperature == null) {
             temperature = 0.2;

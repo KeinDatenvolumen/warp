@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
-# [KI-Log Nr. KI-03] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): PostgreSQL DB-per-Service & Flyway (WARP-002)
+# [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+# [KI-Log Nr. KI-018] (73ce21c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: update Dockerfiles, unpriviliged User (WARP-002)
+# [KI-Log Nr. KI-020] (3bc1abc) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: db_url conversion (WARP-002)
+# [KI-Log Nr. KI-022] (f11b9ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: correct PostgreSQL SSL configuration (WARP-002)
+# [KI-Log Nr. KI-024] (ccafe34) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: correct PostgreSQL SSL configuration for Neon (WARP-002)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 set -eu
 
 if [ -n "${DATABASE_URL:-}" ]; then

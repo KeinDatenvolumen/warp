@@ -1,4 +1,9 @@
-// [KI-Log Nr. KI-09] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Sitzungsverwaltung, CSRF & Rate-Limiting (WARP-006)
+// [KI-Log Nr. KI-096] (77d0318) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: add public BFF login endpoint
+// [KI-Log Nr. KI-097] (a952d0a) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: add public BFF logout endpoint
+// [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+// [KI-Log Nr. KI-148] (a24264e) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): fix: change sameSite to None for the cookies to work with herokuapp (WARP-006)
+// [KI-Log Nr. KI-150] (ceaba81) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): fix: change sameSite to None for the cookies to work with herokuapp (WARP-006)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 package de.warp.bff.api.controller;
 
 import de.warp.bff.api.dto.CreateSessionRequest;

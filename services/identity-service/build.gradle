@@ -1,4 +1,16 @@
-// [KI-Log Nr. KI-21] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone RabbitMQ Mail-Queue & Broker-Fallback (WARP-036)
+// [KI-Log Nr. KI-002] (8c3033f) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize WaRP monorepo and BFF service (WARP-001)
+// [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+// [KI-Log Nr. KI-016] (4fd56ee) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add local databases aswell as heroku databases (WARP-002)
+// [KI-Log Nr. KI-017] (4f98c90) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: update build.gradle files to fix the test issues (WARP-002)
+// [KI-Log Nr. KI-051] (cfd2cd9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat/warp-005: implement user registration with Tests
+// [KI-Log Nr. KI-057] (efe88f9) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add mailpit and improved status request (WARP-001)
+// [KI-Log Nr. KI-068] (a7d6e5a) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat/WARP-005: implement user registration
+// [KI-Log Nr. KI-069] (5884a21) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: remove rate limit and change endpoint (WARP-005)
+// [KI-Log Nr. KI-099] (21f31de) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-006: harden BFF session management
+// [KI-Log Nr. KI-230] (5ebbae2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-035 Configure Caffeine caches
+// [KI-Log Nr. KI-231] (80972f5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: decouple e-mail delivery from identity service via RabbitMQ (WARP-036)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -39,6 +51,59 @@ tasks.named('test') {
             'test-internal-service-token'
     )
     systemProperty('warp.messaging.enabled', 'false')
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/dto/**',
+                '**/entity/**',
+                '**/*Config*',
+                '**/*Properties*',
+                '**/*Application*'
+            ])
+        }))
+    }
+    violationRules {
+        // Kritische Fachservices: Authentifizierung (Branch >= 80%, Complexity >= 75%)
+        rule {
+            element = 'CLASS'
+            includes = [
+                'de.warp.identity.application.RegistrationService',
+                'de.warp.identity.application.SessionService',
+                'de.warp.identity.application.PasswordResetService',
+                'de.warp.identity.application.EmailVerificationService',
+                'de.warp.identity.application.CachedSessionService',
+                'de.warp.identity.application.SessionTokenService'
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+            limit {
+                counter = 'COMPLEXITY'
+                value = 'COVEREDRATIO'
+                minimum = 0.75
+            }
+        }
+    }
 }
 
 springBoot {

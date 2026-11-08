@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Wetter- & Routen-Plattform
+// [KI-Log Nr. KI-202] (d555a4e) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: add user lookup and account change endpoints to identity service (WARP-033)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.identity.service;
 
 import de.warp.identity.dto.ChangeEmailRequest;
@@ -156,7 +158,7 @@ class UserAccountServiceTest {
     }
 
     @Test
-    void shouldChangeEmailResetVerificationAndSendMail() {
+    void shouldRequestEmailChangeKeepCurrentEmailUntilVerifiedAndSendMail() {
         user.markEmailAsVerified();
 
         when(userRepository.findById("usr_1"))
@@ -173,8 +175,9 @@ class UserAccountServiceTest {
                 new ChangeEmailRequest("  Neu@Example.de ", CURRENT_PASSWORD)
         );
 
-        assertThat(user.getEmail()).isEqualTo("neu@example.de");
-        assertThat(user.isEmailVerified()).isFalse();
+        assertThat(user.getEmail()).isEqualTo("max@example.de");
+        assertThat(user.getPendingEmail()).isEqualTo("neu@example.de");
+        assertThat(user.isEmailVerified()).isTrue();
         verify(userRepository).saveAndFlush(user);
         verify(verificationEmailSender)
                 .sendVerificationEmail(user, "plain-token");

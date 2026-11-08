@@ -1,4 +1,6 @@
-// [KI-Log Nr. KI-12] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): Asynchrone Routenberechnung via OpenRouteService (WARP-012)
+// [KI-Log Nr. KI-160] (98b4bc2) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 handle internal route calculation errors
+// [KI-Log Nr. KI-176] (622e888) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): WARP-012 handle internal route calculation errors
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 package de.warp.routing.route.api;
 
 import static org.mockito.Mockito.when;

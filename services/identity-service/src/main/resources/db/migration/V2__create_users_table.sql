@@ -1,4 +1,3 @@
--- [KI-Log Nr. KI-07] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Benutzerregistrierung & Validierung (WARP-005)
 CREATE TABLE warp_identity.users
 (
     id             VARCHAR(40)              NOT NULL,

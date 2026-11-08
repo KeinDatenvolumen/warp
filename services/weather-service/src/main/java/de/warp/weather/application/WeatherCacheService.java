@@ -1,6 +1,11 @@
-// [KI-Log Nr. KI-16] KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): 101-Stufen-Wetterscore, Segmentierung & Abfahrtsoptimierung (WARP-014..019)
+// [KI-Log Nr. KI-195] (d93a0ce) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement route weather segmentation, 60m cache, scoring and BFF integration (WARP-014)
+// [KI-Log Nr. KI-223] (03c6e45) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat(weather): implement 101-step perceptual score scale, map casing, dynamic bottleneck badges and meteogram dock (WARP-014)
+// [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
+// [KI-Log Nr. KI-245] (session) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): feat: pending_email, live session verification, service token auth, 10s AI timeout & full commit KI-Log (WARP-007/014/033/034)
 package de.warp.weather.application;
 
+import de.warp.weather.application.cache.CacheFreshnessPolicy;
+import de.warp.weather.application.hazard.WeatherHazardDetector;
 import de.warp.weather.application.port.WeatherProvider;
 import de.warp.weather.domain.model.CachedForecast;
 import de.warp.weather.domain.model.ForecastLocation;
@@ -26,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,22 +40,47 @@ public class WeatherCacheService {
     private static final Duration WET_ROAD_LOOKBACK = Duration.ofHours(2);
     private static final int WET_ROAD_INTERVALS = 8;
 
+    private static final CacheFreshnessPolicy DEFAULT_POLICY = new CacheFreshnessPolicy();
+    private static final WeatherHazardDetector DEFAULT_HAZARD_DETECTOR = new WeatherHazardDetector();
+
     private final WeatherCacheRepository cacheRepository;
     private final WeatherProvider weatherProvider;
     private final WeatherCacheProperties cacheProperties;
     private final Clock clock;
+    private final CacheFreshnessPolicy freshnessPolicy;
+    private final WeatherHazardDetector hazardDetector;
 
     @Autowired
     public WeatherCacheService(
             WeatherCacheRepository cacheRepository,
             WeatherProvider weatherProvider,
             WeatherCacheProperties cacheProperties,
-            Clock clock
+            Clock clock,
+            CacheFreshnessPolicy freshnessPolicy,
+            WeatherHazardDetector hazardDetector
     ) {
         this.cacheRepository = Objects.requireNonNull(cacheRepository);
         this.weatherProvider = Objects.requireNonNull(weatherProvider);
         this.cacheProperties = Objects.requireNonNull(cacheProperties);
         this.clock = Objects.requireNonNull(clock);
+        this.freshnessPolicy = Objects.requireNonNull(freshnessPolicy);
+        this.hazardDetector = Objects.requireNonNull(hazardDetector);
+    }
+
+    public WeatherCacheService(
+            WeatherCacheRepository cacheRepository,
+            WeatherProvider weatherProvider,
+            WeatherCacheProperties cacheProperties,
+            Clock clock
+    ) {
+        this(
+                cacheRepository,
+                weatherProvider,
+                cacheProperties,
+                clock,
+                DEFAULT_POLICY,
+                DEFAULT_HAZARD_DETECTOR
+        );
     }
 
     public WeatherCacheService(
@@ -72,38 +101,15 @@ public class WeatherCacheService {
             Instant forecastTime,
             WeatherModel model
     ) {
-        Objects.requireNonNull(forecastTime, "forecastTime must not be null");
-        WeatherModel effectiveModel = model == null ? WeatherModel.BEST_MATCH : model;
-        Instant normalizedHour = normalizeToForecastHour(forecastTime);
-
-        return String.format(
-                Locale.ROOT,
-                "%s:%.4f:%.4f:%s",
-                effectiveModel.name(),
-                roundCoordinate(latitude),
-                roundCoordinate(longitude),
-                normalizedHour.toString()
-        );
+        return DEFAULT_POLICY.buildCacheKey(latitude, longitude, forecastTime, model);
     }
 
     public static Instant normalizeToForecastHour(Instant timestamp) {
-        Objects.requireNonNull(timestamp, "timestamp must not be null");
-        Instant truncated = timestamp.truncatedTo(ChronoUnit.HOURS);
-        long minutesIntoHour = Duration.between(truncated, timestamp).toMinutes();
-        return minutesIntoHour >= 30
-                ? truncated.plus(1, ChronoUnit.HOURS)
-                : truncated;
+        return DEFAULT_POLICY.normalizeToForecastHour(timestamp);
     }
 
     public static Instant normalizeToQuarterHour(Instant timestamp) {
-        Objects.requireNonNull(timestamp, "timestamp must not be null");
-        long epochSeconds = timestamp.getEpochSecond();
-        long roundedSeconds = Math.round((double) epochSeconds / 900.0) * 900L;
-        return Instant.ofEpochSecond(roundedSeconds);
-    }
-
-    private static double roundCoordinate(double coordinate) {
-        return Math.round(coordinate * 10_000.0) / 10_000.0;
+        return DEFAULT_POLICY.normalizeToQuarterHour(timestamp);
     }
 
     @Transactional
@@ -119,7 +125,7 @@ public class WeatherCacheService {
         Duration ttl = cacheProperties.ttl();
 
         List<String> keysBySegment = segments.stream()
-                .map(segment -> buildCacheKey(
+                .map(segment -> freshnessPolicy.buildCacheKey(
                         segment.waypointLatitude(),
                         segment.waypointLongitude(),
                         segment.expectedArrivalTime(),
@@ -169,16 +175,15 @@ public class WeatherCacheService {
             Duration ttl
     ) {
         Instant minTime = missingSegments.stream()
-                .map(s -> normalizeToForecastHour(s.expectedArrivalTime()))
+                .map(s -> freshnessPolicy.normalizeToForecastHour(s.expectedArrivalTime()))
                 .min(Comparator.naturalOrder())
                 .orElse(now.truncatedTo(ChronoUnit.HOURS));
 
         Instant maxTime = missingSegments.stream()
-                .map(s -> normalizeToForecastHour(s.expectedArrivalTime()))
+                .map(s -> freshnessPolicy.normalizeToForecastHour(s.expectedArrivalTime()))
                 .max(Comparator.naturalOrder())
                 .orElse(minTime);
 
-        // Request 2 hours earlier so the 8x 15-minute intervals (120 min) for Wet-Road-Memory W_road are included
         ForecastPeriod period = new ForecastPeriod(
                 minTime.minus(WET_ROAD_LOOKBACK),
                 maxTime.plus(1, ChronoUnit.HOURS)
@@ -205,16 +210,16 @@ public class WeatherCacheService {
             RouteSegmenter.PlannedRouteSegment segment = missingSegments.get(i);
             WeatherForecastLocation forecastLocation = bundle.locations().get(i);
             Instant eta = segment.expectedArrivalTime();
-            Instant targetHour = normalizeToForecastHour(eta);
+            Instant targetHour = freshnessPolicy.normalizeToForecastHour(eta);
 
             WeatherCondition condition = resolveConditionForEta(
                     forecastLocation.bestMatch(),
                     eta
             );
 
-            double roundedLat = roundCoordinate(segment.waypointLatitude());
-            double roundedLon = roundCoordinate(segment.waypointLongitude());
-            String cacheKey = buildCacheKey(
+            double roundedLat = freshnessPolicy.roundCoordinate(segment.waypointLatitude());
+            double roundedLon = freshnessPolicy.roundCoordinate(segment.waypointLongitude());
+            String cacheKey = freshnessPolicy.buildCacheKey(
                     roundedLat,
                     roundedLon,
                     eta,
@@ -266,13 +271,12 @@ public class WeatherCacheService {
             long diffMinutes = Math.abs(Duration.between(closest15m.time(), eta).toMinutes());
             if (diffMinutes <= 30 && closest15m.values().temperatureCelsius() != null) {
                 WeatherValues m15 = closest15m.values();
-                // In minutely_15, precipitation is mm per 15 min -> intensity I_P (mm/h) = 4 * P_15min
                 Double precipIntensityMmPerHour = m15.precipitationMillimeters() != null
                         ? Math.max(0.0, 4.0 * m15.precipitationMillimeters())
                         : hourlyInterpolated.precipitationMillimeters();
 
                 WeatherValues merged = new WeatherValues(
-                         firstNonNull(m15.temperatureCelsius(), hourlyInterpolated.temperatureCelsius()),
+                        firstNonNull(m15.temperatureCelsius(), hourlyInterpolated.temperatureCelsius()),
                         firstNonNull(m15.apparentTemperatureCelsius(), hourlyInterpolated.apparentTemperatureCelsius()),
                         firstNonNull(m15.relativeHumidityPercent(), hourlyInterpolated.relativeHumidityPercent()),
                         firstNonNull(m15.dewPointCelsius(), hourlyInterpolated.dewPointCelsius()),
@@ -355,7 +359,7 @@ public class WeatherCacheService {
             return lower.values();
         }
 
-        double alpha = clamp(
+        double alpha = Math.clamp(
                 (double) Duration.between(lower.time(), eta).toSeconds() / (double) spanSeconds,
                 0.0,
                 1.0
@@ -426,7 +430,7 @@ public class WeatherCacheService {
             }
         }
 
-        return clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
+        return Math.clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
     }
 
     private double computeWetRoadIndexFromHourly(
@@ -446,13 +450,12 @@ public class WeatherCacheService {
             WeatherForecastTimeStep closestHour = selectClosestTimeStep(hourlySteps, stepTarget);
             long diffMinutes = Math.abs(Duration.between(closestHour.time(), stepTarget).toMinutes());
             if (diffMinutes <= 45 && closestHour.values().precipitationMillimeters() != null) {
-                // Hourly precipitation divided across 4 quarter-hour intervals
                 double p15Equivalent = Math.max(0.0, closestHour.values().precipitationMillimeters()) / 4.0;
                 pAcc += p15Equivalent * Math.exp(-(0.25 * k) / tauDry);
             }
         }
 
-        return clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
+        return Math.clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
     }
 
     private WeatherForecastTimeStep selectClosestTimeStep(
@@ -480,7 +483,7 @@ public class WeatherCacheService {
         for (int k = 0; k <= 3; k++) {
             pAcc += (precipMm / 4.0) * Math.exp(-(0.25 * k) / tauDry);
         }
-        double wetRoadIndex = clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
+        double wetRoadIndex = Math.clamp(1.0 - Math.exp(-pAcc / 1.2), 0.0, 1.0);
         return toWeatherCondition(values, wetRoadIndex);
     }
 
@@ -503,12 +506,12 @@ public class WeatherCacheService {
 
         double precipProb;
         if (values.precipitationProbabilityPercent() != null) {
-            precipProb = clamp(values.precipitationProbabilityPercent(), 0.0, 100.0);
+            precipProb = Math.clamp(values.precipitationProbabilityPercent(), 0.0, 100.0);
         } else {
             precipProb = precipMm > 0.0 ? Math.min(100.0, precipMm * 25.0 + 30.0) : 0.0;
         }
 
-        double thunderstormProb = deriveThunderstormProbability(
+        double thunderstormProb = DEFAULT_HAZARD_DETECTOR.deriveThunderstormProbability(
                 values.weatherCode(),
                 values.capeJoulesPerKilogram(),
                 values.liftedIndex(),
@@ -521,7 +524,7 @@ public class WeatherCacheService {
                 windGusts,
                 precipProb,
                 precipMm,
-                clamp(wetRoadIndex, 0.0, 1.0),
+                Math.clamp(wetRoadIndex, 0.0, 1.0),
                 values.snowfallCentimeters(),
                 thunderstormProb,
                 values.temperatureCelsius(),
@@ -543,67 +546,22 @@ public class WeatherCacheService {
             Double liftedIndex,
             double precipitationProbabilityPercent
     ) {
-        double probability = 0.0;
-
-        if (weatherCode != null) {
-            if (weatherCode == 99) {
-                probability = 100.0;
-            } else if (weatherCode == 96) {
-                probability = 90.0;
-            } else if (weatherCode == 95) {
-                probability = Math.max(80.0, precipitationProbabilityPercent);
-            } else if (weatherCode == 82) {
-                probability = 55.0;
-            }
-        }
-
-        if (cape != null && cape > 100.0) {
-            double capeRisk;
-            if (cape >= 2000.0) {
-                capeRisk = 85.0;
-            } else if (cape >= 600.0) {
-                // Per [FR-WETT-03]: CAPE >= 600 J/kg with precipProb > 30% triggers elevated thunderstorm risk (>= 50%)
-                if (precipitationProbabilityPercent > 30.0) {
-                    capeRisk = 50.0 + Math.min(35.0, ((cape - 600.0) / 1400.0) * 35.0);
-                } else {
-                    capeRisk = 35.0 + ((cape - 600.0) / 1400.0) * 25.0;
-                }
-            } else {
-                capeRisk = ((cape - 100.0) / 500.0) * 30.0;
-            }
-            probability = Math.max(probability, capeRisk);
-        }
-
-        if (liftedIndex != null && liftedIndex <= -4.0) {
-            probability = Math.min(100.0, probability + 15.0);
-        }
-
-        return clamp(Math.round(probability * 10.0) / 10.0, 0.0, 100.0);
+        return DEFAULT_HAZARD_DETECTOR.deriveThunderstormProbability(
+                weatherCode, cape, liftedIndex, precipitationProbabilityPercent
+        );
     }
 
     private static Double lerp(Double a, Double b, double alpha) {
-        if (a == null && b == null) {
-            return null;
-        }
-        if (a == null) {
-            return b;
-        }
-        if (b == null) {
-            return a;
-        }
+        if (a == null && b == null) return null;
+        if (a == null) return b;
+        if (b == null) return a;
         return (1.0 - alpha) * a + alpha * b;
     }
 
     private static Double lerpAngleDegrees(Double deg0, Double deg1, double alpha) {
-        if (deg0 == null && deg1 == null) {
-            return null;
-        }
-        if (deg0 == null) {
-            return deg1;
-        }
-        if (deg1 == null) {
-            return deg0;
-        }
+        if (deg0 == null && deg1 == null) return null;
+        if (deg0 == null) return deg1;
+        if (deg1 == null) return deg0;
         double rad0 = Math.toRadians(deg0);
         double rad1 = Math.toRadians(deg1);
         double x = (1.0 - alpha) * Math.cos(rad0) + alpha * Math.cos(rad1);
@@ -614,9 +572,5 @@ public class WeatherCacheService {
 
     private static Double firstNonNull(Double primary, Double fallback) {
         return primary != null ? primary : fallback;
-    }
-
-    private static double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
     }
 }

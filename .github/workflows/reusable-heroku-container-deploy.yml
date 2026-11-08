@@ -1,4 +1,9 @@
-# [KI-Log Nr. KI-02] KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): Monorepo-Setup, Gradle & Docker (WARP-001)
+# [KI-Log Nr. KI-003] (39894d5) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): feat: initialize Deployment and Health Endpoints for Services. Frontend to examine health status of services (WARP-001)
+# [KI-Log Nr. KI-007] (418c87c) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: deployment uses new url variables (WARP-001)
+# [KI-Log Nr. KI-055] (5ee9e40) KI-generiert (Microsoft Copilot (GPT 5.6 Sol)): fix: deployment secret (WARP-009)
+# [KI-Log Nr. KI-220] (4dd8015) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): Update reusable-heroku-container-deploy.yml (WARP-001)
+# [KI-Log Nr. KI-221] (97731e7) KI-generiert (Google Antigravity (Gemini 4 Argon Medium)): Update reusable-heroku-container-deploy.yml (WARP-001)
+# [KI-Log Nr. KI-239] (9f705ff) KI-generiert (Google Antigravity (Gemini 3.8 Flash High)): docs & chore: add fallstudie documentation, ki logs, bootRun and flyway dev fixes (WARP-034)
 name: Reusable Heroku container deployment
 
 on:
